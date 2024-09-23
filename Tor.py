@@ -4,7 +4,7 @@ import time
 import os
 
 TOR_CONTROL_PORT = 9051  
-TOR_PASSWORD = "Qwer@12345"  
+TOR_PASSWORD = "Qw*******"  
 def change_mac():
     os.system("sudo macchanger -r eth0")
     os.system("sudo macchanger -r tun0")
