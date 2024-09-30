@@ -1,10 +1,10 @@
 #!/bin/bash 
 
 ########################################
-####  [+]-- Author: OmarSamy --[+]  ####
+####  [+]-- Author: 0x2034 --[+]  ####
 ########################################
 
-figlet -ctf slant OmarSamy
+figlet -ctf slant 0x2034
 
 network(){
 echo ""
@@ -52,18 +52,18 @@ END_SCRIPT
     fi
     echo "--------------------------"
     if nc -zv -w 5 $DOMAIN 389 2>/dev/null || nc -zv -w 5 $DOMAIN 636 2>/dev/null; then
-       gnome-terminal -- bash -c "python3 /home/omarsamy/Downloads/tools/Folders/Windapsearch/windapsearch.py -U --full --dc-ip $DOMAIN ; exec bash"         
+       gnome-terminal -- bash -c "python3  $HOME/Downloads/tools/Folders/Windapsearch/windapsearch.py -U --full --dc-ip $DOMAIN ; exec bash"         
     fi
     echo "--------------------------"
     if nc -zv -w 5 $DOMAIN 88 2>/dev/null; then
-       if /home/omarsamy/Downloads/tools/Files/Kerbrute userenum -d $DOMAIN --dc $HOSTS_ENTRY /usr/share/wordlists/rockyou.txt
+       if  $HOME/Downloads/tools/Files/Kerbrute userenum -d $DOMAIN --dc $HOSTS_ENTRY /usr/share/wordlists/rockyou.txt
        then
            :
-       elif /home/omarsamy/Downloads/tools/Files/Kerbrute userenum -d $DOMAIN --dc $DOMAIN /usr/share/wordlists/rockyou.txt
+       elif  $HOME/Downloads/tools/Files/Kerbrute userenum -d $DOMAIN --dc $DOMAIN /usr/share/wordlists/rockyou.txt
        then
            :
        else
-           /home/omarsamy/Downloads/tools/Files/Kerbrute userenum -d $HOSTS_ENTRY --dc $HOSTS_ENTRY /usr/share/wordlists/rockyou.txt   
+             $HOME/Downloads/tools/Files/Kerbrute userenum -d $HOSTS_ENTRY --dc $HOSTS_ENTRY /usr/share/wordlists/rockyou.txt   
        fi
     fi
 fi
@@ -78,8 +78,8 @@ web_2(){
   gnome-terminal -- bash -c "nikto -h $FULL_DOMAIN -C all ; exec bash"
   if [[ ! $DOMAIN =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
      if [ -z "$HOSTS_ENTRY" ]; then
-          ffuf -w /usr/share/wordlists/amass/test.txt -u $FULL_DOMAIN/ -H "Host: FUZZ.${DOMAIN}" >> /home/omarsamy/myscript_output/test.txt
-          file="/home/omarsamy/myscript_output/test.txt"
+          ffuf -w /usr/share/wordlists/amass/test.txt -u $FULL_DOMAIN/ -H "Host: FUZZ.${DOMAIN}" >> $HOME/myscript_output/test.txt
+          file="$HOME/myscript_output/test.txt"
           while IFS= read -r line; do
                 if echo "$line" | grep -q "Size"; then
                     size=$(echo "$line" | sed -n 's/.*Size: \([0-9]\+\),.*/\1/p')
@@ -92,8 +92,8 @@ web_2(){
                gnome-terminal -- bash -c "ffuf -w /usr/share/wordlists/amass/subdomains-top1mil-110000.txt -u $FULL_DOMAIN/ -H 'Host: FUZZ.${DOMAIN}' -mc 200,302,403,301 -c ; exec bash"
           fi
      else 
-          ffuf -w /usr/share/wordlists/amass/test.txt -u $FULL_DOMAIN/ -H "Host: FUZZ.${DOMAIN}" >> /home/omarsamy/myscript_output/test.txt
-          file="/home/omarsamy/myscript_output/test.txt"
+          ffuf -w /usr/share/wordlists/amass/test.txt -u $FULL_DOMAIN/ -H "Host: FUZZ.${DOMAIN}" >> $HOME/myscript_output/test.txt
+          file="$HOME/myscript_output/test.txt"
           while IFS= read -r line; do
                 if echo "$line" | grep -q "Size"; then
                    size=$(echo "$line" | sed -n 's/.*Size: \([0-9]\+\),.*/\1/p')
@@ -107,16 +107,16 @@ web_2(){
           fi
      fi 
   fi
-  bash /home/omarsamy/Downloads/tools/Files/Gitdumper.sh $FULL_DOMAIN/.git/ /home/omarsamy/myscript_output 
+  bash  $HOME/Downloads/tools/Files/Gitdumper.sh $FULL_DOMAIN/.git/ $HOME/myscript_output 
   echo "--------------------------"
-  python /home/omarsamy/Downloads/tools/Folders/DS_Walk/ds_walk.py -u $FULL_DOMAIN
+  python $HOME/Downloads/tools/Folders/DS_Walk/ds_walk.py -u $FULL_DOMAIN
   echo "--------------------------"
   curl $FULL_DOMAIN -k | grep -oE '\b[a-zA-Z0-9._-]+\.(htb|thm|com|org|net|edu|gov|mil|int|co|us|uk|ca|de|jp|fr|au|eg)\b'
   echo "--------------------------"
-  gnome-terminal -- bash -c "feroxbuster --url $FULL_DOMAIN --random-agent --filter-status 404 -k  ; sleep 5 ; rm /home/omarsamy/Downloads/tools/Files/*.state ; exec bash" 
+  gnome-terminal -- bash -c "feroxbuster --url $FULL_DOMAIN --random-agent --filter-status 404 -k  ; sleep 5 ; rm $HOME/Downloads/tools/Files/*.state ; exec bash" 
   echo "--------------------------"
   sleep 5
-  gnome-terminal -- bash -c "dirsearch -u $FULL_DOMAIN -r --random-agent --exclude-status 404 ; sleep 10 ; rm -rf /home/omarsamy/Downloads/tools/Files/reports ; exec bash"
+  gnome-terminal -- bash -c "dirsearch -u $FULL_DOMAIN -r --random-agent --exclude-status 404 ; sleep 10 ; rm -rf $HOME/Downloads/tools/Files/reports ; exec bash"
   echo "--------------------------"
   sleep 2
   gnome-terminal -- bash -c "for STATUS_CODE in \"\" \"-b 404\" \"-b 404,429\" \"-b 404,429,301\" \"-k -b 301,404,429,403\" \"-k -b 301,404,403,300,429\" \"-k -b 301,302,404,403,401,429,300\" \"-k -b 200\"; do echo 'Running gobuster'; gobuster dir -u \"$FULL_DOMAIN\" -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt --no-error --exclude-length 0 \$STATUS_CODE --random-agent; exit_code=\$?; if [[ \$exit_code -eq 0 ]]; then break; fi; done; exec bash"
