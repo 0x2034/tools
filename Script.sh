@@ -113,6 +113,8 @@ web_2(){
   echo "--------------------------"
   curl $FULL_DOMAIN -k | grep -oE '\b[a-zA-Z0-9._-]+\.(htb|thm|com|org|net|edu|gov|mil|int|co|us|uk|ca|de|jp|fr|au|eg)\b'
   echo "--------------------------"
+  python $HOME/Downloads/tools/Files/Hash_extraction.py $FULL_DOMAIN
+  echo "--------------------------"
   gnome-terminal -- bash -c "feroxbuster --url $FULL_DOMAIN --random-agent --filter-status 404 -k  ; sleep 5 ; rm $HOME/Downloads/tools/Files/*.state ; exec bash" 
   echo "--------------------------"
   sleep 5
