@@ -1,10 +1,10 @@
 #!/bin/bash 
 
 ########################################
-####  [+]-- Author: OmarSamy --[+]  ####
+####  [+]-- Author: 0xos2034 --[+]  ####
 ########################################
 
-figlet -ctf slant OmarSamy
+figlet -ctf slant 0xos2034
 
 network(){
 echo ""
