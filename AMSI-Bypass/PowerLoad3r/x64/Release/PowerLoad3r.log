@@ -1,0 +1,7 @@
+﻿  Assembling Helper.asm...
+  PowerLoad3r.c
+  Generating code
+  Previous IPDB not found, fall back to full compilation.
+  All 24 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  PowerLoad3r.vcxproj -> E:\PowerLoad3r-main\x64\Release\PowerLoad3r.exe
