@@ -1,10 +1,10 @@
 #!/bin/bash 
 
 ########################################
-####  [+]-- Author: 0xos2034 --[+]  ####
+####  [+]-- Author: 0x2034 --[+]  ####
 ########################################
 
-figlet -ctf slant 0xos2034
+figlet -ctf slant OmarSamy
 
 network(){
 echo ""
@@ -206,15 +206,37 @@ web_1(){
    fi
 }
 main(){
-    if ping -c3 $DOMAIN 2>/dev/null; then
-        nmap -A -Pn $DOMAIN
-        gnome-terminal -- bash -c "nmap $DOMAIN -Pn -p- ; exec bash" 
-        web_1
-        network 
-    else
-        echo -e "\e[1;36m[+]--- Second Attempt ---[+]\e[0m"
-        echo ""
-        if ping -c25 $DOMAIN 2>/dev/null; then
+     if [ "$flag_5" = true ];
+     then
+        if [ "$flag_6" = true ];
+        then
+            gnome-terminal -- bash -c "nmap $DOMAIN -Pn -p- ; exec bash" 
+            web_1
+            network 
+        else
+            nmap -A -Pn $DOMAIN
+            gnome-terminal -- bash -c "nmap $DOMAIN -Pn -p- ; exec bash" 
+            web_1
+            network 
+        fi
+     else
+         if ping -c3 $DOMAIN 2>/dev/null; then
+            if [ "$flag_6" = true ];
+            then
+                gnome-terminal -- bash -c "nmap $DOMAIN -Pn -p- ; exec bash" 
+                web_1
+                network 
+            else
+                nmap -A -Pn $DOMAIN
+                gnome-terminal -- bash -c "nmap $DOMAIN -Pn -p- ; exec bash" 
+                web_1
+                network 
+            fi 
+         else
+            echo -e "\e[1;36m[+]--- Second Attempt ---[+]\e[0m"
+            echo ""
+         fi
+         if ping -c25 $DOMAIN 2>/dev/null; then
             nmap -A -Pn $DOMAIN
             gnome-terminal -- bash -c "nmap $DOMAIN -Pn -p- ; exec bash"
             web_1
@@ -223,7 +245,7 @@ main(){
             echo -e "\e[1;31m[+]--- The Target Is Not Reachable ---[+]\e[0m"
             exit 1
         fi
-    fi
+     fi
 }
 help(){
 echo "
@@ -237,11 +259,13 @@ flags:
     --no-https: skip port 443  
     --no-recon: skip recon part 
     --no-network: skip network part
+    --no-ping: skip pinging part
+    --no-portscan: skip port scanning part
 "
 }
 
 declare -A seen_flags
-declare -a valid_flags=("--no-http" "--no-https" "--no-recon" "--no-network")
+declare -a valid_flags=("--no-http" "--no-https" "--no-recon" "--no-network" "--no-ping" "--no-portscan")
 in_array() {
     local needle=$1
     shift
@@ -271,6 +295,8 @@ if [[ "$2" == --* ]]; then
                "--no-https") flag_2=true ;;
                "--no-recon") flag_3=true ;;
                "--no-network") flag_4=true ;;
+               "--no-ping") flag_5=true ;;
+               "--no-portscan") flag_6=true ;;
            esac
        else
            echo -e "\e[1;31m[+]--- For Usage : ./Script.sh -h ---[+]\e[0m"
@@ -296,6 +322,8 @@ else
                "--no-https") flag_2=true ;;
                "--no-recon") flag_3=true ;;
                "--no-network") flag_4=true ;;
+               "--no-ping") flag_5=true ;;
+               "--no-portscan") flag_6=true ;;
            esac
        else
            echo -e "\e[1;31m[+]--- For Usage : ./Script.sh -h ---[+]\e[0m"
@@ -333,3 +361,4 @@ fi
 main
 echo ""
 echo -e "\e[1;32m------------------[+] Finished [+]---------------------\e[0m"
+                                                                                                
