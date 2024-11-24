@@ -235,17 +235,17 @@ main(){
          else
             echo -e "\e[1;36m[+]--- Second Attempt ---[+]\e[0m"
             echo ""
+            if ping -c25 $DOMAIN 2>/dev/null; then
+                nmap -A -Pn $DOMAIN
+                gnome-terminal -- bash -c "nmap $DOMAIN -Pn -p- ; exec bash"
+                web_1
+                network 
+            else
+                echo -e "\e[1;31m[+]--- The Target Is Not Reachable ---[+]\e[0m"
+                exit 1
+            fi
          fi
-         if ping -c25 $DOMAIN 2>/dev/null; then
-            nmap -A -Pn $DOMAIN
-            gnome-terminal -- bash -c "nmap $DOMAIN -Pn -p- ; exec bash"
-            web_1
-            network 
-        else
-            echo -e "\e[1;31m[+]--- The Target Is Not Reachable ---[+]\e[0m"
-            exit 1
-        fi
-     fi
+     fi 
 }
 help(){
 echo "
@@ -361,4 +361,3 @@ fi
 main
 echo ""
 echo -e "\e[1;32m------------------[+] Finished [+]---------------------\e[0m"
-                                                                                                
