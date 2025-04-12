@@ -1,10 +1,10 @@
 #!/bin/bash 
 
 ########################################
-####  [+]-- Author: 0x2034 --[+]  ####
+####  [+]-- Author: 0x2034--[+]  ####
 ########################################
 
-figlet -ctf slant OmarSamy
+figlet -ctf slant 0x2034
 
 network(){
 echo ""
@@ -23,7 +23,7 @@ END_SCRIPT
     fi
     echo "--------------------------"
     if nc -zv -w 5 $DOMAIN 25 2>/dev/null; then
-       gnome-terminal -- bash -c "smtp-user-enum -M VRFY -U /usr/share/wordlists/rockyou.txt -t $DOMAIN ; exec bash" 
+       gnome-terminal -- bash -c "smtp-user-enum -U /usr/share/wordlists/metasploit/unix_users.txt $DOMAIN 25 ; exec bash" 
     fi
     echo "--------------------------"
     if nc -zv -w 5 $DOMAIN 111 2>/dev/null; then
@@ -107,7 +107,10 @@ web_2(){
           fi
      fi 
   fi
-  bash  $HOME/Downloads/tools/Files/Gitdumper.sh $FULL_DOMAIN/.git/ $HOME/myscript_output 
+  TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
+  OUTPUT_DIR="$HOME/myscript_output/.git_${TIMESTAMP}_$DOMAIN"
+  mkdir -p "$OUTPUT_DIR"
+  $HOME/Downloads/tools/Files/Gitdumper.sh "$FULL_DOMAIN/.git/" "$OUTPUT_DIR"
   echo "--------------------------"
   python $HOME/Downloads/tools/Folders/DS_Walk/ds_walk.py -u $FULL_DOMAIN
   echo "--------------------------"
@@ -236,10 +239,16 @@ main(){
             echo -e "\e[1;36m[+]--- Second Attempt ---[+]\e[0m"
             echo ""
             if ping -c25 $DOMAIN 2>/dev/null; then
-                nmap -A -Pn $DOMAIN
-                gnome-terminal -- bash -c "nmap $DOMAIN -Pn -p- ; exec bash"
-                web_1
-                network 
+               if [ "$flag_6" = true ]; then
+                  gnome-terminal -- bash -c "nmap $DOMAIN -Pn -p- ; exec bash"
+                  web_1
+                  network 
+               else
+                  nmap -A -Pn $DOMAIN
+                  gnome-terminal -- bash -c "nmap $DOMAIN -Pn -p- ; exec bash"
+                  web_1
+                  network 
+               fi
             else
                 echo -e "\e[1;31m[+]--- The Target Is Not Reachable ---[+]\e[0m"
                 exit 1
