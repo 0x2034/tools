@@ -276,7 +276,7 @@ flags:
     --no-https: skip port 443  
     --no-recon: skip recon part 
     --no-network: skip network part
-    --no-ping: skip pinging part
+    --no-ping: skip ping part
     --no-portscan: skip port scanning part
 "
 }
