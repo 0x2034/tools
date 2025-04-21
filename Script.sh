@@ -5,6 +5,7 @@
 ########################################
 
 figlet -ctf slant 0x2034
+printf "%78s\n" "v1"
 
 network(){
 echo ""
