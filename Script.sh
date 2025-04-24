@@ -15,9 +15,8 @@ cat << "EOF"
            \____/\__, /_.___/\___/_/   /_/ /_/ /_/\__,_/\__, /  
                 /____/                                 /____/    
                                                              0x2034
-
+                                                             
 EOF
-
 
 network(){
 echo ""
@@ -226,12 +225,12 @@ main(){
      then
         if [ "$flag_6" = true ];
         then
-            gnome-terminal -- bash -c "nmap $DOMAIN -Pn -p- ; exec bash" 
+            gnome-terminal -- bash -c "nmap $DOMAIN -Pn -p- -T 5 ; exec bash" 
             web_1
             network 
         else
             nmap -A -Pn $DOMAIN
-            gnome-terminal -- bash -c "nmap $DOMAIN -Pn -p- ; exec bash" 
+            gnome-terminal -- bash -c "nmap $DOMAIN -Pn -p- -T 5 ; exec bash" 
             web_1
             network 
         fi
@@ -239,12 +238,12 @@ main(){
          if ping -c3 $DOMAIN 2>/dev/null; then
             if [ "$flag_6" = true ];
             then
-                gnome-terminal -- bash -c "nmap $DOMAIN -Pn -p- ; exec bash" 
+                gnome-terminal -- bash -c "nmap $DOMAIN -Pn -p- -T 5 ; exec bash" 
                 web_1
                 network 
             else
                 nmap -A -Pn $DOMAIN
-                gnome-terminal -- bash -c "nmap $DOMAIN -Pn -p- ; exec bash" 
+                gnome-terminal -- bash -c "nmap $DOMAIN -Pn -p- -T 5 ; exec bash" 
                 web_1
                 network 
             fi 
@@ -253,12 +252,12 @@ main(){
             echo ""
             if ping -c25 $DOMAIN 2>/dev/null; then
                if [ "$flag_6" = true ]; then
-                  gnome-terminal -- bash -c "nmap $DOMAIN -Pn -p- ; exec bash"
+                  gnome-terminal -- bash -c "nmap $DOMAIN -Pn -p- -T 5 ; exec bash"
                   web_1
                   network 
                else
                   nmap -A -Pn $DOMAIN
-                  gnome-terminal -- bash -c "nmap $DOMAIN -Pn -p- ; exec bash"
+                  gnome-terminal -- bash -c "nmap $DOMAIN -Pn -p- -T 5 ; exec bash"
                   web_1
                   network 
                fi
@@ -383,3 +382,4 @@ fi
 main
 echo ""
 echo -e "\e[1;32m------------------[+] Finished [+]---------------------\e[0m"
+
