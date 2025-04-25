@@ -60,6 +60,10 @@ END_SCRIPT
        fi
     fi
     echo "--------------------------"
+    if nc -zv -w 5 $DOMAIN 587 2>/dev/null; then
+       gnome-terminal -- bash -c "smtp-user-enum -U /usr/share/wordlists/metasploit/unix_users.txt $DOMAIN 587 ; exec bash" 
+    fi
+    echo "--------------------------"
     if nc -zv -w 5 $DOMAIN 389 2>/dev/null || nc -zv -w 5 $DOMAIN 636 2>/dev/null; then
        gnome-terminal -- bash -c "python3  $HOME/Downloads/tools/Folders/Windapsearch/windapsearch.py -U --full --dc-ip $DOMAIN ; exec bash"         
     fi
@@ -137,6 +141,8 @@ web_2(){
   echo "--------------------------"
   sleep 5
   gnome-terminal -- bash -c "for STATUS_CODE in \"\" \"-b 404\" \"-b 404,429\" \"-b 404,429,301\" \"-k -b 301,404,429,403\" \"-k -b 301,404,403,300,429\" \"-k -b 301,302,404,403,401,429,300\" \"-k -b 200\"; do echo 'Running gobuster'; gobuster dir -u \"$FULL_DOMAIN\" -w /usr/share/wordlists/rockyou.txt --no-error --exclude-length 0 \$STATUS_CODE --random-agent; exit_code=\$?; if [[ \$exit_code -eq 0 ]]; then break; fi; done; exec bash"
+  sleep 2
+  gnome-terminal -- bash -c "wpscan --url $FULL_DOMAIN --disable-tls-checks --ignore-main-redirect --no-update ; wpscan --url $FULL_DOMAIN --disable-tls-checks --ignore-main-redirect --no-update --enumerate u ; exec bash"
   if [ "$flag_3" = true ]
   then
       :
