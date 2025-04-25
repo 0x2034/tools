@@ -21,7 +21,7 @@ def scan_for_hashes(content):
 
 def get_web_page_content(url):
     try:
-        response = requests.get(url)
+        response = requests.get(url, verify=False)
         if response.status_code == 200:
             return response.text
         else:
@@ -59,3 +59,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+                            
