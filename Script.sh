@@ -1,22 +1,19 @@
 #!/bin/bash 
 
 ########################################
-####  [+]--  Author: 0x2034  --[+]  ####
+####  [+]-- Author: 0x2034 --[+]  ####
 ####  [+]--    CyberThug    --[+]  ####
 ########################################
 
 
-cat << "EOF"
-
+echo -e "\e[1;32m
               ______      __             ________
              / ____/_  __/ /_  ___  ____/_  __/ /_  __  __._____
-            / /   / / / / __ \/ _ \/ ___// / / __ \/ / / / __  /
-           / /___/ /_/ / /_/ /  __/ /   / / / / / / /_/ / /_/ / 
+            / /   / / / / __ \/ _ \/ ___// / / __ \/ / / / __  / 
+           / /___/ /_/ / /_/ /  __/ /   / / / / / / /_/ / /_/ /  
            \____/\__, /_.___/\___/_/   /_/ /_/ /_/\__,_/\__, /  
                 /____/                                 /____/    
-                                                             0x2034
-                                                             
-EOF
+                                                            \e[0m""\e[1;37m0x2034\e[0m"
 
 network(){
 echo ""
@@ -225,26 +222,30 @@ main(){
      then
         if [ "$flag_6" = true ];
         then
-            gnome-terminal -- bash -c "nmap $DOMAIN -Pn -p- -T 5 ; exec bash" 
-            web_1
+            gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- TCP ALL Ports on $DOMAIN --[+]\n---------------------------------\e[0m' ; nmap $DOMAIN -Pn -p- -T 5 ; exec bash"
+            gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\n---------------------------------\e[0m' ; nmap $DOMAIN -Pn -sU -T 5 ; exec bash"    
+            web_1 
             network 
         else
             nmap -A -Pn $DOMAIN
-            gnome-terminal -- bash -c "nmap $DOMAIN -Pn -p- -T 5 ; exec bash" 
-            web_1
+            gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- TCP ALL Ports on $DOMAIN --[+]\n---------------------------------\e[0m' ; nmap $DOMAIN -Pn -p- -T 5 ; exec bash"
+            gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\n---------------------------------\e[0m' ; nmap $DOMAIN -Pn -sU -T 5 ; exec bash"     
+            web_1   
             network 
         fi
      else
          if ping -c3 $DOMAIN 2>/dev/null; then
             if [ "$flag_6" = true ];
-            then
-                gnome-terminal -- bash -c "nmap $DOMAIN -Pn -p- -T 5 ; exec bash" 
-                web_1
-                network 
+            then 
+                gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- TCP ALL Ports on $DOMAIN --[+]\n---------------------------------\e[0m' ; nmap $DOMAIN -Pn -p- -T 5 ; exec bash"
+                gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\n---------------------------------\e[0m' ; nmap $DOMAIN -Pn -sU -T 5 ; exec bash"    
+                web_1  
+                network  
             else
                 nmap -A -Pn $DOMAIN
-                gnome-terminal -- bash -c "nmap $DOMAIN -Pn -p- -T 5 ; exec bash" 
-                web_1
+                gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- TCP ALL Ports on $DOMAIN --[+]\n---------------------------------\e[0m' ; nmap $DOMAIN -Pn -p- -T 5 ; exec bash"
+                gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\n---------------------------------\e[0m' ; nmap $DOMAIN -Pn -sU -T 5 ; exec bash"    
+                web_1   
                 network 
             fi 
          else
@@ -252,13 +253,15 @@ main(){
             echo ""
             if ping -c25 $DOMAIN 2>/dev/null; then
                if [ "$flag_6" = true ]; then
-                  gnome-terminal -- bash -c "nmap $DOMAIN -Pn -p- -T 5 ; exec bash"
-                  web_1
+                  gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- TCP ALL Ports on $DOMAIN --[+]\n---------------------------------\e[0m' ; nmap $DOMAIN -Pn -p- -T 5 ; exec bash"
+                  gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\n---------------------------------\e[0m' ; nmap $DOMAIN -Pn -sU -T 5 ; exec bash"    
+                  web_1  
                   network 
                else
                   nmap -A -Pn $DOMAIN
-                  gnome-terminal -- bash -c "nmap $DOMAIN -Pn -p- -T 5 ; exec bash"
-                  web_1
+                  gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- TCP ALL Ports on $DOMAIN --[+]\n---------------------------------\e[0m' ; nmap $DOMAIN -Pn -p- -T 5 ; exec bash"
+                  gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\n---------------------------------\e[0m' ; nmap $DOMAIN -Pn -sU -T 5 ; exec bash"    
+                  web_1     
                   network 
                fi
             else
@@ -371,8 +374,8 @@ if [ "$2" != "" ]; then
     else
         DOMAIN=$2
         HOSTS_ENTRY=$1
-        echo "$1 $2" | sudo tee -a /etc/hosts 
-        echo "Added to => /etc/hosts"
+        echo "$1 $2" | sudo tee -a /etc/hosts > /dev/null
+        echo -e "\e[1;32m$1 $2 ⇒  /etc/hosts\e[0m"
         echo "--------------------------"
     fi
 else
@@ -382,4 +385,3 @@ fi
 main
 echo ""
 echo -e "\e[1;32m------------------[+] Finished [+]---------------------\e[0m"
-
