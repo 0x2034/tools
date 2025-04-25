@@ -129,7 +129,7 @@ web_2(){
   echo "--------------------------"
   curl $FULL_DOMAIN -k | grep -oE '\b[a-zA-Z0-9._-]+\.(htb|thm|com|org|net|edu|gov|mil|int|co|us|uk|ca|de|jp|fr|au|eg)\b'
   echo "--------------------------"
-  python $HOME/Downloads/tools/Files/Hash_extraction.py $FULL_DOMAIN
+  python $HOME/Downloads/tools/Files/Hash_extraction.py $FULL_DOMAIN 2>/dev/null
   echo "--------------------------"
   gnome-terminal -- bash -c "feroxbuster --url $FULL_DOMAIN --random-agent --filter-status 404 -k  ; sleep 5 ; rm $HOME/Downloads/tools/Files/*.state ; exec bash" 
   echo "--------------------------"
@@ -141,6 +141,7 @@ web_2(){
   echo "--------------------------"
   sleep 5
   gnome-terminal -- bash -c "for STATUS_CODE in \"\" \"-b 404\" \"-b 404,429\" \"-b 404,429,301\" \"-k -b 301,404,429,403\" \"-k -b 301,404,403,300,429\" \"-k -b 301,302,404,403,401,429,300\" \"-k -b 200\"; do echo 'Running gobuster'; gobuster dir -u \"$FULL_DOMAIN\" -w /usr/share/wordlists/rockyou.txt --no-error --exclude-length 0 \$STATUS_CODE --random-agent; exit_code=\$?; if [[ \$exit_code -eq 0 ]]; then break; fi; done; exec bash"
+  echo "--------------------------"
   sleep 2
   gnome-terminal -- bash -c "wpscan --url $FULL_DOMAIN --disable-tls-checks --ignore-main-redirect --no-update ; wpscan --url $FULL_DOMAIN --disable-tls-checks --ignore-main-redirect --no-update --enumerate u ; exec bash"
   if [ "$flag_3" = true ]
