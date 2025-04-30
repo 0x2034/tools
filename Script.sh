@@ -17,13 +17,15 @@ echo -e "\e[1;32m
 
 network(){
 echo ""
-echo -e "\e[1;35m--------------- [+] NETWORK [+] --------------\e[0m"
+echo -e "\e[1;35m--------------- [+] NETWORK [+] ---------------\e[0m"
 echo ""
 if [ "$flag_4" = true ]
 then
     :
 else 
     if nc -zv -w 5 $DOMAIN 21 2>/dev/null; then
+              echo -e "\e[1;32m[+]-- FTP Enumeration on $DOMAIN --[+]\e[0m"
+              echo ""
               ftp -n $DOMAIN <<END_SCRIPT
 user Anonymous Anonymous
 ls        
@@ -31,44 +33,53 @@ bye
 END_SCRIPT
     fi
     echo "--------------------------"
-    if nc -zv -w 5 $DOMAIN 25 2>/dev/null; then
-       gnome-terminal -- bash -c "smtp-user-enum -U /usr/share/wordlists/metasploit/unix_users.txt $DOMAIN 25 ; exec bash" 
+    if nc -zv -w 5 $DOMAIN 25 2>/dev/null || nc -zv -w 5 $DOMAIN 587 2>/dev/null; then
+       gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- SMTP Enumeration on $DOMAIN --[+]\e[0m' ; echo "" ; smtp-user-enum -U /usr/share/wordlists/metasploit/unix_users.txt $DOMAIN 25 ; exec bash" 
     fi
     echo "--------------------------"
-    if nc -zv -w 5 $DOMAIN 111 2>/dev/null; then
+    if nc -zv -w 5 $DOMAIN 111 2>/dev/null || nc -zv -w 5 $DOMAIN 2049 2>/dev/null; then
        output=$(timeout 10s showmount -e $DOMAIN 2>&1)
        line_count=$(echo "$output" | wc -l)
        if [ $line_count -gt 1 ]; then
-           gnome-terminal -- bash -c "showmount -e $DOMAIN ; exec bash"
+           gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- NFS Enumeration on $DOMAIN --[+]\e[0m' ; echo "" ; showmount -e $DOMAIN ; exec bash"
        else
            :
        fi
     fi
     echo "--------------------------"
     if nc -zv -w 5 $DOMAIN 139 2>/dev/null || nc -zv -w 5 $DOMAIN 445 2>/dev/null; then
+       echo ""
+       echo -e "\e[1;32m[+]-- Enum4Linux on $DOMAIN --[+]\e[0m"
+       echo ""
        enum4linux $DOMAIN
+       echo -e "\e[1;32m[+]-- LookupSID on $DOMAIN --[+]\e[0m"
+       echo ""
        lookupsid.py -no-pass guest@$DOMAIN 20000
     fi
     echo "--------------------------"
-    if nc -zv -w 5 $DOMAIN 161 2>/dev/null || nc -zvu -w 5 $DOMAIN 161 2>/dev/null; then
-       output=$(timeout 10s snmpwalk -v 2c -c public $DOMAIN 2>/dev/null || timeout 10s snmpwalk -v 1 -c public $DOMAIN 2>/dev/null)
-       line_count=$(echo "$output" | wc -l)
-       if [ $line_count -gt 5 ]; then
-           gnome-terminal -- bash -c "snmpwalk -v 2c -c public $DOMAIN ; snmpwalk -v 1 -c public $DOMAIN ; exec bash"
-       else
-           :
-       fi
-    fi
-    echo "--------------------------"
-    if nc -zv -w 5 $DOMAIN 587 2>/dev/null; then
-       gnome-terminal -- bash -c "smtp-user-enum -U /usr/share/wordlists/metasploit/unix_users.txt $DOMAIN 587 ; exec bash" 
+    if nc -zv -w 5 "$DOMAIN" 161 2>/dev/null || nc -zvu -w 5 "$DOMAIN" 161 2>/dev/null; then
+        gnome-terminal -- bash -c "
+        echo -e '\e[1;32m[+]-- SNMP Enumeration on $FULL_DOMAIN --[+]\e[0m'
+        echo ''
+        wordlist='/usr/share/wordlists/seclists/Discovery/SNMP/common-snmp-community-strings-onesixtyone.txt'
+        for comm in \$(cat \"\$wordlist\"); do
+            echo -e '\e[1;35m-----[+] Testing community string: '\$comm'  [+]-----\e[0m'
+            timeout 2s snmpwalk -v 2c -c \"\$comm\" \"$DOMAIN\" || echo -e '\e[1;38m--------------------\e[0m'
+            timeout 2s snmpwalk -v 1 -c \"\$comm\" \"$DOMAIN\"
+            echo -e '\e[1;39m[+] Commands => snmpwalk -v 2c '\$comm' $DOMAIN || snmpwalk -v 1 -c '\$comm' $DOMAIN [+]\e[0m'
+            echo ''
+        done
+        exec bash"
     fi
     echo "--------------------------"
     if nc -zv -w 5 $DOMAIN 389 2>/dev/null || nc -zv -w 5 $DOMAIN 636 2>/dev/null; then
-       gnome-terminal -- bash -c "python3  $HOME/Downloads/tools/Folders/Windapsearch/windapsearch.py -U --full --dc-ip $DOMAIN ; exec bash"         
+       gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- Windsearch on $DOMAIN --[+]\e[0m' ; echo "" ; python3 $HOME/Downloads/tools/Folders/Windapsearch/windapsearch.py -U --full --dc-ip $DOMAIN ; exec bash"         
     fi
     echo "--------------------------"
     if nc -zv -w 5 $DOMAIN 88 2>/dev/null; then
+       echo ""
+       echo -e "\e[1;32m[+]-- Kerbrute on $DOMAIN --[+]\e[0m"
+       echo ""
        if  $HOME/Downloads/tools/Files/Kerbrute userenum -d $DOMAIN --dc $HOSTS_ENTRY /usr/share/wordlists/rockyou.txt
        then
            :
@@ -84,15 +95,15 @@ fi
 web_2(){
   PROTOCOL=$1
   FULL_DOMAIN="$PROTOCOL://$DOMAIN"
-  echo "--------------------------"
-  echo "[+]--- Scanning $FULL_DOMAIN ---[+]"
-  echo "--------------------------"
-  echo ""
-  gnome-terminal -- bash -c "nikto -h $FULL_DOMAIN -C all ; exec bash"
+  echo -e "                                     \e[1;37m[+]----- Scanning $FULL_DOMAIN -----[+]\e[0m"
+  echo "" 
+  gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- Nikto on $FULL_DOMAIN --[+]\e[0m' ; echo "" ; nikto -h $FULL_DOMAIN -C all ; exec bash"
   if [[ ! $DOMAIN =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
      if [ -z "$HOSTS_ENTRY" ]; then
-          ffuf -w /usr/share/wordlists/amass/test.txt -u $FULL_DOMAIN/ -H "Host: FUZZ.${DOMAIN}" >> $HOME/myscript_output/test.txt
-          file="$HOME/myscript_output/test.txt"
+          echo -e "dasdddd445ddddda445sd\ndasdsada4sdsdasd54654\ndsdasdd45d4a5sd4as5d4\n5445dasd4554dasd45ddd\n455ddasd5512das2da2d2\ndasdas5d5asd5asd5asd4\ndas5das5d4as5d4asd5as\nds5d5454das5d4a5d12dd\ndasd554d21d2ad8dadada\ndadadasd545d45ad4sd5s\ndasd4a5d4a5sdas5d4a5d\nd5asd4a5d4as5d4sd55dd\nda5sdas4da5d4as5dad54\nda5d454d45da45das4ddd\ndas5d4ad54as5da4dasdd\nda5d4a5d4a4dad54ds4dd\nd5ad4a5ds5d4dsd4s4dd5\n4d5ad4a5d4a5d4d5d455d\nadasdadasd45ad4a5s4dd\nd5sd4ad5a4da5d45dd4dd\nd5ad4a5d4as5das4d5ddd" > $HOME/myscript_output/test.txt
+          ffuf -w $HOME/myscript_output/test.txt -u $FULL_DOMAIN/ -H "Host: FUZZ.${DOMAIN}" >> $HOME/myscript_output/test1.txt
+          echo ""
+          file="$HOME/myscript_output/test1.txt"
           while IFS= read -r line; do
                 if echo "$line" | grep -q "Size"; then
                     size=$(echo "$line" | sed -n 's/.*Size: \([0-9]\+\),.*/\1/p')
@@ -105,8 +116,10 @@ web_2(){
                gnome-terminal -- bash -c "ffuf -w /usr/share/wordlists/amass/subdomains-top1mil-110000.txt -u $FULL_DOMAIN/ -H 'Host: FUZZ.${DOMAIN}' -mc 200,302,403,301 -c ; exec bash"
           fi
      else 
-          ffuf -w /usr/share/wordlists/amass/test.txt -u $FULL_DOMAIN/ -H "Host: FUZZ.${DOMAIN}" >> $HOME/myscript_output/test.txt
-          file="$HOME/myscript_output/test.txt"
+          echo -e "dasdddd445ddddda445sd\ndasdsada4sdsdasd54654\ndsdasdd45d4a5sd4as5d4\n5445dasd4554dasd45ddd\n455ddasd5512das2da2d2\ndasdas5d5asd5asd5asd4\ndas5das5d4as5d4asd5as\nds5d5454das5d4a5d12dd\ndasd554d21d2ad8dadada\ndadadasd545d45ad4sd5s\ndasd4a5d4a5sdas5d4a5d\nd5asd4a5d4as5d4sd55dd\nda5sdas4da5d4as5dad54\nda5d454d45da45das4ddd\ndas5d4ad54as5da4dasdd\nda5d4a5d4a4dad54ds4dd\nd5ad4a5ds5d4dsd4s4dd5\n4d5ad4a5d4a5d4d5d455d\nadasdadasd45ad4a5s4dd\nd5sd4ad5a4da5d45dd4dd\nd5ad4a5d4as5das4d5ddd" > $HOME/myscript_output/test.txt
+          ffuf -w $HOME/myscript_output/test.txt -u $FULL_DOMAIN/ -H "Host: FUZZ.${DOMAIN}" >> $HOME/myscript_output/test1.txt  
+          echo ""
+          file="$HOME/myscript_output/test1.txt" 
           while IFS= read -r line; do
                 if echo "$line" | grep -q "Size"; then
                    size=$(echo "$line" | sed -n 's/.*Size: \([0-9]\+\),.*/\1/p')
@@ -121,20 +134,28 @@ web_2(){
      fi 
   fi
   TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
-  OUTPUT_DIR="$HOME/myscript_output/.git_${TIMESTAMP}_$DOMAIN"
+  OUTPUT_DIR="$HOME/myscript_output/.git_${TIMESTAMP}_$FULL_DOMAIN"
   mkdir -p "$OUTPUT_DIR"
+  echo -e "\e[1;32m[+]-- GitDumper on $FULL_DOMAIN --[+]\e[0m"
+  echo -e ""
   $HOME/Downloads/tools/Files/Gitdumper.sh "$FULL_DOMAIN/.git/" "$OUTPUT_DIR"
   echo "--------------------------"
+  echo -e "\e[1;32m[+]-- Ds_Walk on $FULL_DOMAIN --[+]\e[0m"
+  echo "" 
   python $HOME/Downloads/tools/Folders/DS_Walk/ds_walk.py -u $FULL_DOMAIN
   echo "--------------------------"
+  echo -e "\e[1;32m[+]-- Page Source Domains on $FULL_DOMAIN --[+]\e[0m"
+  echo "" 
   curl $FULL_DOMAIN -k | grep -oE '\b[a-zA-Z0-9._-]+\.(htb|thm|com|org|net|edu|gov|mil|int|co|us|uk|ca|de|jp|fr|au|eg)\b'
   echo "--------------------------"
+  echo -e "\e[1;32m[+]-- Hash Extraction on $FULL_DOMAIN --[+]\e[0m"
+  echo "" 
   python $HOME/Downloads/tools/Files/Hash_extraction.py $FULL_DOMAIN 2>/dev/null
   echo "--------------------------"
-  gnome-terminal -- bash -c "feroxbuster --url $FULL_DOMAIN --random-agent --filter-status 404 -k  ; sleep 5 ; rm $HOME/Downloads/tools/Files/*.state ; exec bash" 
+  gnome-terminal -- bash -c "feroxbuster --url $FULL_DOMAIN --random-agent --filter-status 404 -k ; exec bash" 
   echo "--------------------------"
   sleep 5
-  gnome-terminal -- bash -c "dirsearch -u $FULL_DOMAIN -r --random-agent --exclude-status 404 ; sleep 10 ; rm -rf $HOME/Downloads/tools/Files/reports ; exec bash"
+  gnome-terminal -- bash -c "dirsearch -u $FULL_DOMAIN -r --random-agent --exclude-status 404 ; exec bash"
   echo "--------------------------"
   sleep 2
   gnome-terminal -- bash -c "for STATUS_CODE in \"\" \"-b 404\" \"-b 404,429\" \"-b 404,429,301\" \"-k -b 301,404,429,403\" \"-k -b 301,404,403,300,429\" \"-k -b 301,302,404,403,401,429,300\" \"-k -b 200\"; do echo 'Running gobuster'; gobuster dir -u \"$FULL_DOMAIN\" -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt --no-error --exclude-length 0 \$STATUS_CODE --random-agent; exit_code=\$?; if [[ \$exit_code -eq 0 ]]; then break; fi; done; exec bash"
@@ -143,16 +164,17 @@ web_2(){
   gnome-terminal -- bash -c "for STATUS_CODE in \"\" \"-b 404\" \"-b 404,429\" \"-b 404,429,301\" \"-k -b 301,404,429,403\" \"-k -b 301,404,403,300,429\" \"-k -b 301,302,404,403,401,429,300\" \"-k -b 200\"; do echo 'Running gobuster'; gobuster dir -u \"$FULL_DOMAIN\" -w /usr/share/wordlists/rockyou.txt --no-error --exclude-length 0 \$STATUS_CODE --random-agent; exit_code=\$?; if [[ \$exit_code -eq 0 ]]; then break; fi; done; exec bash"
   echo "--------------------------"
   sleep 2
-  gnome-terminal -- bash -c "wpscan --url $FULL_DOMAIN --disable-tls-checks --ignore-main-redirect --no-update ; wpscan --url $FULL_DOMAIN --disable-tls-checks --ignore-main-redirect --no-update --enumerate u ; exec bash"
-  if [ "$flag_3" = true ]
-  then
-      :
-  else
-      echo -e "\e[1;36m[+] RECON [+]\e[0m"
-  fi
+  gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- WPscan on $FULL_DOMAIN --[+]\e[0m' ; echo "" ; wpscan --url $FULL_DOMAIN --disable-tls-checks --ignore-main-redirect --no-update ; wpscan --url $FULL_DOMAIN --disable-tls-checks --ignore-main-redirect --no-update --enumerate u ; exec bash"
 }
 web_1(){
    echo ""
+   if [ "$flag_3" = true ]
+   then
+       :
+   else
+       echo -e "\e[1;35m---------------[+] RECON [+] ---------------\e[0m"
+       echo ""
+   fi
    echo -e "\e[1;35m--------------- [+] WEB [+] ---------------\e[0m"
    echo ""
    HTTP_OPEN=false
@@ -229,14 +251,14 @@ main(){
      then
         if [ "$flag_6" = true ];
         then
-            gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- TCP ALL Ports on $DOMAIN --[+]\n---------------------------------\e[0m' ; nmap $DOMAIN -Pn -p- -T 5 ; exec bash"
-            gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\n---------------------------------\e[0m' ; nmap $DOMAIN -Pn -sU -T 5 ; exec bash"    
+            gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- TCP All Ports on $DOMAIN --[+]\e[0m'; echo "" ; nmap $DOMAIN -Pn -p- -T 5 ; exec bash"
+            gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\e[0m'; echo "" ; nmap $DOMAIN -Pn -sU -T 5 ; exec bash"    
             web_1 
             network 
         else
             nmap -A -Pn $DOMAIN
-            gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- TCP ALL Ports on $DOMAIN --[+]\n---------------------------------\e[0m' ; nmap $DOMAIN -Pn -p- -T 5 ; exec bash"
-            gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\n---------------------------------\e[0m' ; nmap $DOMAIN -Pn -sU -T 5 ; exec bash"     
+            gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- TCP All Ports on $DOMAIN --[+]\e[0m'; echo "" ; nmap $DOMAIN -Pn -p- -T 5 ; exec bash"
+            gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\e[0m'; echo "" ; nmap $DOMAIN -Pn -sU -T 5 ; exec bash"     
             web_1   
             network 
         fi
@@ -244,14 +266,14 @@ main(){
          if ping -c3 $DOMAIN 2>/dev/null; then
             if [ "$flag_6" = true ];
             then 
-                gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- TCP ALL Ports on $DOMAIN --[+]\n---------------------------------\e[0m' ; nmap $DOMAIN -Pn -p- -T 5 ; exec bash"
-                gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\n---------------------------------\e[0m' ; nmap $DOMAIN -Pn -sU -T 5 ; exec bash"    
+                gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- TCP All Ports on $DOMAIN --[+]\e[0m'; echo "" ; nmap $DOMAIN -Pn -p- -T 5 ; exec bash"
+                gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\e[0m'; echo "" ; nmap $DOMAIN -Pn -sU -T 5 ; exec bash"    
                 web_1  
                 network  
             else
                 nmap -A -Pn $DOMAIN
-                gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- TCP ALL Ports on $DOMAIN --[+]\n---------------------------------\e[0m' ; nmap $DOMAIN -Pn -p- -T 5 ; exec bash"
-                gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\n---------------------------------\e[0m' ; nmap $DOMAIN -Pn -sU -T 5 ; exec bash"    
+                gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- TCP All Ports on $DOMAIN --[+]\e[0m'; echo "" ; nmap $DOMAIN -Pn -p- -T 5 ; exec bash"
+                gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\e[0m'; echo "" ; nmap $DOMAIN -Pn -sU -T 5 ; exec bash"    
                 web_1   
                 network 
             fi 
@@ -260,14 +282,14 @@ main(){
             echo ""
             if ping -c25 $DOMAIN 2>/dev/null; then
                if [ "$flag_6" = true ]; then
-                  gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- TCP ALL Ports on $DOMAIN --[+]\n---------------------------------\e[0m' ; nmap $DOMAIN -Pn -p- -T 5 ; exec bash"
-                  gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\n---------------------------------\e[0m' ; nmap $DOMAIN -Pn -sU -T 5 ; exec bash"    
+                  gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- TCP All Ports on $DOMAIN --[+]\e[0m'; echo "" ; nmap $DOMAIN -Pn -p- -T 5 ; exec bash"
+                  gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\e[0m'; echo "" ; nmap $DOMAIN -Pn -sU -T 5 ; exec bash"    
                   web_1  
                   network 
                else
                   nmap -A -Pn $DOMAIN
-                  gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- TCP ALL Ports on $DOMAIN --[+]\n---------------------------------\e[0m' ; nmap $DOMAIN -Pn -p- -T 5 ; exec bash"
-                  gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\n---------------------------------\e[0m' ; nmap $DOMAIN -Pn -sU -T 5 ; exec bash"    
+                  gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- TCP All Ports on $DOMAIN --[+]\e[0m'; echo "" ; nmap $DOMAIN -Pn -p- -T 5 ; exec bash"
+                  gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\e[0m'; echo "" ; nmap $DOMAIN -Pn -sU -T 5 ; exec bash"    
                   web_1     
                   network 
                fi
