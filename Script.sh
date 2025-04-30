@@ -57,9 +57,9 @@ END_SCRIPT
        lookupsid.py -no-pass guest@$DOMAIN 20000
     fi
     echo "--------------------------"
-    if nc -zv -w 5 "$DOMAIN" 161 2>/dev/null || nc -zvu -w 5 "$DOMAIN" 161 2>/dev/null; then
+    if nc -zv -w 5 $DOMAIN 161 2>/dev/null || nc -zvu -w 5 $DOMAIN 161 2>/dev/null; then
         gnome-terminal -- bash -c "
-        echo -e '\e[1;32m[+]-- SNMP Enumeration on $FULL_DOMAIN --[+]\e[0m'
+        echo -e '\e[1;32m[+]-- SNMP Enumeration on $DOMAIN --[+]\e[0m'
         echo ''
         wordlist='/usr/share/wordlists/seclists/Discovery/SNMP/common-snmp-community-strings-onesixtyone.txt'
         for comm in \$(cat \"\$wordlist\"); do
@@ -251,13 +251,13 @@ main(){
      then
         if [ "$flag_6" = true ];
         then
-            gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- TCP All Ports on $DOMAIN --[+]\e[0m'; echo "" ; nmap $DOMAIN -Pn -p- -T 5 ; exec bash"
+            gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- TCP all Ports on $DOMAIN --[+]\e[0m'; echo "" ; nmap $DOMAIN -Pn -p- -T 5 ; exec bash"
             gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\e[0m'; echo "" ; nmap $DOMAIN -Pn -sU -T 5 ; exec bash"    
             web_1 
             network 
         else
             nmap -A -Pn $DOMAIN
-            gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- TCP All Ports on $DOMAIN --[+]\e[0m'; echo "" ; nmap $DOMAIN -Pn -p- -T 5 ; exec bash"
+            gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- TCP all Ports on $DOMAIN --[+]\e[0m'; echo "" ; nmap $DOMAIN -Pn -p- -T 5 ; exec bash"
             gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\e[0m'; echo "" ; nmap $DOMAIN -Pn -sU -T 5 ; exec bash"     
             web_1   
             network 
@@ -266,13 +266,13 @@ main(){
          if ping -c3 $DOMAIN 2>/dev/null; then
             if [ "$flag_6" = true ];
             then 
-                gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- TCP All Ports on $DOMAIN --[+]\e[0m'; echo "" ; nmap $DOMAIN -Pn -p- -T 5 ; exec bash"
+                gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- TCP all Ports on $DOMAIN --[+]\e[0m'; echo "" ; nmap $DOMAIN -Pn -p- -T 5 ; exec bash"
                 gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\e[0m'; echo "" ; nmap $DOMAIN -Pn -sU -T 5 ; exec bash"    
                 web_1  
                 network  
             else
                 nmap -A -Pn $DOMAIN
-                gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- TCP All Ports on $DOMAIN --[+]\e[0m'; echo "" ; nmap $DOMAIN -Pn -p- -T 5 ; exec bash"
+                gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- TCP all Ports on $DOMAIN --[+]\e[0m'; echo "" ; nmap $DOMAIN -Pn -p- -T 5 ; exec bash"
                 gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\e[0m'; echo "" ; nmap $DOMAIN -Pn -sU -T 5 ; exec bash"    
                 web_1   
                 network 
@@ -282,13 +282,13 @@ main(){
             echo ""
             if ping -c25 $DOMAIN 2>/dev/null; then
                if [ "$flag_6" = true ]; then
-                  gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- TCP All Ports on $DOMAIN --[+]\e[0m'; echo "" ; nmap $DOMAIN -Pn -p- -T 5 ; exec bash"
+                  gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- TCP all Ports on $DOMAIN --[+]\e[0m'; echo "" ; nmap $DOMAIN -Pn -p- -T 5 ; exec bash"
                   gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\e[0m'; echo "" ; nmap $DOMAIN -Pn -sU -T 5 ; exec bash"    
                   web_1  
                   network 
                else
                   nmap -A -Pn $DOMAIN
-                  gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- TCP All Ports on $DOMAIN --[+]\e[0m'; echo "" ; nmap $DOMAIN -Pn -p- -T 5 ; exec bash"
+                  gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- TCP all Ports on $DOMAIN --[+]\e[0m'; echo "" ; nmap $DOMAIN -Pn -p- -T 5 ; exec bash"
                   gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\e[0m'; echo "" ; nmap $DOMAIN -Pn -sU -T 5 ; exec bash"    
                   web_1     
                   network 
