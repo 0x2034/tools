@@ -5,7 +5,6 @@
 ####  [+]--    CyberThug    --[+]  ####
 ########################################
 
-
 echo -e "\e[1;32m
               ______      __             ________
              / ____/_  __/ /_  ___  ____/_  __/ /_  __  __._____
@@ -100,10 +99,10 @@ web_2(){
   gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- Nikto on $FULL_DOMAIN --[+]\e[0m' ; echo "" ; nikto -h $FULL_DOMAIN -C all ; exec bash"
   if [[ ! $DOMAIN =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
      if [ -z "$HOSTS_ENTRY" ]; then
-          echo -e "dasdddd445ddddda445sd\ndasdsada4sdsdasd54654\ndsdasdd45d4a5sd4as5d4\n5445dasd4554dasd45ddd\n455ddasd5512das2da2d2\ndasdas5d5asd5asd5asd4\ndas5das5d4as5d4asd5as\nds5d5454das5d4a5d12dd\ndasd554d21d2ad8dadada\ndadadasd545d45ad4sd5s\ndasd4a5d4a5sdas5d4a5d\nd5asd4a5d4as5d4sd55dd\nda5sdas4da5d4as5dad54\nda5d454d45da45das4ddd\ndas5d4ad54as5da4dasdd\nda5d4a5d4a4dad54ds4dd\nd5ad4a5ds5d4dsd4s4dd5\n4d5ad4a5d4a5d4d5d455d\nadasdadasd45ad4a5s4dd\nd5sd4ad5a4da5d45dd4dd\nd5ad4a5d4as5das4d5ddd" > $HOME/myscript_output/test.txt
-          ffuf -w $HOME/myscript_output/test.txt -u $FULL_DOMAIN/ -H "Host: FUZZ.${DOMAIN}" >> $HOME/myscript_output/test1.txt
+          echo -e "dasdddd445ddddda445sd\ndasdsada4sdsdasd54654\ndsdasdd45d4a5sd4as5d4\n5445dasd4554dasd45ddd\n455ddasd5512das2da2d2\ndasdas5d5asd5asd5asd4\ndas5das5d4as5d4asd5as\nds5d5454das5d4a5d12dd\ndasd554d21d2ad8dadada\ndadadasd545d45ad4sd5s\ndasd4a5d4a5sdas5d4a5d\nd5asd4a5d4as5d4sd55dd\nda5sdas4da5d4as5dad54\nda5d454d45da45das4ddd\ndas5d4ad54as5da4dasdd\nda5d4a5d4a4dad54ds4dd\nd5ad4a5ds5d4dsd4s4dd5\n4d5ad4a5d4a5d4d5d455d\nadasdadasd45ad4a5s4dd\nd5sd4ad5a4da5d45dd4dd\nd5ad4a5d4as5das4d5ddd" > $HOME/CyberThug_output/.test.txt
+          ffuf -w $HOME/CyberThug_output/.test.txt -u $FULL_DOMAIN/ -H "Host: FUZZ.${DOMAIN}" >> $HOME/CyberThug_output/.test1.txt
           echo ""
-          file="$HOME/myscript_output/test1.txt"
+          file="$HOME/CyberThug_output/.test1.txt"
           while IFS= read -r line; do
                 if echo "$line" | grep -q "Size"; then
                     size=$(echo "$line" | sed -n 's/.*Size: \([0-9]\+\),.*/\1/p')
@@ -116,10 +115,10 @@ web_2(){
                gnome-terminal -- bash -c "ffuf -w /usr/share/wordlists/amass/subdomains-top1mil-110000.txt -u $FULL_DOMAIN/ -H 'Host: FUZZ.${DOMAIN}' -mc 200,302,403,301 -c ; exec bash"
           fi
      else 
-          echo -e "dasdddd445ddddda445sd\ndasdsada4sdsdasd54654\ndsdasdd45d4a5sd4as5d4\n5445dasd4554dasd45ddd\n455ddasd5512das2da2d2\ndasdas5d5asd5asd5asd4\ndas5das5d4as5d4asd5as\nds5d5454das5d4a5d12dd\ndasd554d21d2ad8dadada\ndadadasd545d45ad4sd5s\ndasd4a5d4a5sdas5d4a5d\nd5asd4a5d4as5d4sd55dd\nda5sdas4da5d4as5dad54\nda5d454d45da45das4ddd\ndas5d4ad54as5da4dasdd\nda5d4a5d4a4dad54ds4dd\nd5ad4a5ds5d4dsd4s4dd5\n4d5ad4a5d4a5d4d5d455d\nadasdadasd45ad4a5s4dd\nd5sd4ad5a4da5d45dd4dd\nd5ad4a5d4as5das4d5ddd" > $HOME/myscript_output/test.txt
-          ffuf -w $HOME/myscript_output/test.txt -u $FULL_DOMAIN/ -H "Host: FUZZ.${DOMAIN}" >> $HOME/myscript_output/test1.txt  
+          echo -e "dasdddd445ddddda445sd\ndasdsada4sdsdasd54654\ndsdasdd45d4a5sd4as5d4\n5445dasd4554dasd45ddd\n455ddasd5512das2da2d2\ndasdas5d5asd5asd5asd4\ndas5das5d4as5d4asd5as\nds5d5454das5d4a5d12dd\ndasd554d21d2ad8dadada\ndadadasd545d45ad4sd5s\ndasd4a5d4a5sdas5d4a5d\nd5asd4a5d4as5d4sd55dd\nda5sdas4da5d4as5dad54\nda5d454d45da45das4ddd\ndas5d4ad54as5da4dasdd\nda5d4a5d4a4dad54ds4dd\nd5ad4a5ds5d4dsd4s4dd5\n4d5ad4a5d4a5d4d5d455d\nadasdadasd45ad4a5s4dd\nd5sd4ad5a4da5d45dd4dd\nd5ad4a5d4as5das4d5ddd" > $HOME/CyberThug_output/.test.txt
+          ffuf -w $HOME/CyberThug_output/.test.txt -u $FULL_DOMAIN/ -H "Host: FUZZ.${DOMAIN}" >> $HOME/CyberThug_output/.test1.txt  
           echo ""
-          file="$HOME/myscript_output/test1.txt" 
+          file="$HOME/CyberThug_output/.test1.txt" 
           while IFS= read -r line; do
                 if echo "$line" | grep -q "Size"; then
                    size=$(echo "$line" | sed -n 's/.*Size: \([0-9]\+\),.*/\1/p')
@@ -134,7 +133,8 @@ web_2(){
      fi 
   fi
   TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
-  OUTPUT_DIR="$HOME/myscript_output/.git_${TIMESTAMP}_$FULL_DOMAIN"
+  SANITIZED_DOMAIN=$(echo "$FULL_DOMAIN" | sed 's~://~_~')
+  OUTPUT_DIR="$HOME/CyberThug_output/GitDumper/git_${TIMESTAMP}_${SANITIZED_DOMAIN}"
   mkdir -p "$OUTPUT_DIR"
   echo -e "\e[1;32m[+]-- GitDumper on $FULL_DOMAIN --[+]\e[0m"
   echo -e ""
@@ -142,7 +142,7 @@ web_2(){
   echo "--------------------------"
   echo -e "\e[1;32m[+]-- Ds_Walk on $FULL_DOMAIN --[+]\e[0m"
   echo "" 
-  python $HOME/Downloads/tools/Folders/DS_Walk/ds_walk.py -u $FULL_DOMAIN
+  python $HOME/Downloads/tools/Folders/DS_Walk/ds_walk.py -u $FULL_DOMAIN 
   echo "--------------------------"
   echo -e "\e[1;32m[+]-- Page Source Domains on $FULL_DOMAIN --[+]\e[0m"
   echo "" 
@@ -411,6 +411,19 @@ else
     DOMAIN=$1
     HOSTS_ENTRY=""
 fi 
+if [ ! -d "$HOME/CyberThug_output" ]; then
+    mkdir -p "$HOME/CyberThug_output"
+    echo "" 
+    echo -e "\e[1;3m\e[1;32m[+]-- $HOME/CyberThug_output Folder Created --[+]\e[0m\e[0m"
+    echo ""
+
+fi
+
+trap 'next_step=true' SIGINT
+if [ "$next_step" = true ]; then
+  next_step=false
+fi
+
 main
 echo ""
 echo -e "\e[1;32m------------------[+] Finished [+]---------------------\e[0m"
