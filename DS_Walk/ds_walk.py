@@ -45,7 +45,7 @@ def saveIndexDS():
     netloc = parsed.netloc
     timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
     filename = f"ds_store_index_{timestamp}_{scheme}_{netloc}"
-    output_dir = os.path.expandvars('$HOME/CyberThug_output/ds_walk')
+    output_dir = os.path.expandvars('$HOME/CyberThug_output/Ds_Walk')
     os.makedirs(output_dir, exist_ok=True)
 
     file_path = os.path.join(output_dir, filename)
