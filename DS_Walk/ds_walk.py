@@ -27,13 +27,13 @@ def getArgs():
 def firstCheck(url):
     s = requests.get(url + "/.DS_Store", verify=False)
     if s.status_code == 200:
-        print(GREEN + "[!] .ds_store file is present on the webserver." + END)
+        print(GREEN + "[!] .ds_store file is present on the webserver" + END)
         ds_index = s.url
         print(GREEN + "[+] Enumerating directories based on .ds_server file" + END)
         return ds_index
 
     else:
-        print(RED + "[X] .ds_store file not found in base directory." + END)
+        print(RED + "[X] .ds_store file not found in base directory" + END)
         sys.exit(0)
 
 
