@@ -29,7 +29,7 @@ def firstCheck(url):
     if s.status_code == 200:
         print(GREEN + "[!] .ds_store file is present on the webserver." + END)
         ds_index = s.url
-        print(GREEN + "[+] Enumerating directories based on .ds_server file:" + END)
+        print(GREEN + "[+] Enumerating directories based on .ds_server file" + END)
         return ds_index
 
     else:
@@ -52,7 +52,7 @@ def saveIndexDS():
 
     with open(file_path, 'wb') as f:
         f.write(index_ds.content)
-    print(f"\033[32mOutput file in => {output_dir} \033[0m")
+    print(f"\033[32m[+] Output file in => {output_dir} \033[0m")
 
 
     return filename
