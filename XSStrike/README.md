@@ -1,3 +1,6 @@
+# command
+# yes y | python3 xsstrike.py -u http://environment.htb/upload?search=s | sed 's/%0a/ /g; s/%0d/ /g; s/%0dx/ /g; s/%09/ /g; s/%09a/ /g'
+
 <h1 align="center">
   <br>
   <a href="https://github.com/s0md3v/XSStrike"><img src="https://image.ibb.co/cpuYoA/xsstrike-logo.png" alt="XSStrike"></a>
