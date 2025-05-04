@@ -1,5 +1,5 @@
 # command
-# yes y | python3 xsstrike.py -u http://environment.htb/upload?search=s | sed 's/%0a/ /g; s/%0d/ /g; s/%0dx/ /g; s/%09/ /g; s/%09a/ /g'
+# yes y | python3 xsstrike.py -u http://?search=s | sed 's/%0a/ /g; s/%0d/ /g; s/%0dx/ /g; s/%09/ /g; s/%09a/ /g'
 
 <h1 align="center">
   <br>
