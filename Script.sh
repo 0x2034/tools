@@ -65,7 +65,7 @@ END_SCRIPT
             echo -e '\e[1;35m-----[+] Testing community string: '\$comm'  [+]-----\e[0m'
             timeout 2s snmpwalk -v 2c -c \"\$comm\" \"$DOMAIN\" || echo -e '\e[1;38m--------------------\e[0m'
             timeout 2s snmpwalk -v 1 -c \"\$comm\" \"$DOMAIN\"
-            echo -e '\e[1;31m[+] Commands => snmpwalk -v 2c -c '\$comm' $DOMAIN || snmpwalk -v 1 -c '\$comm' $DOMAIN [+]\e[0m'
+            echo -e '\e[1;31m[+] Commands => snmpwalk -v 2c -c '\$comm' $DOMAIN -m all || snmpwalk -v 1 -c '\$comm' $DOMAIN -m all [+]\e[0m'
             echo ''
         done
         exec bash"
