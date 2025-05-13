@@ -164,7 +164,7 @@ web_2(){
   gnome-terminal -- bash -c "for STATUS_CODE in \"\" \"-b 404\" \"-b 404,429\" \"-b 404,429,301\" \"-k -b 301,404,429,403\" \"-k -b 301,404,403,300,429\" \"-k -b 301,302,404,403,401,429,300\" \"-k -b 200\"; do echo 'Running gobuster'; gobuster dir -u \"$FULL_DOMAIN\" -w /usr/share/wordlists/rockyou.txt --no-error --exclude-length 0 \$STATUS_CODE --random-agent; exit_code=\$?; if [[ \$exit_code -eq 0 ]]; then break; fi; done; exec bash"
   echo "--------------------------"
   sleep 2
-  gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- WPscan on $FULL_DOMAIN --[+]\e[0m' ; echo "" ; wpscan --url $FULL_DOMAIN --disable-tls-checks --ignore-main-redirect --no-update ; wpscan --url $FULL_DOMAIN --disable-tls-checks --ignore-main-redirect --no-update --enumerate u ; exec bash"
+  gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- WPscan on $FULL_DOMAIN --[+]\e[0m' ; echo "" ; wpscan --url $FULL_DOMAIN --disable-tls-checks --ignore-main-redirect --no-update ; wpscan --url $FULL_DOMAIN --disable-tls-checks --ignore-main-redirect --no-update --enumerate u ; ; wpscan --url  $FULL_DOMAIN --disable-tls-checks --ignore-main-redirect --no-update -e p --plugins-detection aggressive ; exec bash"
 }
 web_1(){
    echo ""
