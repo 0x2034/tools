@@ -1,7 +1,7 @@
 #!/bin/bash 
 
 ########################################
-####  [+]-- Author: 0x2034 --[+]  ####
+####  [+]-- Author: OmarSamy --[+]  ####
 ####  [+]--    CyberThug    --[+]  ####
 ########################################
 
@@ -12,8 +12,7 @@ echo -e "\e[1;32m
            / /___/ /_/ / /_/ /  __/ /   / / / / / / /_/ / /_/ /  
            \____/\__, /_.___/\___/_/   /_/ /_/ /_/\__,_/\__, /  
                 /____/                                 /____/    
-                                                            \e[0m""\e[1;37m0x2034\e[0m"
-
+                                                            \e[0m""\e[1;37mOmarSamy\e[0m"
 
 network(){
 echo ""
@@ -321,6 +320,21 @@ web_1(){
           fi
       fi
    fi
+   echo "--------------------------"
+   if nc -zv -w 5 $DOMAIN 31337 2>/dev/null; then
+      echo -n | openssl s_client -connect $DOMAIN:31337 > /dev/null 2>&1
+      if [ $? -eq 0 ]; then
+         response=$(curl -s -o /dev/null -w "%{http_code}" https://$DOMAIN:31337)
+         if [ "$response" -eq 200 ] || [ "$response" -eq 302 ] || [ "$response" -eq 403 ]; then
+             gnome-terminal -- bash -c "for STATUS_CODE in \"\" \"-b 404\" \"-b 404,429\" \"-b 404,429,301\" \"-k -b 301,404,429,403\" \"-k -b 301,404,403,300,429\" \"-k -b 301,302,404,403,401,429,300\" \"-k -b 200\"; do echo 'Running gobuster'; gobuster dir -u \"https://$DOMAIN:31337\" -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt --no-error --exclude-length 0 \$STATUS_CODE --random-agent; exit_code=\$?; if [[ \$exit_code -eq 0 ]]; then break; fi; done; exec bash"
+         fi
+      else
+          response=$(curl -s -o /dev/null -w "%{http_code}" http://$DOMAIN:31337)
+          if [ "$response" -eq 200 ] || [ "$response" -eq 302 ] || [ "$response" -eq 403 ]; then
+             gnome-terminal -- bash -c "for STATUS_CODE in \"\" \"-b 404\" \"-b 404,429\" \"-b 404,429,301\" \"-k -b 301,404,429,403\" \"-k -b 301,404,403,300,429\" \"-k -b 301,302,404,403,401,429,300\" \"-k -b 200\"; do echo 'Running gobuster'; gobuster dir -u \"http://$DOMAIN:31337\" -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt --no-error --exclude-length 0 \$STATUS_CODE --random-agent; exit_code=\$?; if [[ \$exit_code -eq 0 ]]; then break; fi; done; exec bash"
+          fi
+      fi
+   fi
 }
 main(){
      if [ "$flag_5" = true ];
@@ -332,7 +346,7 @@ main(){
             web_1 
             network 
         else
-            nmap -A -Pn $DOMAIN
+            nmap -A -vv -Pn $DOMAIN
             gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- TCP all Ports on $DOMAIN --[+]\e[0m'; echo "" ; nmap $DOMAIN -Pn -p- -T 5 ; exec bash"
             gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\e[0m'; echo "" ; nmap $DOMAIN -Pn -sU -T 5 ; exec bash"     
             web_1   
@@ -347,7 +361,7 @@ main(){
                 web_1  
                 network  
             else
-                nmap -A -Pn $DOMAIN
+                nmap -A -vv -Pn $DOMAIN
                 gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- TCP all Ports on $DOMAIN --[+]\e[0m'; echo "" ; nmap $DOMAIN -Pn -p- -T 5 ; exec bash"
                 gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\e[0m'; echo "" ; nmap $DOMAIN -Pn -sU -T 5 ; exec bash"    
                 web_1   
@@ -363,7 +377,7 @@ main(){
                   web_1  
                   network 
                else
-                  nmap -A -Pn $DOMAIN
+                  nmap -A -vv -Pn $DOMAIN
                   gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- TCP all Ports on $DOMAIN --[+]\e[0m'; echo "" ; nmap $DOMAIN -Pn -p- -T 5 ; exec bash"
                   gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\e[0m'; echo "" ; nmap $DOMAIN -Pn -sU -T 5 ; exec bash"    
                   web_1     
@@ -503,5 +517,4 @@ fi
 main
 echo ""
 echo -e "\e[1;32m------------------[+] Finished [+]---------------------\e[0m"
-
-                                                        
+                                                                                    
