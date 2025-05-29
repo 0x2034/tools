@@ -1,7 +1,7 @@
 #!/bin/bash 
 
 ########################################
-####  [+]--  Author: 0x2034  --[+]  ####
+####  [+]-- Author: 0x2034 --[+]  ####
 ####  [+]--    CyberThug    --[+]  ####
 ########################################
 
@@ -38,7 +38,9 @@ END_SCRIPT
     echo "--------------------------"
     if nc -zv -w 5 $DOMAIN 53 2>/dev/null || nc -zv -w 5 $DOMAIN 53 2>/dev/null; then
        ip=$(ping -c 1 intelligence.htb | awk -F'[()]' '/PING/{print $2}')
-       gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- DNS Enumeration on $DOMAIN --[+]\e[0m' ; echo "" ; dig @$ip $DOMAIN ; echo "" ; echo -e '\e[1;32m---------------\e[0m' ; echo "" ; dig axfr @$ip $DOMAIN ; echo "" ;echo -e '\e[1;32m---------------\e[0m' ; echo "" ; dnsenum --dnsserver $ip -f /usr/share/seclists/Discovery/DNS/bitquark-subdomains-top100000.txt -o /tmp/dns_enum $DOMAIN ; exec bash"
+       mkdir -p "$HOME/CyberThug_output/dnsenum"
+       Time=$(date +"%Y-%m-%d_%H-%M-%S")
+       gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- DNS Enumeration on $DOMAIN --[+]\e[0m' ; echo "" ; dig @$ip $DOMAIN ; echo "" ; echo -e '\e[1;32m---------------\e[0m' ; echo "" ; dig axfr @$ip $DOMAIN ; echo "" ;echo -e '\e[1;32m---------------\e[0m' ; echo "" ; dnsenum --dnsserver $ip -f /usr/share/seclists/Discovery/DNS/bitquark-subdomains-top100000.txt -o $HOME/CyberThug_output/dnsenum/dns_enum_${DOMAIN}_${Time} $DOMAIN ; exec bash"
     fi
     echo "--------------------------"
     if nc -zv -w 5 $DOMAIN 111 2>/dev/null || nc -zv -w 5 $DOMAIN 2049 2>/dev/null; then
@@ -521,4 +523,5 @@ fi
 
 main
 echo ""
+rm $HOME/Downloads/tools/Files/*.state 2>/dev/null ; rm -r $HOME/Downloads/tools/Files/reports 2>/dev/null
 echo -e "\e[1;32m------------------[+] Finished [+]---------------------\e[0m"
