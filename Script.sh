@@ -1,8 +1,8 @@
 #!/bin/bash 
 
 ########################################
-####  [+]-- Author: 0x2034 --[+]  ####
-####  [+]--    CyberThug    --[+]  ####
+####  [+]-- Author: 0x2034   --[+]  ####
+####   [+]--   CyberThug   --[+]    ####
 ########################################
 
 echo -e "\e[1;32m
@@ -12,7 +12,7 @@ echo -e "\e[1;32m
            / /___/ /_/ / /_/ /  __/ /   / / / / / / /_/ / /_/ /  
            \____/\__, /_.___/\___/_/   /_/ /_/ /_/\__,_/\__, /  
                 /____/                                 /____/    
-                                                            \e[0m""\e[1;37m0x2034\e[0m"
+                                                            \e[0m""\e[1;38m0x2034\e[0m"
 
 network(){
 echo ""
@@ -36,8 +36,8 @@ END_SCRIPT
        gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- SMTP Enumeration on $DOMAIN --[+]\e[0m' ; echo "" ; smtp-user-enum -U /usr/share/wordlists/metasploit/unix_users.txt $DOMAIN 25 ; exec bash" 
     fi
     echo "--------------------------"
-    if nc -zv -w 5 $DOMAIN 53 2>/dev/null || nc -zv -w 5 $DOMAIN 53 2>/dev/null; then
-       ip=$(ping -c 1 intelligence.htb | awk -F'[()]' '/PING/{print $2}')
+    if nc -zv -w 5 $DOMAIN 53 2>/dev/null || nc -zuv -w 5 $DOMAIN 53 2>/dev/null; then
+       ip=$(ping -c 1 $DOMAIN | awk -F'[()]' '/PING/{print $2}')
        mkdir -p "$HOME/CyberThug_output/dnsenum"
        Time=$(date +"%Y-%m-%d_%H-%M-%S")
        gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- DNS Enumeration on $DOMAIN --[+]\e[0m' ; echo "" ; dig @$ip $DOMAIN ; echo "" ; echo -e '\e[1;32m---------------\e[0m' ; echo "" ; dig axfr @$ip $DOMAIN ; echo "" ;echo -e '\e[1;32m---------------\e[0m' ; echo "" ; dnsenum --dnsserver $ip -f /usr/share/seclists/Discovery/DNS/bitquark-subdomains-top100000.txt -o $HOME/CyberThug_output/dnsenum/dns_enum_${DOMAIN}_${Time} $DOMAIN ; echo "" ; echo -e '\e[1;32m[+]-- Output File : $HOME/CyberThug_output/dnsenum/dns_enum_${DOMAIN}_${Time} --[+]\e[0m' ; exec bash"
@@ -153,7 +153,7 @@ web_2(){
   echo "--------------------------"
   echo -e "\e[1;32m[+]-- Page Source Domains on $FULL_DOMAIN --[+]\e[0m"
   echo "" 
-  curl $FULL_DOMAIN -k | grep -oE '\b[a-zA-Z0-9._-]+\.(htb|thm|com|org|net|edu|gov|mil|int|co|us|uk|ca|de|jp|fr|au|eg)\b'
+  curl $FULL_DOMAIN -k | grep -oE '\b[a-zA-Z0-9._-]+\.(htb|thm|com|org|net|edu|gov|mil|int|co|us|uk|ca|de|jp|fr|au|eg|local)\b'
   echo "--------------------------"
   echo -e "\e[1;32m[+]-- Hash Extraction on $FULL_DOMAIN --[+]\e[0m"
   echo "" 
@@ -399,21 +399,513 @@ main(){
 }
 help(){
 echo "
-Usage: 
-    ./Script.sh [ip] [domain] flags
-    ./Script.sh [ip] flags
-    ./Script.sh [domain] flags
+╔════════════════════════════════════════════════════╗
+║                ⚡ CyberThug ⚡                     ║
+╚════════════════════════════════════════════════════╝
 
-flags:
+Usage: 
+    cyberthug [ip] [domain] flags
+    cyberthug [ip] flags
+    cyberthug [domain] flags
+    cyberthug flags 
+Flags:
     --no-http: skip port 80 
     --no-https: skip port 443  
-    --no-recon: skip recon part 
-    --no-network: skip network part
-    --no-ping: skip ping part
-    --no-portscan: skip port scanning part
+    --no-recon: skip recon 
+    --no-network: skip network 
+    --no-ping: skip ping 
+    --no-portscan: skip port scanning 
+    -h [help] : display this help menu 
+    -t [tool] : Use a specific tool
 "
 }
+trap 'next_step=true' SIGINT
+if [ "$next_step" = true ]; then
+  next_step=false
+fi
+set -o history
+read_input() {
+    local var_name="$1"
+    local prompt="$2"
+    local default="$3"
+    read -e -i "$default" -p $'\033[35m'"$prompt"$'\033[0m' "$var_name"
+    history -s "${!var_name}"
+}
+if [[ "$1" == "-t" ]]; then
+    banner(){
+     echo -e "\e[1;36m
+     ╔════════════════════════════════════════════════════╗
+     ║                ⚡ CyberThug ⚡                     ║
+     ╚════════════════════════════════════════════════════╝
+     \e[0m"
+       echo -e "\033[35m
+           1) nc
+           2) python_server
+           3) smbclient
+           4) nxc
+       \033[0m"
+       echo ""
+       read_input tool $'\033[35m# \033[0m'
+    }
+    banner
+    if [[ "$tool" == "1" ]]; then
+           while true; do 
+               echo -e "\033[35m
+	        _ __   ___
+ 	       | '_ \ / __|
+	       | | | | (__
+     	       |_| |_|\___|
+               \033[0m"
+               echo "
+                  1) Linux
+                  2) Windows
+               "
+               echo ""
+               read_input choice $'\033[35m# \033[0m'
+               if [[ "$choice" == ".." ]]; then
+                    exec "$0" "$@"  
+               elif [[ "$choice" == "1" ]]; then
+                     echo ""
+                     read_input port $'\033[35mEnter The Port : \033[0m'
+                     if [[ "$port" == "exit" ]]; then
+                         exit 0
+                     fi
+                     DATE=$(date +%F_%H-%M-%S)
+                     PYFILE="/tmp/reverse_shell_Linux_${DATE}.py"
+                     cat > "$PYFILE" << EOF
+import socket
+import threading
+import sys
+import os
+import termios
+import tty
+import time
 
+HOST = '0.0.0.0'
+PORT = $port
+PTY_CMD = "script -qc /bin/bash /dev/null\n"
+FALLBACK_CMD = "python3 -c 'import pty; pty.spawn(\"/bin/bash\")'\n"
+BASIC_CMD = "/bin/bash -i\n"
+SCRIPT_CHECK_CMD = "which script\n"
+PYTHON_CHECK_CMD = "which python3\n"
+
+def recv_from_client(conn):
+    try:
+        while True:
+            data = conn.recv(1024)
+            if not data:
+                break
+            os.write(sys.stdout.fileno(), data)
+    except Exception:
+        pass
+
+def send_to_client(conn):
+    try:
+        while True:
+            data = os.read(sys.stdin.fileno(), 1024)
+            if not data:
+                break
+            conn.sendall(data)
+    except Exception:
+        pass
+
+def check_cmd(conn, cmd_to_check, keyword):
+    buffer = []
+    conn.sendall(cmd_to_check.encode())
+    time.sleep(1)
+
+    try:
+        conn.settimeout(0.5)
+        while True:
+            data = conn.recv(1024)
+            if not data:
+                break
+            buffer.append(data)
+    except socket.timeout:
+        pass
+    finally:
+        conn.settimeout(None)
+
+    response = b''.join(buffer).decode(errors='ignore').lower()
+    return keyword in response
+def main():
+    old_settings = None  
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind((HOST, PORT))
+            s.listen(1)
+            print(" ")
+            print(f"\033[92m[*] Listening on {HOST}:{PORT}...\033[0m")
+
+            try:
+                conn, addr = s.accept()
+            except KeyboardInterrupt:
+                sys.exit(0)
+
+            print(f"[*] Connection from {addr}")
+
+            old_settings = termios.tcgetattr(sys.stdin.fileno())
+            tty.setraw(sys.stdin.fileno())
+
+            has_script = check_cmd(conn, SCRIPT_CHECK_CMD, '/')
+            has_python = check_cmd(conn, PYTHON_CHECK_CMD, '/')
+
+            if has_script:
+                conn.sendall(PTY_CMD.encode())
+            elif has_python:
+                conn.sendall(FALLBACK_CMD.encode())
+            else:
+                conn.sendall(BASIC_CMD.encode())
+
+            t_recv = threading.Thread(target=recv_from_client, args=(conn,), daemon=True)
+            t_send = threading.Thread(target=send_to_client, args=(conn,), daemon=True)
+            t_recv.start()
+            t_send.start()
+
+            t_recv.join()
+            t_send.join()
+
+    finally:
+        if old_settings:
+            termios.tcsetattr(sys.stdin.fileno(), termios.TCSADRAIN, old_settings)
+        print("\n[*] Connection closed Terminal restored")
+
+if __name__ == "__main__":
+    main()
+EOF
+               python3 "$PYFILE"
+               elif [[ "$choice" == "2" ]]; then
+                      echo ""
+                      read_input port $'\033[35mEnter The Port : \033[0m'
+                      if [[ "$port" == "exit" ]]; then
+                          exit 0
+                      else
+                         DATE=$(date +%F_%H-%M-%S)
+                         PYFILE="/tmp/reverse_shell_Windows_${DATE}.py"
+                         cat > "$PYFILE" << EOF
+import socket
+import signal
+from prompt_toolkit.shortcuts import PromptSession
+from prompt_toolkit.history import FileHistory
+
+history_file = ".shell_history"
+session = PromptSession(history=FileHistory(history_file))
+
+def ignore_signal(signum, frame):
+    pass
+
+def handle_client(client_socket):
+    try:
+        while True:
+            try:
+                cmd = session.prompt("Shell> ")
+            except KeyboardInterrupt:
+                print("")  
+                continue
+
+            if not cmd.strip():
+                continue
+
+            client_socket.send(cmd.encode() + b"\n")
+
+            if cmd.lower() == "exit":
+                print("[*] Exiting shell session.")
+                client_socket.close()
+                break
+
+            response = b""
+            client_socket.settimeout(1.0)
+            try:
+                while True:
+                    chunk = client_socket.recv(4096)
+                    if not chunk:
+                        break
+                    response += chunk
+            except socket.timeout:
+                pass
+
+            print(response.decode(errors="ignore"))
+    except (ConnectionResetError, BrokenPipeError):
+        print("[*] Connection closed by remote host.")
+    finally:
+        client_socket.close()
+
+def main():
+    signal.signal(signal.SIGINT, ignore_signal)   
+    signal.signal(signal.SIGTSTP, ignore_signal)  
+
+    server_ip = "0.0.0.0"
+    server_port = $port 
+
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.bind((server_ip, server_port))
+    server.listen(5)
+    print(" ")   
+    print(f"\n\033[92m[*] Listening on {server_ip}:{server_port}...\033[0m")
+
+    client_socket, addr = server.accept()
+    print(f"[*] Connection from {addr[0]}:{addr[1]}")
+
+    handle_client(client_socket)
+
+if __name__ == "__main__":
+    main()
+EOF
+                         python3 "$PYFILE"
+                      fi
+               elif [[ "$choice"  == "exit" ]]; then
+                    exit 0
+               else
+                  echo ""
+                  echo -e "\033[35m[!] Enter a Valid Option\033[0m"
+               fi
+           done
+    elif [[ "$tool" == "2" ]]; then
+        trap ctrlc_handler INT
+        ctrlc_handler() {
+        if [ "$server_pid" != "" ] && kill -0 "$server_pid" 2>/dev/null; then
+            echo -e "\n\e[0;31mStopping Python server ...\e[0m"
+            kill "$server_pid"
+            wait "$server_pid" 2>/dev/null
+            server_pid=""
+            current_dir="$server_dir"
+            echo -e "\e[0;32mReturned to folder selection in $current_dir\e[0m\n"
+        else
+            echo -e "\n\e[0;31mExiting tool\e[0m"
+            exit 0
+        fi
+        }
+        current_dir="$HOME"
+        server_dir=""
+        server_pid=""
+        prev_choice=""
+        prev_port="8000"
+        while true; do
+        echo -e "\033[35m
+         ____        _   _                 ____
+        |  _ \ _   _| |_| |__   ___  _ __ / ___|  ___ _ ____   _____ _ __
+        | |_) | | | | __| '_ \ / _ \| '_ \\___ \ / _ \ '__\ \ / / _ \ '__|
+        |  __/| |_| | |_| | | | (_) | | | |___) |  __/ |   \ V /  __/ |
+        |_|    \__, |\__|_| |_|\___/|_| |_|____/ \___|_|    \_/ \___|_|
+               |___/
+
+        \033[0m"
+        while true; do
+            echo -e "\e[0;36mCurrent directory:\e[0;32m $current_dir\e[0m"
+            echo ""
+            echo -e "\e[1;33mFolders:\e[0m"
+            echo ""
+            dirs=()
+            files=()
+            i=1
+            for d in "$current_dir"/*/ ; do
+            [ -d "$d" ] || continue
+            dir_name="${d%/}"
+            dir_name="${dir_name##*/}"
+            echo -e "\e[1;33m[$i]\e[0m $dir_name"
+            dirs+=("$dir_name")
+            ((i++))
+            done
+            echo ""
+            echo -e "\e[1;34mFiles:\e[0m"
+            echo ""
+            for f in "$current_dir"/* ; do
+            [ -f "$f" ] || continue
+            file_name="${f##*/}"
+            echo -e "\e[1;34m- $file_name\e[0m"
+            files+=("$file_name")
+            done
+            echo ""
+            echo -e "\e[1;35m[!] Options"
+            echo "-----"
+            echo -e "\e[1;33m[.]\e[0m a step back"
+            echo -e "\e[1;33m[s]\e[0m Select this directory to start server here"
+            echo ""
+            read -e -p $'\e[0;32m# \e[0m' choice
+            if [[ "$choice" == "exit" ]]; then
+                 exit 0
+            elif [[ "$choice" == ".." ]]; then
+                    exec "$0" "$@"  
+            fi
+            if [[ -z "$choice" && -n "$prev_choice" ]]; then
+            choice="$prev_choice"
+            echo "(Using previous input)"
+            fi
+            if [ -n "$choice" ]; then
+            history -s "$choice"
+            prev_choice="$choice"
+            fi
+
+            if [[ "$choice" == "s" ]]; then
+            server_dir="$current_dir"
+            break
+            elif [[ "$choice" == "." ]]; then
+            if [[ "$current_dir" == "/" ]]; then
+                echo -e "\e[0;31mAlready at root directory, cannot go back further\e[0m"
+            else
+                current_dir=$(dirname "$current_dir")
+            fi
+            elif [[ "$choice" =~ ^[0-9]+$ ]]; then
+            if (( choice >= 1 && choice <= ${#dirs[@]} )); then
+                current_dir="$current_dir/${dirs[$((choice-1))]}"
+            else
+                echo -e "\e[0;31mInvalid folder number\e[0m"
+            fi
+            else
+            echo -e "\033[35m[!] Enter a Valid Choice\033[0m"
+            fi
+            echo
+        done
+        read -e -p $'\e[0;32mEnter a port number (default 8000): \e[0m' port
+
+        if [[ -z "$port" && -n "$prev_port" ]]; then
+            port="$prev_port"
+            echo "(Using previous port)"
+        fi
+        if ! [[ "$port" =~ ^[0-9]+$ ]] || [ "$port" -lt 1 ] || [ "$port" -gt 65535 ]; then
+            echo -e "\e[0;31mInvalid port number .. Using default 8000\e[0m"
+            port=8000
+        fi
+        history -s "$port"
+        prev_port="$port"
+        echo -e "\e[0;36mStarting Python HTTP server in directory\e[0;32m $current_dir \e[0;36mon port\e[0;32m $port\e[0m"
+        cd "$current_dir" || { echo -e "\e[0;31mFailed to enter directory\e[0m"; exit 1; }
+
+        if command -v python3 &>/dev/null; then
+            python3 -m http.server "$port" &
+        elif command -v python &>/dev/null; then
+            python -m http.server "$port" &
+        else
+            echo -e "\e[0;31mPython not found\e[0m"
+            exit 1
+        fi
+        server_pid=$!
+        wait "$server_pid"
+        server_pid=""
+        echo -e "\e[1;33mPython server stopped\e[0m\n"
+        done
+    elif [[ "$tool" == "3" ]]; then
+       while true; do     
+         echo -e "\033[35m
+                             _          _ _            _   
+               ___ _ __ ___ | |__   ___| (_) ___ _ __ | |_ 
+              / __| '_ \` _ \\| '_ \\ / __| | |/ _ \\ '_ \\| __|
+              \\__ \\ | | | | | |_) | (__| | |  __/ | | | |_ 
+              |___/_| |_| |_|_.__/ \\___|_|_|\\___|_| |_|\\__|
+         \033[0m"
+               echo "
+                    1) smbclient -L domain
+                    2) smbclient -L domain -U user%password
+                    3) smbclient \\\\\\\\domain\\\\share -U user%password
+               "
+               read_input number $'\033[35m# \033[0m'
+               if [[ "$number" == ".." ]]; then
+                    exec "$0" "$@"  
+               elif [[ "$number" == "1" ]]; then
+                  read_input Domain $'\033[35mEnter The Domain : \033[0m'
+                  echo ""
+                  echo -e "\033[36m[+]-- Running smbclient -L $Domain --[+]\033[0m"
+                  echo ""
+                  smbclient -L $Domain 
+                  echo ""
+               elif [[ "$number" == "2" ]]; then
+                  read_input Domain $'\033[35mEnter The Domain : \033[0m'
+                  read_input User $'\033[35mEnter The User : \033[0m' 
+                  read_input Password $'\033[35mEnter The Password : \033[0m'
+                  echo ""
+                  echo -e "\033[36m[+]-- Running smbclient -L $Domain -U $User%$Password --[+]\033[0m"
+                  echo ""
+                  smbclient -L $Domain -U $User%$Password
+                  echo ""
+              elif [[ "$number" == "3" ]]; then
+                  read_input Domain $'\033[35mEnter The Domain : \033[0m'
+                  read_input Share $'\033[35mEnter The Share : \033[0m'
+                  read_input User $'\033[35mEnter The User : \033[0m' 
+                  read_input Password $'\033[35mEnter The Password : \033[0m'
+                  echo ""
+                  echo -e "\033[36m[+]-- Running smbclient \\\\\\\\$Domain\\\\$Share -U $User%$Password --[+]\033[0m"
+                  echo ""
+                  smbclient \\\\$Domain\\$Share -U $User%$Password
+                  echo ""
+               elif [[ "$number" == "exit" ]]; then
+                    exit 0
+               else
+                   echo ""
+                   echo -e "\033[35m[!] Enter a Valid Option\033[0m"
+               fi
+       done
+    elif [[ "$tool" == "4" ]]; then
+       while true; do 
+         echo  -e "\033[35m
+                   _    __  ______  
+                  | \ | \ \/ / ___| 
+                  |  \| |\  / |     
+                  | |\  |/  \ |___  
+                  |_| \_/_/\_\____| 
+         \033[0m"
+	       echo "
+        	  1) nxc smb domain -u 'user' -p 'password' --continue-on-success
+          	  2) nxc smb domain -u 'user' -p 'password' --users
+                  3) nxc smb domain -u 'user' -p 'password' --shares
+          	  4) nxc ldap domain -u 'user' -p 'password' --bloodhound --collection all --dns-server ip
+               "
+       	       read_input number $'\033[35m# \033[0m'
+               if [[ "$number" == ".." ]]; then
+                    exec "$0" "$@"  
+               elif [[ "$number" == "1" ]]; then
+           	  read_input Domain $'\033[35mEnter The Domain : \033[0m'
+          	  read_input User $'\033[35mEnter The User : \033[0m' 
+          	  read_input Password $'\033[35mEnter The Password : \033[0m'
+                  echo ""
+                  echo -e "\033[36m[+]-- Running nxc smb $Domain -u $User -p $Password --continue-on-success --[+]\033[0m"
+                  echo ""
+                  nxc smb $Domain -u $User -p $Password --continue-on-success
+                  echo ""
+               elif [[ "$number" == "2" ]]; then
+                  read_input Domain $'\033[35mEnter The Domain : \033[0m' 
+                  read_input User $'\033[35mEnter The User : \033[0m' 
+                  read_input Password $'\033[35mEnter The Password : \033[0m' 
+                  echo ""
+                  echo -e "\033[36m[+]-- Running nxc smb $Domain -u $User -p $Password --users --[+]\033[0m"
+                  echo ""
+                  nxc smb $Domain -u $User -p $Password --users
+                  echo ""
+       	       elif [[ "$number" == "3" ]]; then
+                  read_input Domain $'\033[35mEnter The Domain : \033[0m' 
+                  read_input User $'\033[35mEnter The User : \033[0m' 
+                  read_input Password $'\033[35mEnter The Password : \033[0m' 
+          	  echo ""
+          	  echo -e "\033[36m[+]-- Running nxc smb $Domain -u $User -p $Password --shares --[+]\033[0m"
+                  echo ""
+          	  nxc smb $Domain -u $User -p $Password --shares 
+          	  echo ""
+               elif [[ "$number" == "4" ]]; then
+                  read_input Domain $'\033[35mEnter The Domain : \033[0m' 
+                  read_input User $'\033[35mEnter The User : \033[0m' 
+                  read_input Password $'\033[35mEnter The Password : \033[0m' 
+                  read_input Ip $'\033[35mEnter The Dns-server Ip : \033[0m' 
+                  echo ""
+                  echo -e "\033[36m[+]-- Running nxc ldap $Domain -u $User -p $Password --bloodhound --collection all --dns-server $Ip --[+]\033[0m"
+                  echo ""
+                  nxc ldap $Domain -u $User -p $Password --bloodhound --collection all --dns-server $Ip
+                  echo ""
+               elif [[ "$number" == "exit" ]]; then
+                    exit 0
+               else
+                  echo ""
+                  echo -e "\033[35m[!] Enter a Valid Option\033[0m"
+               fi
+       done
+    elif [[ "$tool" == "exit" ]]; then
+         exit 0
+    elif [[ -z "$tool" ]]; then
+         exec "$0" "$@" 
+    else
+        echo
+        echo -e "\e[1;36m[!] Enter a Valid option\033[0m"
+        exec "$0" "$@" 
+    fi
+fi
 declare -A seen_flags
 declare -a valid_flags=("--no-http" "--no-https" "--no-recon" "--no-network" "--no-ping" "--no-portscan")
 in_array() {
@@ -449,7 +941,7 @@ if [[ "$2" == --* ]]; then
                "--no-portscan") flag_6=true ;;
            esac
        else
-           echo -e "\e[1;31m[+]--- For Usage : ./Script.sh -h ---[+]\e[0m"
+           echo -e "\e[1;31m[+]--- For Usage : cyberthug -h ---[+]\e[0m"
            exit 1
        fi
     done
@@ -476,13 +968,13 @@ else
                "--no-portscan") flag_6=true ;;
            esac
        else
-           echo -e "\e[1;31m[+]--- For Usage : ./Script.sh -h ---[+]\e[0m"
+           echo -e "\e[1;31m[+]--- For Usage : cyberthug -h ---[+]\e[0m"
            exit 1
        fi
     done
 fi
 if [ -z "$1" ]; then
-    echo -e "\e[1;31m[+]--- For Usage : ./Script.sh -h ---[+]\e[0m"
+    echo -e "\e[1;31m[+]--- For Usage : cyberthug -h ---[+]\e[0m"
     exit 1
 fi
 if [ "$1" == "-h" ]; then
@@ -490,7 +982,7 @@ if [ "$1" == "-h" ]; then
     exit 1
 fi
 if [[ "$2" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-    echo -e "\e[1;31m[+]--- For Usage : ./Script.sh -h ---[+]\e[0m"
+    echo -e "\e[1;31m[+]--- For Usage : cyberthug -h ---[+]\e[0m"
     exit 1
 fi
 if [ "$2" != "" ]; then
@@ -514,11 +1006,6 @@ if [ ! -d "$HOME/CyberThug_output" ]; then
     echo -e "\e[1;3m\e[1;32m[+]-- $HOME/CyberThug_output Folder Created --[+]\e[0m\e[0m"
     echo ""
 
-fi
-
-trap 'next_step=true' SIGINT
-if [ "$next_step" = true ]; then
-  next_step=false
 fi
 
 main
