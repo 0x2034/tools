@@ -1,7 +1,7 @@
 #!/bin/bash 
 
 ########################################
-####  [+]-- Author: 0x2034   --[+]  ####
+####  [+]-- Author: 0x2034 --[+]  ####
 ####   [+]--   CyberThug   --[+]    ####
 ########################################
 
@@ -443,6 +443,8 @@ if [[ "$1" == "-t" ]]; then
            2) python_server
            3) smbclient
            4) nxc
+           5) GetNPUsers.py
+           6) GetUserSPNs.py
        \033[0m"
        echo ""
        read_input tool $'\033[35m# \033[0m'
@@ -465,7 +467,6 @@ if [[ "$1" == "-t" ]]; then
                if [[ "$choice" == ".." ]]; then
                     exec "$0" "$@"  
                elif [[ "$choice" == "1" ]]; then
-                     echo ""
                      read_input port $'\033[35mEnter The Port : \033[0m'
                      if [[ "$port" == "exit" ]]; then
                          exit 0
@@ -575,7 +576,6 @@ if __name__ == "__main__":
 EOF
                python3 "$PYFILE"
                elif [[ "$choice" == "2" ]]; then
-                      echo ""
                       read_input port $'\033[35mEnter The Port : \033[0m'
                       if [[ "$port" == "exit" ]]; then
                           exit 0
@@ -846,8 +846,12 @@ EOF
 	       echo "
         	  1) nxc smb domain -u 'user' -p 'password' --continue-on-success
           	  2) nxc smb domain -u 'user' -p 'password' --users
-                  3) nxc smb domain -u 'user' -p 'password' --shares
-          	  4) nxc ldap domain -u 'user' -p 'password' --bloodhound --collection all --dns-server ip
+                  3) nxc smb domain -u 'user' -p 'password' --rid-brute
+                  4) nxc smb domain -u 'user' -p 'password' --shares
+                  5) nxc smb domain -u 'user' -p 'password' --loggedon-users
+                  6) nxc smb domain -u 'user' -p 'password' -M enum_av
+                  7) nxc winrm domain -u 'user' -p 'password'
+          	  8) nxc ldap domain -u 'user' -p 'password' --bloodhound --collection all --dns-server ip
                "
        	       read_input number $'\033[35m# \033[0m'
                if [[ "$number" == ".." ]]; then
@@ -870,7 +874,16 @@ EOF
                   echo ""
                   nxc smb $Domain -u $User -p $Password --users
                   echo ""
-       	       elif [[ "$number" == "3" ]]; then
+               elif [[ "$number" == "3" ]]; then
+                  read_input Domain $'\033[35mEnter The Domain : \033[0m' 
+                  read_input User $'\033[35mEnter The User : \033[0m' 
+                  read_input Password $'\033[35mEnter The Password : \033[0m' 
+                  echo ""
+                  echo -e "\033[36m[+]-- Running nxc smb $Domain -u $User -p $Password --rid-brute --[+]\033[0m"
+                  echo ""
+                  nxc smb $Domain -u $User -p $Password --rid-brute
+                  echo ""  
+       	       elif [[ "$number" == "4" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m' 
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m' 
@@ -879,7 +892,34 @@ EOF
                   echo ""
           	  nxc smb $Domain -u $User -p $Password --shares 
           	  echo ""
-               elif [[ "$number" == "4" ]]; then
+               elif [[ "$number" == "5" ]]; then
+                  read_input Domain $'\033[35mEnter The Domain : \033[0m' 
+                  read_input User $'\033[35mEnter The User : \033[0m' 
+                  read_input Password $'\033[35mEnter The Password : \033[0m' 
+                  echo ""
+                  echo -e "\033[36m[+]-- Running nxc smb $Domain -u $User -p $Password --loggedon-users --[+]\033[0m"
+                  echo ""
+                  nxc smb $Domain -u $User -p $Password --loggedon-users
+                  echo ""
+               elif [[ "$number" == "6" ]]; then
+                  read_input Domain $'\033[35mEnter The Domain : \033[0m' 
+                  read_input User $'\033[35mEnter The User : \033[0m' 
+                  read_input Password $'\033[35mEnter The Password : \033[0m' 
+                  echo ""
+                  echo -e "\033[36m[+]-- Running nxc smb $Domain -u $User -p $Password -M enum_av --[+]\033[0m"
+                  echo ""
+                  nxc smb $Domain -u $User -p $Password -M enum_av
+                  echo ""
+               elif [[ "$number" == "7" ]]; then
+                  read_input Domain $'\033[35mEnter The Domain : \033[0m' 
+                  read_input User $'\033[35mEnter The User : \033[0m' 
+                  read_input Password $'\033[35mEnter The Password : \033[0m' 
+                  echo ""
+                  echo -e "\033[36m[+]-- Running nxc winrm $Domain -u $User -p $Password --[+]\033[0m"
+                  echo ""
+                  nxc winrm $Domain -u $User -p $Password  
+                  echo ""
+               elif [[ "$number" == "8" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m' 
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m' 
@@ -896,6 +936,80 @@ EOF
                   echo -e "\033[35m[!] Enter a Valid Option\033[0m"
                fi
        done
+    elif [[ "$tool" = "5" ]]; then
+      while true; do
+           echo  -e "\033[35m
+	    ____      _   _   _ ____  _   _                                 
+     	   / ___| ___| |_| \ | |  _ \| | | |___  ___ _ __ ___   _ __  _   _ 
+	  | |  _ / _ \ __|  \| | |_) | | | / __|/ _ \ '__/ __| | '_ \| | | |
+	  | |_| |  __/ |_| |\  |  __/| |_| \__ \  __/ |  \__ \_| |_) | |_| |
+ 	   \____|\___|\__|_| \_|_|    \___/|___/\___|_|  |___(_) .__/ \__, |
+                                                    	       |_|    |___/ 
+           \033[0m"
+           echo "
+               1) GetNPUsers.py -no-pass -usersfile users.txt domain/
+           "
+           read_input number $'\033[35m# \033[0m'
+           if [[ "$number" == ".." ]]; then
+               exec "$0" "$@"
+           elif [[ "$number" == "1" ]]; then
+               read_input Domain $'\033[35mEnter The Domain : \033[0m'  
+               read_input users_file $'\033[35mEnter The Users_File : \033[0m' 
+               echo ""
+               echo -e "\033[36m[+]-- Running GetNPUsers.py -no-pass -usersfile $users_file $Domain/ --[+]\033[0m"
+               echo ""
+               GetNPUsers.py -no-pass -usersfile $users_file $Domain/
+               echo ""
+           elif [[ "$number" == "exit" ]]; then
+               exit 0
+           else
+               echo ""
+               echo -e "\033[35m[!] Enter a Valid Option\033[0m"
+           fi
+      done
+    elif [[ "$tool" = "6" ]]; then
+      while true; do
+           echo  -e "\033[35m
+	    ____      _   _   _               ____  ____  _   _                   
+	   / ___| ___| |_| | | |___  ___ _ __/ ___||  _ \| \ | |___   _ __  _   _ 
+	  | |  _ / _ \ __| | | / __|/ _ \ '__\___ \| |_) |  \| / __| | '_ \| | | |
+	  | |_| |  __/ |_| |_| \__ \  __/ |   ___) |  __/| |\  \__ \_| |_) | |_| |
+ 	   \____|\___|\__|\___/|___/\___|_|  |____/|_|   |_| \_|___(_) .__/ \__, |
+                       	                                             |_|    |___/ 
+           \033[0m"
+           echo "
+               1) GetUserSPNs.py domain/user:password -request
+               2) GetUserSPNs.py -no-preauth "user" -usersfile users.txt -dc-host "DC" domain/
+           "
+           read_input number $'\033[35m# \033[0m'
+           if [[ "$number" == ".." ]]; then
+               exec "$0" "$@"
+           elif [[ "$number" == "1" ]]; then
+               read_input Domain $'\033[35mEnter The Domain : \033[0m'
+               read_input User $'\033[35mEnter The User : \033[0m'  
+               read_input Password $'\033[35mEnter The Password : \033[0m' 
+               echo ""
+               echo -e "\033[36m[+]-- Running GetUserSPNs.py $Domain/$User:$Password -request --[+]\033[0m"
+               echo ""
+               GetUserSPNs.py $Domain/$User:$Password -request
+               echo ""
+           elif [[ "$number" == "2" ]]; then
+               read_input User $'\033[35mEnter The User : \033[0m'  
+               read_input users_file $'\033[35mEnter The Users_File : \033[0m'
+               read_input DC $'\033[35mEnter The DC : \033[0m'
+               read_input Domain $'\033[35mEnter The Domain : \033[0m'
+               echo ""
+               echo -e "\033[36m[+]-- Running GetUserSPNs.py -no-preauth $User -usersfile $users_file -dc-host "$DC" $Domain/ --[+]\033[0m"
+               echo ""
+               GetUserSPNs.py -no-preauth $User -usersfile $users_file -dc-host "$DC" $Domain/
+               echo ""
+           elif [[ "$number" == "exit" ]]; then
+               exit 0
+           else
+               echo ""
+               echo -e "\033[35m[!] Enter a Valid Option\033[0m"
+           fi
+      done
     elif [[ "$tool" == "exit" ]]; then
          exit 0
     elif [[ -z "$tool" ]]; then
@@ -1012,3 +1126,35 @@ main
 echo ""
 rm $HOME/Downloads/tools/Files/*.state 2>/dev/null ; rm -r $HOME/Downloads/tools/Files/reports 2>/dev/null
 echo -e "\e[1;32m------------------[+] Finished [+]---------------------\e[0m"
+
+
+# TEMPLATE
+# ---------------------------------
+#    elif [[ "$tool" = "5" ]]; then
+#      while true; do
+#           echo  -e "\033[35m
+#           \033[0m"
+#           echo "
+#               1)
+#           "
+#           read_input number $'\033[35m# \033[0m'
+#           if [[ "$number" == ".." ]]; then
+#               exec "$0" "$@"
+#           elif [[ "$number" == "1" ]]; then
+#               read_input Domain $'\033[35mEnter The Domain : \033[0m' 
+#               read_input User $'\033[35mEnter The User : \033[0m' 
+#               read_input Password $'\033[35mEnter The Password : \033[0m' 
+#               echo ""
+#               echo -e "\033[36m[+]-- Running nxc smb $Domain -u $User -p $Password --users --[+]\033[0m"
+#               echo ""
+#               nxc smb $Domain -u $User -p $Password --users
+#               echo ""
+#           elif [[ "$number" == "exit" ]]; then
+#               exit 0
+#           else
+#               echo ""
+#               echo -e "\033[35m[!] Enter a Valid Option\033[0m"
+#           fi
+#      done
+#--------------------------------------
+#    elif [[ "$tool" == "exit" ]]; then
