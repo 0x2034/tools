@@ -2194,8 +2194,8 @@ EOF
       while true; do
            history -a "$HISTFILE"
            echo  -e "\033[35m
-	                 _ _             _                     
-             _____     _(_) |__        _(_)_ __  _ __ _ __ ___ 
+	               _ _               _                     
+             ___ _   _(_) |            _(_)_ __  _ __ _ __ ___ 
  	    / _ \ \ / / | |____\ \ /\ / / | '_ \| '__| '_ ' _  \ 
 	   |  __/\ V /| | |_____\ V  V /| | | | | |  | | | | | | 
  	    \___| \_/ |_|_|      \_/\_/ |_|_| |_|_|  |_| |_| |_| 
@@ -2212,7 +2212,14 @@ EOF
                read_input Domain $'\033[35mEnter The Domain : \033[0m' 
                read_input User $'\033[35mEnter The User : \033[0m' 
                read_input Password $'\033[35mEnter The Password : \033[0m' 
-               sudo ntpdate -s $Domain 
+               sudo ntpdate -s $Domain
+	       echo ""
+     	       echo -e "\033[36m[+]-- Running nxc smb $Domain --generate-krb5-file /tmp/domain-krb5.conf --[+]\033[0m"
+    	       echo ""
+    	       nxc smb $Domain --generate-krb5-file /tmp/domain-krb5.conf
+    	       sudo cp /tmp/domain-krb5.conf /etc/krb5.conf 
+    	       echo ""
+               echo -e "\e[1;32mConfiguring /etc/krb5.conf ... \e[0m" 
                echo ""
                echo -e "\033[36m[+]-- Running evil-winrm -i $Domain -u $User -p $Password --[+]\033[0m"
                echo ""
@@ -2222,7 +2229,14 @@ EOF
                read_input User $'\033[35mEnter The User : \033[0m' 
                read_input Domain $'\033[35mEnter The Domain : \033[0m' 
                read_input DC $'\033[35mEnter The DC : \033[0m' 
-               sudo ntpdate -s $DC 
+               sudo ntpdate -s $DC
+               echo ""
+               echo -e "\033[36m[+]-- Running nxc smb $DC --generate-krb5-file /tmp/domain-krb5.conf -k --[+]\033[0m"
+               echo ""
+               nxc smb $DC --generate-krb5-file /tmp/domain-krb5.conf -k
+               sudo cp /tmp/domain-krb5.conf /etc/krb5.conf
+               echo ""
+               echo -e "\e[1;32mConfiguring /etc/krb5.conf ... \e[0m" 
                echo ""
                echo -e "\033[36m[+]-- Running evil-winrm -i $DC -r $Domain -u $User --[+]\033[0m"
                echo ""
@@ -2811,4 +2825,4 @@ echo -e "\e[1;32m------------------[+] Finished [+]---------------------\e[0m"
 #      done
 #--------------------------------------
 #    elif [[ "$tool" == "exit" ]]; then
-                                                       
+                                                                    
