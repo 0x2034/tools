@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash 
 ########################################
 ####  [+]-- Author: 0x2034 --[+]  ####
 ####   [+]--   CyberThug    --[+]   ####
@@ -60,34 +60,95 @@ interact
 EOT
         chmod +x /tmp/temp5.sh
         bash /tmp/temp5.sh
-        gnome-terminal -- bash -c '
-export DC='__$DC__'
-export CLEAN_DOMAIN='__$CLEAN_DOMAIN__'
-export Ip='__$Ip__'
-user=\"'\$user'\"
-p=\"'\$p'\"
+  	gnome-terminal -- bash -c \"
+export DC='$DC'
+export CLEAN_DOMAIN='$CLEAN_DOMAIN'
+export user='$user'
+export p='$p'
 
-echo -e \"\e[1;32m[+] User: \$user\e[0m\"
-echo -e \"\e[1;32m[+] Password: \$p\e[0m\"
-echo -e \"\e[1;32m[+] DC: \$DC\e[0m\"
-echo -e \"\e[1;32m[+] Domain: \$CLEAN_DOMAIN\e[0m\"
-echo -e \"\e[1;32m[+] Trying powerview direct auth for \$user ...\e[0m\"
-echo \"\"
-echo -e \"\e[1;32m[+]-- Running powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC --[+]\e[0m\"
-echo \"\"
-powerview \"\$CLEAN_DOMAIN/\$user:\$p@\$DC\"
-echo \"\"
-echo -e \"\e[1;32m[+] Getting TGT for \$user ...\e[0m\"
-echo \"\"
+echo -e '\e[1;32m[+] User: \$user\e[0m'
+echo -e '\e[1;32m[+] Password: \$p\e[0m'
+echo -e '\e[1;32m[+] DC: \$DC\e[0m'
+echo -e '\e[1;32m[+] Domain: \$CLEAN_DOMAIN\e[0m'
+echo -e '\e[1;32m[+] Trying powerview direct auth for \$user ...\e[0m'
+echo ''
+echo -e '\e[1;32m[+]-- Running powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC --[+]\e[0m'
+echo ''
+expect -c \\\"set timeout -1
+set send_slow {1 .001}
+spawn powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-Domain\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn -Properties servicePrincipalName\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -PreAuthNotRequired\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Admincount -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainComputer -Properties name,operatingSystem,samaccountname\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Properties name,member\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroupMember -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -AdminCount\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainTrust\\\\\\\\r\\\\\\\";
+interact\\\"
+echo ''
+echo -e '\e[1;32m[+] Getting TGT for \$user ...\e[0m'
+echo ''
 getTGT.py \"\$CLEAN_DOMAIN/\$user:\$p\" -dc-ip \"\$Ip\" -k
 export KRB5CCNAME=\$PWD/\${user}.ccache
-echo \"\"
-echo -e \"\e[1;32m[+]-- powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC -k --[+]\e[0m\"
-echo \"\"
-powerview \"\$CLEAN_DOMAIN/\$user:\$p@\$DC\" -k
-echo \"\"
-echo -e \"\e[1;33m[!] powerview failed for \$user again with ticket\e[0m\"
-exec bash'
+echo ''
+echo -e '\e[1;32m[+]-- powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC -k --[+]\e[0m'
+echo ''
+expect -c \\\"set timeout -1
+set send_slow {1 .001}
+spawn powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC -k
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-Domain\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn -Properties servicePrincipalName\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -PreAuthNotRequired\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Admincount -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainComputer -Properties name,operatingSystem,samaccountname\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Properties name,member\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroupMember -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -AdminCount\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainTrust\\\\\\\\r\\\\\\\";
+interact\\\"
+echo ''
+echo -e '\e[1;33m[!] powerview failed for \$user again with ticket\e[0m'
+exec bash\"  
         gnome-terminal -- bash -c '
 export DC='__$DC__'
 export CLEAN_DOMAIN='__$CLEAN_DOMAIN__'
@@ -200,7 +261,38 @@ echo -e '\e[1;32m[+] Trying powerview direct auth for \$user ...\e[0m'
 echo ''
 echo -e '\e[1;32m[+]-- Running powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC --[+]\e[0m'
 echo ''
-powerview \"\$CLEAN_DOMAIN/\$user:\$p@\$DC\"
+expect -c \\\"set timeout -1
+set send_slow {1 .001}
+spawn powerview \\\$CLEAN_DOMAIN/\$user:\$p@\\\$DC
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-Domain\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn -Properties servicePrincipalName\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -PreAuthNotRequired\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Admincount -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainComputer -Properties name,operatingSystem,samaccountname\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Properties name,member\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroupMember -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -AdminCount\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainTrust\\\\\\\\r\\\\\\\";
+interact\\\"
 echo ''
 echo -e '\e[1;32m[+] Getting TGT for \$user ...\e[0m'
 echo ''
@@ -209,7 +301,38 @@ export KRB5CCNAME=\$PWD/\${user}.ccache
 echo ''
 echo -e '\e[1;32m[+]-- powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC -k --[+]\e[0m'
 echo ''
-powerview \"\$CLEAN_DOMAIN/\$user:\$p@\$DC\" -k
+expect -c \\\"set timeout -1
+set send_slow {1 .001}
+spawn powerview \\\$CLEAN_DOMAIN/\$user:\$p@\\\$DC -k
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-Domain\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn -Properties servicePrincipalName\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -PreAuthNotRequired\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Admincount -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainComputer -Properties name,operatingSystem,samaccountname\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Properties name,member\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroupMember -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -AdminCount\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainTrust\\\\\\\\r\\\\\\\";
+interact\\\"
 echo ''
 echo -e '\e[1;33m[!] powerview failed for \$user again with ticket\e[0m'
 exec bash\"  
@@ -306,34 +429,95 @@ interact
 EOT
         chmod +x /tmp/temp4.sh
         bash /tmp/temp4.sh
-        gnome-terminal -- bash -c '
-export DC='__$DC__'
-export CLEAN_DOMAIN='__$CLEAN_DOMAIN__'
-export Ip='__$Ip__'
-user=\"'\$user'\"
-p=\"'\$p'\"
+  	gnome-terminal -- bash -c \"
+export DC='$DC'
+export CLEAN_DOMAIN='$CLEAN_DOMAIN'
+export user='$user'
+export p='$p'
 
-echo -e \"\e[1;32m[+] User: \$user\e[0m\"
-echo -e \"\e[1;32m[+] Password: \$p\e[0m\"
-echo -e \"\e[1;32m[+] DC: \$DC\e[0m\"
-echo -e \"\e[1;32m[+] Domain: \$CLEAN_DOMAIN\e[0m\"
-echo -e \"\e[1;32m[+] Trying powerview direct auth for \$user ...\e[0m\"
-echo \"\"
-echo -e \"\e[1;32m[+]-- Running powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC --[+]\e[0m\"
-echo \"\"
-powerview \"\$CLEAN_DOMAIN/\$user:\$p@\$DC\"
-echo \"\"
-echo -e \"\e[1;32m[+] Getting TGT for \$user ...\e[0m\"
-echo \"\"
+echo -e '\e[1;32m[+] User: \$user\e[0m'
+echo -e '\e[1;32m[+] Password: \$p\e[0m'
+echo -e '\e[1;32m[+] DC: \$DC\e[0m'
+echo -e '\e[1;32m[+] Domain: \$CLEAN_DOMAIN\e[0m'
+echo -e '\e[1;32m[+] Trying powerview direct auth for \$user ...\e[0m'
+echo ''
+echo -e '\e[1;32m[+]-- Running powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC --[+]\e[0m'
+echo ''
+expect -c \\\"set timeout -1
+set send_slow {1 .001}
+spawn powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-Domain\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn -Properties servicePrincipalName\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -PreAuthNotRequired\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Admincount -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainComputer -Properties name,operatingSystem,samaccountname\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Properties name,member\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroupMember -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -AdminCount\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainTrust\\\\\\\\r\\\\\\\";
+interact\\\"
+echo ''
+echo -e '\e[1;32m[+] Getting TGT for \$user ...\e[0m'
+echo ''
 getTGT.py \"\$CLEAN_DOMAIN/\$user:\$p\" -dc-ip \"\$Ip\" -k
 export KRB5CCNAME=\$PWD/\${user}.ccache
-echo \"\"
-echo -e \"\e[1;32m[+]-- powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC -k --[+]\e[0m\"
-echo \"\"
-powerview \"\$CLEAN_DOMAIN/\$user:\$p@\$DC\" -k
-echo \"\"
-echo -e \"\e[1;33m[!] powerview failed for \$user again with ticket\e[0m\"
-exec bash'  
+echo ''
+echo -e '\e[1;32m[+]-- powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC -k --[+]\e[0m'
+echo ''
+expect -c \\\"set timeout -1
+set send_slow {1 .001}
+spawn powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC -k
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-Domain\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn -Properties servicePrincipalName\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -PreAuthNotRequired\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Admincount -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainComputer -Properties name,operatingSystem,samaccountname\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Properties name,member\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroupMember -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -AdminCount\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainTrust\\\\\\\\r\\\\\\\";
+interact\\\"
+echo ''
+echo -e '\e[1;33m[!] powerview failed for \$user again with ticket\e[0m'
+exec bash\"  
         gnome-terminal -- bash -c \"
 export DC='__$DC__'
 export CLEAN_DOMAIN='__$CLEAN_DOMAIN__'
@@ -441,7 +625,38 @@ echo -e '\e[1;32m[+] Trying powerview direct auth for \$user ...\e[0m'
 echo ''
 echo -e '\e[1;32m[+]-- Running powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC --[+]\e[0m'
 echo ''
-powerview \"\$CLEAN_DOMAIN/\$user:\$p@\$DC\"
+expect -c \\\"set timeout -1
+set send_slow {1 .001}
+spawn powerview \\\$CLEAN_DOMAIN/\$user:\$p@\\\$DC
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-Domain\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn -Properties servicePrincipalName\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -PreAuthNotRequired\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Admincount -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainComputer -Properties name,operatingSystem,samaccountname\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Properties name,member\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroupMember -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -AdminCount\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainTrust\\\\\\\\r\\\\\\\";
+interact\\\"
 echo ''
 echo -e '\e[1;32m[+] Getting TGT for \$user ...\e[0m'
 echo ''
@@ -450,7 +665,38 @@ export KRB5CCNAME=\$PWD/\${user}.ccache
 echo ''
 echo -e '\e[1;32m[+]-- powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC -k --[+]\e[0m'
 echo ''
-powerview \"\$CLEAN_DOMAIN/\$user:\$p@\$DC\" -k
+expect -c \\\"set timeout -1
+set send_slow {1 .001}
+spawn powerview \\\$CLEAN_DOMAIN/\$user:\$p@\\\$DC -k
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-Domain\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn -Properties servicePrincipalName\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -PreAuthNotRequired\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Admincount -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainComputer -Properties name,operatingSystem,samaccountname\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Properties name,member\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroupMember -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -AdminCount\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainTrust\\\\\\\\r\\\\\\\";
+interact\\\"
 echo ''
 echo -e '\e[1;33m[!] powerview failed for \$user again with ticket\e[0m'
 exec bash\"  
@@ -551,35 +797,95 @@ interact
 EOT
         chmod +x /tmp/temp3.sh
         bash /tmp/temp3.sh
-        gnome-terminal -- bash -c '
-export DC='__$DC__'
-export CLEAN_DOMAIN='__$CLEAN_DOMAIN__'
-export Ip='__$Ip__'
-user=\"'\$user'\"
-p=\"'\$p'\"
+  gnome-terminal -- bash -c \"
+export DC='$DC'
+export CLEAN_DOMAIN='$CLEAN_DOMAIN'
+export user='$user'
+export p='$p'
 
-echo -e \"\e[1;32m[+] User: \$user\e[0m\"
-echo -e \"\e[1;32m[+] Password: \$p\e[0m\"
-echo -e \"\e[1;32m[+] DC: \$DC\e[0m\"
-echo -e \"\e[1;32m[+] Domain: \$CLEAN_DOMAIN\e[0m\"
-echo -e \"\e[1;32m[+] Trying powerview direct auth for \$user ...\e[0m\"
-echo \"\"
-echo -e \"\e[1;32m[+]-- Running powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC --[+]\e[0m\"
-echo \"\"
-powerview \"\$CLEAN_DOMAIN/\$user:\$p@\$DC\"
-echo \"\"
-echo -e \"\e[1;32m[+] Getting TGT for \$user ...\e[0m\"
-echo \"\"
+echo -e '\e[1;32m[+] User: \$user\e[0m'
+echo -e '\e[1;32m[+] Password: \$p\e[0m'
+echo -e '\e[1;32m[+] DC: \$DC\e[0m'
+echo -e '\e[1;32m[+] Domain: \$CLEAN_DOMAIN\e[0m'
+echo -e '\e[1;32m[+] Trying powerview direct auth for \$user ...\e[0m'
+echo ''
+echo -e '\e[1;32m[+]-- Running powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC --[+]\e[0m'
+echo ''
+expect -c \\\"set timeout -1
+set send_slow {1 .001}
+spawn powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-Domain\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn -Properties servicePrincipalName\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -PreAuthNotRequired\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Admincount -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainComputer -Properties name,operatingSystem,samaccountname\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Properties name,member\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroupMember -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -AdminCount\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainTrust\\\\\\\\r\\\\\\\";
+interact\\\"
+echo ''
+echo -e '\e[1;32m[+] Getting TGT for \$user ...\e[0m'
+echo ''
 getTGT.py \"\$CLEAN_DOMAIN/\$user:\$p\" -dc-ip \"\$Ip\" -k
 export KRB5CCNAME=\$PWD/\${user}.ccache
-echo \"\"
-echo -e \"\e[1;32m[+]-- powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC -k --[+]\e[0m\"
-echo \"\"
-powerview \"\$CLEAN_DOMAIN/\$user:\$p@\$DC\" -k
-echo \"\"
-echo -e \"\e[1;33m[!] powerview failed for \$user again with ticket\e[0m\"
-exec bash'  
-
+echo ''
+echo -e '\e[1;32m[+]-- powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC -k --[+]\e[0m'
+echo ''
+expect -c \\\"set timeout -1
+set send_slow {1 .001}
+spawn powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC -k
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-Domain\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn -Properties servicePrincipalName\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -PreAuthNotRequired\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Admincount -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainComputer -Properties name,operatingSystem,samaccountname\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Properties name,member\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroupMember -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -AdminCount\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainTrust\\\\\\\\r\\\\\\\";
+interact\\\"
+echo ''
+echo -e '\e[1;33m[!] powerview failed for \$user again with ticket\e[0m'
+exec bash\"  
         gnome-terminal -- bash -c '
 export DC='__$DC__'
 export CLEAN_DOMAIN='__$CLEAN_DOMAIN__'
@@ -697,7 +1003,38 @@ echo -e '\e[1;32m[+] Trying powerview direct auth for \$user ...\e[0m'
 echo ''
 echo -e '\e[1;32m[+]-- Running powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC --[+]\e[0m'
 echo ''
-powerview \"\$CLEAN_DOMAIN/\$user:\$p@\$DC\"
+expect -c \\\"set timeout -1
+set send_slow {1 .001}
+spawn powerview \\\$CLEAN_DOMAIN/\$user:\$p@\\\$DC
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-Domain\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn -Properties servicePrincipalName\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -PreAuthNotRequired\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Admincount -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainComputer -Properties name,operatingSystem,samaccountname\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Properties name,member\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroupMember -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -AdminCount\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainTrust\\\\\\\\r\\\\\\\";
+interact\\\"
 echo ''
 echo -e '\e[1;32m[+] Getting TGT for \$user ...\e[0m'
 echo ''
@@ -706,11 +1043,41 @@ export KRB5CCNAME=\$PWD/\${user}.ccache
 echo ''
 echo -e '\e[1;32m[+]-- powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC -k --[+]\e[0m'
 echo ''
-powerview \"\$CLEAN_DOMAIN/\$user:\$p@\$DC\" -k
+expect -c \\\"set timeout -1
+set send_slow {1 .001}
+spawn powerview \\\$CLEAN_DOMAIN/\$user:\$p@\\\$DC -k
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-Domain\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn -Properties servicePrincipalName\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -PreAuthNotRequired\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Admincount -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainComputer -Properties name,operatingSystem,samaccountname\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Properties name,member\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroupMember -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -AdminCount\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainTrust\\\\\\\\r\\\\\\\";
+interact\\\"
 echo ''
 echo -e '\e[1;33m[!] powerview failed for \$user again with ticket\e[0m'
 exec bash\"  
-
         gnome-terminal -- bash -c \"
 export DC='$DC'
 export CLEAN_DOMAIN='$CLEAN_DOMAIN'
@@ -1606,6 +1973,43 @@ exec bash
             echo -e "\033[36m[+]-- Running nxc smb $DOMAIN -u $User -p $Password --shares $flag --[+]\033[0m"
             echo ""
             nxc smb $DOMAIN -u $User -p $Password --shares $flag
+            echo ""
+  	    for i in {1..15}; do
+               dots=$(( (i - 1) % 3 + 1 ))
+               echo -ne "\r\033[31mProcessing $(printf "%-${dots}s" | tr ' ' '.')\033[0m"
+               sleep 0.1
+            done
+            echo ""
+	    nxc smb $DOMAIN -u $User -p $Password --shares $flag | awk '/READ/ {print $5}' > /tmp/shares.txt
+            if [[ -s /tmp/shares.txt ]]; then
+                if [[ -f "$User" || -f "$Password" ]]; then
+		    :
+                else
+                    gnome-terminal -- bash -c "
+                        echo -e '\033[1;32m[+]-- Running Smbclient for => $User --[+]\033[0m'
+                        while read -r share; do
+                            echo \"\"
+                            echo -e \"\033[1;34m[*] \$share\033[0m\" 
+  			    gnome-terminal -- bash -c \"
+	                       echo -e '\033[36m[+] Connecting to share: //$DC/\$share\033[0m'
+          	               echo -e '\033[36m[+] User: $User\033[0m'
+                   	       echo -e '\033[36m[+] Password: $Password\033[0m'
+                               echo \"\"
+                    	       smbclient //$DC/\$share -U $User%$Password
+                               echo \"\"
+                    	       echo -e '\033[36m[+] Getting TGT for => $User\033[0m'
+			       echo \"\"
+                    	       getTGT.py $CLEAN_DOMAIN/$User:$Password -dc-ip $DC -k 
+                    	       export KRB5CCNAME=${User}.ccache
+                               echo \"\"
+                    	       impacket-smbclient -k -no-pass -target-ip $Ip $CLEAN_DOMAIN/$User@$DC
+                    	       exec bash
+                	    \"
+                        done < /tmp/shares.txt
+                        exec bash
+                    "
+                fi
+            fi
             echo ""
             echo -e "\033[36m[+]-- Running nxc smb $DOMAIN -u $User -p $Password --loggedon-users $flag --[+]\033[0m"
             echo ""
@@ -5256,6 +5660,43 @@ echo -e "\033[36m[+]-- Running nxc smb \"$DOMAIN\" -u \"$User\" -p \"$Password\"
 echo ""
 nxc smb $DOMAIN -u $User -p $Password --shares $flag
 echo ""
+for i in {1..15}; do
+    dots=\$(( (i - 1) % 3 + 1 ))
+    echo -ne "\r\033[31mProcessing \$(printf %-\${dots}s | tr ' ' '.')\033[0m"
+    sleep 0.1
+done
+echo ""
+nxc smb $DOMAIN -u $User -p $Password --shares $flag | awk '/READ/ {print \$5}' > /tmp/shares.txt
+if [[ -s /tmp/shares.txt ]]; then
+   if [[ -f "$User" || -f "$Password" ]]; then
+        :
+   else
+      gnome-terminal -- bash -c "
+           echo -e '\033[1;32m[+]-- Running Smbclient for => $User --[+]\033[0m'
+           while read -r share; do
+             echo \"\"
+             echo -e \"\033[1;34m[*] \\\$share\033[0m\" 
+             gnome-terminal -- bash -c \"
+                               echo -e '\033[36m[+] Connecting to share: //$DC/\\\$share \033[0m'
+                               echo -e '\033[36m[+] User: $User\033[0m'
+                               echo -e '\033[36m[+] Password: $Password\033[0m'
+                               echo \"\"
+                               smbclient //$DC/\\\$share -U $User%$Password
+                               echo \"\"
+                               echo -e '\033[36m[+] Getting TGT for => $User\033[0m'
+                               echo \"\"
+                               getTGT.py $CLEAN_DOMAIN/$User:$Password -dc-ip $DC -k 
+                               export KRB5CCNAME=${User}.ccache
+                               echo \"\"
+                               impacket-smbclient -k -no-pass -target-ip $Ip $CLEAN_DOMAIN/$User@$DC
+                               exec bash
+             \"
+           done < /tmp/shares.txt
+        exec bash
+      "
+   fi
+fi
+echo ""
 echo -e "\033[36m[+]-- Running nxc smb \"$DOMAIN\" -u \"$User\" -p \"$Password\" --loggedon-users $flag --[+]\033[0m"
 echo ""
 nxc smb $DOMAIN -u $User -p $Password --loggedon-users $flag
@@ -5795,3 +6236,5 @@ echo -e "\e[1;32m------------------[+] Finished [+]---------------------\e[0m"
 #      done
 #--------------------------------------
 #    elif [[ "$tool" == "exit" ]]; then
+                                                                           
+                                                                                      
