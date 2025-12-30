@@ -1,6 +1,6 @@
 #!/bin/bash
 ########################################
-####  [+]-- Author: 0x2034   --[+]  ####
+####  [+]-- Author: 0x2034 --[+]  ####
 ####   [+]--   CyberThug    --[+]   ####
 ########################################
 
@@ -1510,14 +1510,12 @@ if [ "$flag_4" = true ]
 then
     :
 else 
-    if nc -zv -w 5 $DOMAIN 21 2>/dev/null; then
-              echo -e "\e[1;32m[+]-- FTP Enumeration on $DOMAIN --[+]\e[0m"
-              echo ""
-              ftp -n $DOMAIN <<END_SCRIPT
-user Anonymous Anonymous
-ls        
-bye
-END_SCRIPT
+    if nc -zv -w 5 "$DOMAIN" 21 2>/dev/null; then
+    gnome-terminal -- bash -c "
+echo -e '\e[1;32m[+]-- FTP Enumeration on $DOMAIN --[+]\e[0m'
+echo ""
+lftp -u Anonymous,Anonymous $DOMAIN
+"
     fi
     echo "--------------------------"
     if nc -zv -w 5 $DOMAIN 25 2>/dev/null || nc -zv -w 5 $DOMAIN 587 2>/dev/null; then
@@ -1528,7 +1526,7 @@ END_SCRIPT
        ip=$(ping -c 1 $DOMAIN | awk -F'[()]' '/PING/{print $2}')
        mkdir -p "$HOME/CyberThug_output/dnsenum"
        Time=$(date +"%Y-%m-%d_%H-%M-%S")
-       gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- DNS Enumeration on $DOMAIN --[+]\e[0m' ; echo "" ; dig @$ip $DOMAIN ; echo "" ; echo -e '\e[1;32m---------------\e[0m' ; echo "" ; dig axfr @$ip $DOMAIN ; echo "" ;echo -e '\e[1;32m---------------\e[0m' ; echo "" ; dnsenum --dnsserver $ip -f /usr/share/seclists/Discovery/DNS/bitquark-subdomains-top100000.txt -o $HOME/CyberThug_output/dnsenum/dns_enum_${DOMAIN}_${Time} $DOMAIN ; echo "" ; echo -e '\e[1;32m[+]-- Output File : $HOME/CyberThug_output/dnsenum/dns_enum_${DOMAIN}_${Time} --[+]\e[0m' ; exec bash"
+       gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- DNS Enumeration on $DOMAIN --[+]\e[0m' ; echo "" ; dig @$DOMAIN -x $ip ; echo "" ; dig @$ip $DOMAIN ; echo "" ; echo -e '\e[1;32m---------------\e[0m' ; echo "" ; dig axfr @$ip $DOMAIN ; echo "" ;echo -e '\e[1;32m---------------\e[0m' ; echo "" ; dnsenum --dnsserver $ip -f /usr/share/seclists/Discovery/DNS/bitquark-subdomains-top100000.txt -o $HOME/CyberThug_output/dnsenum/dns_enum_${DOMAIN}_${Time} $DOMAIN ; echo "" ; echo -e '\e[1;32m[+]-- Output File : $HOME/CyberThug_output/dnsenum/dns_enum_${DOMAIN}_${Time} --[+]\e[0m' ; exec bash"
     fi
     echo "--------------------------"
     if nc -zv -w 5 $DOMAIN 111 2>/dev/null || nc -zv -w 5 $DOMAIN 2049 2>/dev/null; then
@@ -1566,6 +1564,28 @@ exec bash"
     fi
     echo "--------------------------"
     if nc -zv -w 5 $DOMAIN 139 2>/dev/null || nc -zv -w 5 $DOMAIN 445 2>/dev/null; then
+            echo ''
+            echo -e "\e[1;32m[+]-- Smbclient on $DOMAIN --[+]\e[0m"
+            smbclient -L $DOMAIN -U ""%""
+            nxc smb $DOMAIN -u "" -p "" --shares | awk 'NR>6 && $0 ~ /READ/ {for(i=5;i<=NF && $i !~ /READ/; i++) printf "%s%s",$i,(i<NF?" ":"\n"); print ""}' > /tmp/shares.txt
+            if [[ -s /tmp/shares.txt ]]; then
+		    nxc smb $DOMAIN -u "" -p "" -M spider_plus
+                    gnome-terminal -- bash -c "
+                        echo -e '\033[1;32m[+]-- Running Smbclient for => Guest --[+]\033[0m'
+                        while read -r share; do
+                            echo \"\"
+                            echo -e \"\033[1;34m[*] \$share\033[0m\" 
+                            gnome-terminal -- bash -c \"
+                               echo -e '\033[36m[+] Connecting to share: //$DOMAIN/\$share\033[0m'
+                               echo \"\"
+                               smbclient //$DOMAIN/'\$share' -U ""%""
+                               echo \"\"
+                               exec bash
+                            \"
+                        done < /tmp/shares.txt
+                        exec bash
+                    "
+            fi
        echo ""
        echo -e "\e[1;32m[+]-- Enum4Linux on $DOMAIN --[+]\e[0m"
        echo ""
@@ -1594,7 +1614,7 @@ exec bash"
        gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- Windsearch on $DOMAIN --[+]\e[0m' ; echo "" ; python3 $HOME/Downloads/tools/Folders/Windapsearch/windapsearch.py -U --full --dc-ip $DOMAIN ; exec bash"         
     fi
     echo "--------------------------"
-    if nc -zv -w 5 $DOMAIN 6379 2>/dev/null || nc -zvu -w 5 $DOMAIN 6379 2>/dev/null; then
+    if nc -zv -w 5 $DOMAIN 6379 2>/dev/null ; then
         gnome-terminal -- bash -c "echo -e '\e[1;32m[+]-- Redis-Cli on $DOMAIN --[+]\e[0m' ; echo "" ; redis-cli -h $DOMAIN ; exec bash"         
     fi 
     echo "--------------------------"
@@ -1789,9 +1809,9 @@ exec bash
 gnome-terminal -- bash -c "
 echo -e '\e[1;32m[+]-- WPscan on $FULL_DOMAIN --[+]\e[0m';
 echo "" ;
-wpscan --url $FULL_DOMAIN --disable-tls-checks --ignore-main-redirect --no-update;
-wpscan --url $FULL_DOMAIN --disable-tls-checks --ignore-main-redirect --no-update --enumerate u;
-wpscan --url $FULL_DOMAIN --disable-tls-checks --ignore-main-redirect --no-update -e p --plugins-detection aggressive;
+wpscan --url $FULL_DOMAIN --disable-tls-checks --ignore-main-redirect --no-update --random-user-agent;
+wpscan --url $FULL_DOMAIN --disable-tls-checks --ignore-main-redirect --no-update --enumerate u --random-user-agent;
+wpscan --url $FULL_DOMAIN --disable-tls-checks --ignore-main-redirect --no-update -e p --plugins-detection aggressive --random-user-agent;
 gnome-terminal -- bash -c \"echo -e '\e[1;34m[+]-- Droopescan on $FULL_DOMAIN --[+]\e[0m' ; echo "" ; droopescan scan drupal -u $FULL_DOMAIN ; exec bash\";
 gnome-terminal -- bash -c \"joomscan -u $FULL_DOMAIN ; echo "" ; echo -e '\e[1;35m[+]-- JoomScan on $FULL_DOMAIN --[+]\e[0m' ; exec bash\";
 exec bash"
@@ -1837,6 +1857,13 @@ echo -e "\e[1;32m[+]-- Checking The Common Web Ports to run Gobuster --[+]\e[0m"
 echo ""
 DOMAIN='"$DOMAIN"'
 WORDLIST="/usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt"
+HOME="$HOME"
+GREEN="\e[1;32m"
+RED="\e[1;31m"
+BLUE="\e[1;34m"
+YELLOW="\e[1;33m"
+RESET="\e[0m"
+
 PORTS=(8080 8000 8443 8888 3000 5000 9000 1337 31337)
 STATUS_CODES=("" "-b 404" "-b 404,429" "-b 404,429,301" "-k -b 301,404,429,403" "-k -b 301,404,403,300,429" "-k -b 301,302,404,403,401,429,300,502" "-k -b 200")
 
@@ -1847,7 +1874,6 @@ check_and_run() {
         echo "[+] Launching Gobuster ... "
         echo -n | openssl s_client -connect "$DOMAIN:$PORT" > /dev/null 2>&1
         if [ $? -eq 0 ]; then PROTO="https"; else PROTO="http"; fi
-
         gnome-terminal -- bash -c "
 PROTO=\"$PROTO\"
 DOMAIN=\"$DOMAIN\"
@@ -1862,16 +1888,143 @@ do
   if [ \$? -eq 0 ]; then break; fi
 done
 exec bash"
+        gnome-terminal -- bash -c "
+PROTO=\"$PROTO\"
+DOMAIN=\"$DOMAIN\"
+PORT=\"$PORT\"
+echo -e \"\e[1;32m[+]-- Nikto on $PROTO://$DOMAIN:$PORT --[+]\e[0m\";
+echo ""
+nikto -h $PROTO://$DOMAIN:$PORT -C all 
+exec bash"
+       gnome-terminal -- bash -c "
+PROTO=\"$PROTO\"
+DOMAIN=\"$DOMAIN\"
+PORT=\"$PORT\"
+HOME=\"$HOME\"
+echo -e \"\e[1;32m[+]-- Nuclei on $PROTO://$DOMAIN:$PORT --[+]\e[0m\";
+echo ""
+nuclei -u $PROTO://$DOMAIN:$PORT -severity info,low,medium,high,critical -rate-limit 50 -c 50 -mhe 5 -t $HOME/nuclei-templates
+exec bash"
+       gnome-terminal -- bash -c "
+GREEN=\"\e[1;32m\"
+RED=\"\e[1;31m\"
+BLUE=\"\e[1;34m\"
+YELLOW=\"\e[1;33m\"
+RESET=\"\e[0m\"
+
+PROTO=\"$PROTO\"
+DOMAIN=\"$DOMAIN\"
+PORT=\"$PORT\"
+HOME_DIR=\"$HOME\"
+
+echo -e \"\${GREEN}[+]-- GitDumper on \${PROTO}://\${DOMAIN}:\${PORT} --[+]\${RESET}\"
+echo
+
+TIMESTAMP=\$(date +\"%Y-%m-%d_%H-%M-%S\")
+SANITIZED_DOMAIN=\$(echo \"\${PROTO}://\${DOMAIN}:\${PORT}\" | sed \"s~://~_~g\")
+OUTPUT_DIR=\"\${HOME_DIR}/CyberThug_output/GitDumper/git_\${TIMESTAMP}_\${SANITIZED_DOMAIN}\"
+
+mkdir -p \"\$OUTPUT_DIR\"
+
+\"\$HOME_DIR/Downloads/tools/Files/Gitdumper.sh\" \
+  \"\${PROTO}://\${DOMAIN}:\${PORT}/.git/\" \
+  \"\$OUTPUT_DIR\"
+
+echo
+echo -e \"\${YELLOW}[*] Destination folder does not exist\${RESET}\"
+echo -e \"\${GREEN}[+] Creating \$OUTPUT_DIR/Extractor\${RESET}\"
+
+\"\$HOME_DIR/Downloads/tools/Files/Extractor.sh\" \
+  \"\$OUTPUT_DIR\" \
+  \"\$OUTPUT_DIR/Extractor\"
+
+echo
+echo -e \"\${BLUE}--------------------------\${RESET}\"
+echo -e \"\${GREEN}[+]-- Ds_Walk on \${PROTO}://\${DOMAIN}:\${PORT} --[+]\${RESET}\"
+echo
+
+python3 \"\$HOME_DIR/Downloads/tools/Folders/DS_Walk/ds_walk.py\" \
+  -u \"\${PROTO}://\${DOMAIN}:\${PORT}\"
+
+echo
+echo -e \"\${BLUE}--------------------------\${RESET}\"
+echo -e \"\${GREEN}[+]-- Page Source Domains on \${PROTO}://\${DOMAIN}:\${PORT} --[+]\${RESET}\"
+echo
+
+curl -L \"\${PROTO}://\${DOMAIN}:\${PORT}\" -k | \
+grep -oE \"\\\\b[a-zA-Z0-9._-]+\\\\.(htb|thm|com|org|net|edu|gov|mil|int|co|us|uk|ca|de|jp|fr|au|eg|local)\\\\b\"
+
+echo
+echo -e \"\${BLUE}--------------------------\${RESET}\"
+echo -e \"\${GREEN}[+]-- WPscan on \${PROTO}://\${DOMAIN}:\${PORT} --[+]\${RESET}\"
+echo
+
+wpscan --url \"\${PROTO}://\${DOMAIN}:\${PORT}\" --disable-tls-checks --ignore-main-redirect --no-update --random-user-agent
+wpscan --url \"\${PROTO}://\${DOMAIN}:\${PORT}\" --disable-tls-checks --ignore-main-redirect --no-update --enumerate u --random-user-agent
+wpscan --url \"\${PROTO}://\${DOMAIN}:\${PORT}\" --disable-tls-checks --ignore-main-redirect --no-update -e p --plugins-detection aggressive --random-user-agent
+
+echo
+echo -e \"\${BLUE}--------------------------\${RESET}\"
+echo -e \"\${GREEN}[+]-- Droopescan on \${PROTO}://\${DOMAIN}:\${PORT} --[+]\${RESET}\"
+echo
+
+droopescan scan drupal -u \"\${PROTO}://\${DOMAIN}:\${PORT}\"
+
+echo
+echo -e \"\${BLUE}--------------------------\${RESET}\"
+
+gnome-terminal -- bash -c \"
+GREEN=\\\\\\\"\\\\e[1;32m\\\\\\\"
+RESET=\\\\\\\"\\\\e[0m\\\\\\\"
+
+URL=\\\"$PROTO://$DOMAIN:$PORT\\\"
+
+joomscan -u \\\$URL
+echo 
+echo -e \\\"$GREEN[+]-- JoomScan on \\\$URL --[+]$RESET\\\" 
+exec bash
+\"
+
+exec bash
+"
+ 	gnome-terminal -- bash -c "
+PROTO=\"$PROTO\"
+DOMAIN=\"$DOMAIN\"
+PORT=\"$PORT\"
+echo -e \"\e[1;32m[+]-- Dirsearch on $PROTO://$DOMAIN:$PORT --[+]\e[0m\";
+echo ""
+dirsearch -u $PROTO://$DOMAIN:$PORT -r --random-agent --exclude-status 404 
+exec bash"
+        gnome-terminal -- bash -c "
+PROTO=\"$PROTO\"
+DOMAIN=\"$DOMAIN\"
+PORT=\"$PORT\"
+echo -e \"\e[1;32m[+]-- Feroxbuster on $PROTO://$DOMAIN:$PORT --[+]\e[0m\";
+echo ""
+feroxbuster --url $PROTO://$DOMAIN:$PORT --random-agent --filter-status 404 -k
+exec bash"
     else
         echo "[-] Port $PORT is closed or unreachable"
     fi
-    echo "--------------------------"
+        echo "--------------------------"
 }
 
 for PORT in "${PORTS[@]}"; do
     check_and_run "$PORT"
 done
-
+while true; do
+    echo ""
+    read -p "Any Ports (y/n) " a
+    echo "" 
+    if [[ $a == "y" || $a == "Y" ]]; then
+        read -p "Enter The Port: " p
+        echo ""
+        check_and_run "$p"
+    else
+        echo "--------------------------"
+        break
+    fi
+done
 exec bash'
 
 }
@@ -1889,7 +2042,7 @@ gnome-terminal -- bash -c "
             web_1 
             network 
         else
-            nmap -A -vv -Pn $DOMAIN
+            nmap -AO -vv -Pn $DOMAIN
 gnome-terminal -- bash -c "
   echo -e '\e[1;32m[+]-- TCP all Ports on $DOMAIN --[+]\e[0m';
   gnome-terminal -- bash -c \"echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\e[0m'; echo ''; nmap $DOMAIN -Pn -sU -T5 -vv ; exec bash\";
@@ -1912,7 +2065,7 @@ gnome-terminal -- bash -c "
                 web_1  
                 network  
             else
-                nmap -A -vv -Pn $DOMAIN
+                nmap -AO -vv -Pn $DOMAIN
 gnome-terminal -- bash -c "
   echo -e '\e[1;32m[+]-- TCP all Ports on $DOMAIN --[+]\e[0m';
   gnome-terminal -- bash -c \"echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\e[0m'; echo ''; nmap $DOMAIN -Pn -sU -T5 -vv ; exec bash\";
@@ -1936,7 +2089,7 @@ gnome-terminal -- bash -c "
                   web_1  
                   network 
                else
-                  nmap -A -vv -Pn $DOMAIN
+                  nmap -AO -vv -Pn $DOMAIN
 gnome-terminal -- bash -c "
   echo -e '\e[1;32m[+]-- TCP all Ports on $DOMAIN --[+]\e[0m';
   gnome-terminal -- bash -c \"echo -e '\e[1;32m[+]-- UDP on $DOMAIN --[+]\e[0m'; echo ''; nmap $DOMAIN -Pn -sU -T5 -vv ; exec bash\";
@@ -2953,6 +3106,10 @@ exec bash
             echo -e "\033[36m[+]-- Running nxc ldap $DOMAIN -u $User -p $Password --bloodhound --collection all --dns-server $Ip $flag --[+]\033[0m"
             echo ""
             nxc ldap $DOMAIN -u $User -p $Password --bloodhound --collection all --dns-server $Ip $flag
+            echo ""
+            echo -e "\033[36m[+]-- Running rusthound-ce -d $CLEAN_DOMAIN -u $User -p $Password --zip -c All --[+]\033[0m"
+            echo ""
+            rusthound-ce -d $CLEAN_DOMAIN -u $User -p $Password --zip -c All
             echo ""
             if [[ -f "$User" && -f "$Password" ]]; then
                  :
@@ -6643,7 +6800,7 @@ EOF
     fi
 fi
 declare -A seen_flags
-declare -a valid_flags=("--no-http" "--no-https" "--no-recon" "--no-network" "--no-ping" "--no-portscan" "--creds")
+declare -a valid_flags=("--no-http" "--no-https" "--no-recon" "--no-network" "--no-ping" "--no-portscan" "--creds" "--web-ports")
 in_array() {
     local needle=$1
     shift
@@ -7545,6 +7702,10 @@ echo -e "\033[36m[+]-- Running nxc ldap \"$DOMAIN\" -u \"$User\" -p \"$Password\
 echo ""
 nxc ldap $DOMAIN -u $User -p $Password --bloodhound --collection all --dns-server $Ip $flag
 echo ""
+echo -e "\033[36m[+]-- Running rusthound-ce -d \"$CLEAN_DOMAIN\" -u \"$User\" -p \"$Password\" --zip -c All --[+]\033[0m"
+echo ""
+rusthound-ce -d $CLEAN_DOMAIN -u $User -p $Password --zip -c All
+echo ""
 if [[ -f "$User" && -f "$Password" ]]; then
      :
 elif [[ -f "$User" ]] ; then
@@ -8123,4 +8284,4 @@ echo -e "\e[1;32m------------------[+] Finished [+]---------------------\e[0m"
 #      done
 #--------------------------------------
 #    elif [[ "$tool" == "exit" ]]; then
-                                                        
+                                                                           
